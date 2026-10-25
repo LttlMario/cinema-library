@@ -145,6 +145,7 @@ expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://c
 expect(tvConfig.includes('version="1.7.9"'), 'TV package version matches the wrapper source');
 expect(tvMain.includes('if (event.target === retry) return') && tvMain.includes('if (!loaded && code !== BACK_KEY'), 'TV wrapper keeps retry controls native and does not forward keys before load');
 expect(read('assets/site-shell.js').includes('let contentReturn = null'), 'secondary-page TV navigation remembers content return position');
+expect(siteShell.includes('current.matches(\'[data-shell-menu]\')') && siteShell.includes('requestAnimationFrame') && siteShell.includes('current.closest(\'.nav-submenu.open\')'), 'secondary-page TV menus move focus into options and back to the parent');
 expect(read('assets/nav-parity.css').includes('html.tv-mode.keynav main'), 'secondary-page TV focus is visibly highlighted');
 expect(read('assets/home-nav-fix.js').includes("event.key === 'Escape'") && read('assets/home-nav-fix.js').includes('searchToggle.focus'), 'Search Escape restores focus to the sidebar button');
 expect(homeNavFix.includes('headerObserver.disconnect()') && homeNavFix.includes("if (!document.querySelector('.cinema-shell-header, #header'))"), 'Search/focus observer disconnects after the shell is initialized');
