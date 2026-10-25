@@ -5,7 +5,15 @@
     if (!window.__cinemaTvRemoteBridge) {
       window.__cinemaTvRemoteBridge = true;
       const keyCodes = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Enter: 13 };
-      const visible = (el) => !!(el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && getComputedStyle(el).display !== 'none');
+      const visible = (el) => {
+        if (!el || !el.getClientRects().length) return false;
+        const style = getComputedStyle(el);
+        return style.visibility !== 'hidden'
+          && style.display !== 'none'
+          && style.opacity !== '0'
+          && style.pointerEvents !== 'none'
+          && (el.offsetWidth > 0 || el.offsetHeight > 0);
+      };
       const focusables = () => [...document.querySelectorAll('button,a,input,select,textarea,[tabindex="0"]')].filter(el => visible(el) && !el.disabled && el.getAttribute('tabindex') !== '-1');
       let contentReturn = null;
       const focusElement = (element) => {
