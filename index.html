@@ -2820,6 +2820,9 @@ $('clear-filters').addEventListener('click', () => {
   const initialRows = isTvMode ? CATEGORY_ROWS.slice(0, 3) : CATEGORY_ROWS;
   const initialLoads = initialRows.map(cfg => loadRow(cfg));
   await Promise.allSettled([warmup, ...initialLoads]);
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'cinema:app-ready' }, '*');
+  }
   populateAdvancedFilters();
   // Personalization is secondary to the first paint. Starting it only after
   // the core rows keeps the initial TMDB queue focused on visible content.
