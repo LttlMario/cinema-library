@@ -108,8 +108,8 @@ expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseR
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
 expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
-expect(index.includes('sw.js?v=20261025-v31') && stream.includes('sw.js?v=20261025-v31'), 'catalog and player register the current service-worker revision');
-expect(sw.includes('cinema-library-shell-v31-cache-safe-20261025') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
+expect(index.includes('sw.js?v=20261025-v32') && stream.includes('sw.js?v=20261025-v32'), 'catalog and player register the current service-worker revision');
+expect(sw.includes('cinema-library-shell-v32-cache-safe-20261025') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
 expect(index.includes('registration.update()') && stream.includes('registration.update()') && sw.includes("cinema:skip-waiting"), 'TV and web check for a newer service-worker version at startup');
 expect(sw.includes("url.searchParams.has('fresh')"), 'service-worker supports forced fresh document loads');
 expect(sw.includes("if (url.pathname === '/stream/index.html')") && sw.includes('Never cache those dynamic query variants'), 'service-worker never caches dynamic player query variants');
