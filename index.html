@@ -1441,7 +1441,7 @@ function playerUrl(item, season = 1, episode = 1) {
   const p = new URLSearchParams({ server: CINEMA_PLAYER_ID });
   p.set('tv', '1');
   if (new URLSearchParams(window.location.search).get('tv') === '1') p.set('player-tv', '1');
-  p.set('v', '20261025-stability11');
+  p.set('v', '20261025-stability12');
   const subtitlePreference = localStorage.getItem('cinemalibrary_subtitle_v1') || 'ro';
   p.set('sub', subtitlePreference === 'en' ? 'en' : 'ro');
   const type = mediaOf(item);
@@ -2681,7 +2681,11 @@ $('clear-filters').addEventListener('click', () => {
   // Start the hero, genre map, top-10 row and first content rows together.
   // The old sequence waited for three TMDB requests before even creating
   // skeletons, which made the TV WebView look frozen during first paint.
-  const warmup = Promise.allSettled([loadGenres(), loadHero(), loadTop10()]);
+  const warmup = Promise.allSettled([
+    loadGenres(),
+    loadHero(),
+    ...(isTvMode ? [] : [loadTop10()])
+  ]);
   const initialRows = isTvMode ? CATEGORY_ROWS.slice(0, 3) : CATEGORY_ROWS;
   const initialLoads = initialRows.map(cfg => loadRow(cfg));
   await Promise.allSettled([warmup, ...initialLoads]);
@@ -2691,6 +2695,10 @@ $('clear-filters').addEventListener('click', () => {
   if (!isTvMode) loadPersonalizedRow();
   if (isTvMode) {
     const deferred = () => {
+      // Top 10 is below the first TV viewport; defer its request and poster
+      // work until the initial hero/catalog paint is no longer competing for
+      // the WebView's main thread.
+      loadTop10();
       loadPersonalizedRow();
       CATEGORY_ROWS.slice(3).forEach(cfg => loadRow(cfg));
       // Do not flood the TV WebView with every universe at once. Two rows per
