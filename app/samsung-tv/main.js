@@ -6,6 +6,7 @@
   var error = document.getElementById('app-error');
   var retry = document.getElementById('retry');
   var loaded = false;
+  var errorTimer = 0;
   var backHandledByWeb = false;
   var backRequestId = 0;
   var BACK_HANDSHAKE_TIMEOUT = 700;
@@ -36,10 +37,11 @@
 
   function retryLoad() {
     loaded = false;
+    window.clearTimeout(errorTimer);
     loading.hidden = false;
     error.hidden = true;
     frame.src = 'https://cinema.panel-pro.ro/?tv=1&tvapp=1.7.8&fresh=1&retry=' + Date.now();
-    window.setTimeout(showError, 15000);
+    errorTimer = window.setTimeout(showError, 15000);
   }
 
   function showError() {
@@ -51,6 +53,8 @@
 
   frame.addEventListener('load', function () {
     loaded = true;
+    window.clearTimeout(errorTimer);
+    errorTimer = 0;
     backHandledByWeb = false;
     loading.hidden = true;
     error.hidden = true;
@@ -94,5 +98,5 @@
       event.preventDefault();
     }
   }, true);
-  window.setTimeout(showError, 15000);
+  errorTimer = window.setTimeout(showError, 15000);
 }());
