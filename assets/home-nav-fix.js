@@ -46,6 +46,17 @@
     }
   }
 
+  function setSearchA11yState(input, clear, open) {
+    if (input) {
+      input.setAttribute('aria-hidden', String(!open));
+      input.tabIndex = open ? 0 : -1;
+    }
+    if (clear) {
+      clear.setAttribute('aria-hidden', String(!open));
+      clear.tabIndex = open ? 0 : -1;
+    }
+  }
+
   function bind() {
     // Remove the legacy auxiliary control if it was left in the DOM by a
     // cached/older navigation script. The sidebar keeps only the real toggle.
@@ -122,6 +133,7 @@
         searchWrap.classList.add('search-open');
         searchWrap.classList.remove('open');
         searchToggle.setAttribute('aria-expanded', 'true');
+        setSearchA11yState(search, document.querySelector('#search-clear'), true);
         centerSearch();
         search.focus();
         document.dispatchEvent(new Event('cinema:search-opened'));
@@ -133,6 +145,7 @@
           search.blur();
           searchWrap.classList.remove('search-open', 'open');
           searchToggle.setAttribute('aria-expanded', 'false');
+          setSearchA11yState(search, document.querySelector('#search-clear'), false);
           document.querySelector('#search-suggestions')?.classList.remove('visible');
           document.querySelector('#search-clear')?.classList.remove('visible');
           search.style.setProperty('opacity', '0', 'important');
@@ -152,7 +165,10 @@
     if (searchWrap.classList.contains('open')
       || searchWrap.classList.contains('search-open')
       || search.value.trim()) {
+      setSearchA11yState(search, document.querySelector('#search-clear'), true);
       centerSearch();
+    } else {
+      setSearchA11yState(search, document.querySelector('#search-clear'), false);
     }
 
     if (!document.body.dataset.homeNavFixCloseBound) {
@@ -176,6 +192,7 @@
       event.stopPropagation();
       wrap.classList.add('search-open', 'open');
       toggle.setAttribute('aria-expanded', 'true');
+      setSearchA11yState(input, document.querySelector('#search-clear'), true);
       centerSearch();
       input.focus();
       document.dispatchEvent(new Event('cinema:search-opened'));
