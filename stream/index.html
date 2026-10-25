@@ -726,6 +726,7 @@ const TMDB_CACHE_TTL = isTvClient ? 30 * 60 * 1000 : 5 * 60 * 1000;
 const TMDB_CACHE_STORE = isTvClient ? localStorage : sessionStorage;
 let tmdbCacheMemory = null;
 let tmdbCacheWriteTimer = 0;
+const tmdbInFlight = new Map();
 function readTmdbCache() {
   if (tmdbCacheMemory) return tmdbCacheMemory;
   try { tmdbCacheMemory = JSON.parse(TMDB_CACHE_STORE.getItem(TMDB_CACHE_KEY) || '{}'); } catch { tmdbCacheMemory = {}; }
@@ -741,21 +742,31 @@ const tmdb = async path => {
   const cache = readTmdbCache();
   const cached = cache[localizedPath];
   if (cached && Date.now() - cached.time < TMDB_CACHE_TTL) return cached.data;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const pending = tmdbInFlight.get(localizedPath);
+  if (pending) return pending;
+  const request = (async () => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const r = await fetch(`${API_BASE}${localizedPath}`, { headers: HEADERS, signal: controller.signal });
+      if (!r.ok) throw new Error(`TMDB request failed (${r.status})`);
+      const data = await r.json();
+      cache[localizedPath] = { time: Date.now(), data };
+      writeTmdbCache(cache);
+      return data;
+    } catch (error) {
+      if (cached) return cached.data;
+      const message = error.name === 'AbortError' ? 'TMDB nu a răspuns la timp.' : 'Catalogul TMDB nu este disponibil momentan.';
+      toast(message);
+      throw new Error(message);
+    } finally { clearTimeout(timeout); }
+  })();
+  tmdbInFlight.set(localizedPath, request);
   try {
-    const r = await fetch(`${API_BASE}${localizedPath}`, { headers: HEADERS, signal: controller.signal });
-    if (!r.ok) throw new Error(`TMDB request failed (${r.status})`);
-    const data = await r.json();
-    cache[localizedPath] = { time: Date.now(), data };
-    writeTmdbCache(cache);
-    return data;
-  } catch (error) {
-    if (cached) return cached.data;
-    const message = error.name === 'AbortError' ? 'TMDB nu a răspuns la timp.' : 'Catalogul TMDB nu este disponibil momentan.';
-    toast(message);
-    throw new Error(message);
-  } finally { clearTimeout(timeout); }
+    return await request;
+  } finally {
+    if (tmdbInFlight.get(localizedPath) === request) tmdbInFlight.delete(localizedPath);
+  }
 };
 
 let state = null;          // { type, id, season, episode, server, subtitle, title }
