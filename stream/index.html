@@ -290,6 +290,23 @@
     .recommendation-card:hover img,.recommendation-card:focus-visible img { outline:2px solid var(--accent-h); outline-offset:2px; }
     @media (max-width:800px){.end-recommendations{left:.55rem;right:.55rem;bottom:3.8rem;padding:.7rem}.recommendation-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:.45rem}}
     @media (max-width:560px){.end-recommendations{bottom:3.4rem;padding:.6rem}.end-recommendations h2{font-size:.85rem}.end-recommendations p{font-size:.68rem;margin-bottom:.5rem}.recommendation-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:.35rem}.recommendation-card span{font-size:.62rem}}
+    .episode-picker { position:absolute; inset:0; z-index:30; display:flex; flex-direction:column; justify-content:center; gap:1rem; padding:clamp(1rem,4vw,3rem); background:rgba(8,8,11,.96); }
+    .episode-picker[hidden] { display:none; }
+    .episode-picker-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+    .episode-picker-head h2 { margin:0; color:#fff; font-size:clamp(1.1rem,2.4vw,1.8rem); }
+    .episode-picker-close { width:46px; height:46px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.28); border-radius:8px; background:rgba(255,255,255,.08); color:#fff; font:700 26px/1 system-ui,sans-serif; cursor:pointer; }
+    .episode-picker-close:hover,.episode-picker-close:focus-visible { background:var(--accent); border-color:var(--accent-h); }
+    .episode-picker-season { width:min(300px,100%); min-height:48px; padding:.65rem .85rem; border:1px solid rgba(255,255,255,.22); border-radius:8px; background:#18181f; color:#fff; font:600 15px inherit; }
+    .episode-picker-grid { display:flex; gap:clamp(.6rem,1.5vw,1rem); overflow-x:auto; overflow-y:hidden; padding:.45rem .2rem 1rem; scrollbar-width:thin; }
+    .episode-picker-card { flex:0 0 clamp(120px,14vw,190px); display:flex; flex-direction:column; gap:.45rem; padding:0; border:2px solid transparent; border-radius:9px; background:#141419; color:#fff; text-align:left; cursor:pointer; overflow:hidden; }
+    .episode-picker-card img,.episode-picker-placeholder { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; background:#24242b; }
+    .episode-picker-placeholder { display:grid; place-items:center; color:#aaa; font-size:1.5rem; }
+    .episode-picker-card span { padding:0 .6rem .65rem; font-size:.9rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .episode-picker-card:hover,.episode-picker-card:focus-visible,.episode-picker-card.kf { border-color:var(--accent-h); outline:0; box-shadow:0 0 0 3px rgba(229,9,20,.28); }
+    body.tv-mode .episode-picker { padding:clamp(1.5rem,5vw,4rem); }
+    body.tv-mode .episode-picker-season { min-height:58px; font-size:18px; }
+    body.tv-mode .episode-picker-card { flex-basis:clamp(150px,16vw,230px); }
+    body.tv-mode .episode-picker-card span { font-size:1.05rem; }
     body.embedded { overflow:hidden; background:#000; }
     body.embedded header,
     body.embedded #tv-panel,
@@ -525,7 +542,7 @@
           <select id="own-quality" aria-label="Claritate video"><option value="auto">Auto</option><option value="1080p">1080p</option><option value="720p">720p</option><option value="480p">480p</option></select>
           <select id="own-picture" aria-label="Profil imagine"><option value="standard">Standard</option><option value="cinema">Cinema</option><option value="bright">Luminos</option><option value="contrast">Contrast</option><option value="vivid">Viu</option><option value="natural">Natural</option><option value="night">Noapte</option></select>
           <span class="control-spacer"></span>
-          <button id="own-next" type="button" aria-label="Următorul episod" title="Următorul episod" hidden>⏭</button>
+          <button id="own-next" type="button" aria-label="Alege episodul" title="Alege episodul" hidden>☷ Episod</button>
           <button id="own-mute" type="button" aria-label="Arată volumul" aria-expanded="false" title="Arată volumul">🔊</button>
           <input id="own-volume" type="range" min="0" max="1" value="1" step="0.05" aria-label="Volum">
           <button id="own-captions" type="button" aria-label="Subtitrări">CC</button>
@@ -548,6 +565,11 @@
           <div class="subtitle-actions"><button type="button" class="secondary" id="subtitle-minus">−0,5s</button><button type="button" class="secondary" id="subtitle-plus">+0,5s</button></div>
         </div>
         <button class="player-fullscreen-action" id="player-fullscreen" type="button" title="Full screen pentru player" aria-label="Full screen pentru player">⛶</button>
+        <div class="episode-picker" id="episode-picker" hidden aria-label="Alege episodul">
+          <div class="episode-picker-head"><h2>Alege episodul</h2><button class="episode-picker-close" id="episode-picker-close" type="button" aria-label="Închide alegerea episodului">×</button></div>
+          <select class="episode-picker-season" id="episode-picker-season" aria-label="Alege sezonul"></select>
+          <div class="episode-picker-grid" id="episode-picker-grid"></div>
+        </div>
         <div class="resume-prompt" id="resume-prompt" hidden>
           <div class="resume-card">
             <h2>Vrei să continui vizionarea?</h2>
@@ -1029,7 +1051,6 @@ function setupOwnControls() {
   $('own-restart').addEventListener('click', () => ownCommand('seek', [0]));
   $('own-back10').addEventListener('click', () => seekOwn(-10));
   $('own-forward10').addEventListener('click', () => seekOwn(10));
-  $('own-next').addEventListener('click', () => goNextEpisode());
   $('own-mute').addEventListener('click', toggleVolumeControl);
   $('own-volume').addEventListener('input', event => ownCommand('setVolume', [Number(event.target.value)]));
   $('own-timeline').addEventListener('input', event => {
@@ -1647,12 +1668,14 @@ async function setupTv() {
   }
 
   await populateEpisodes(true);
+  setupEpisodePicker();
 
   seasonSel.addEventListener('change', async () => {
     state.season = parseInt(seasonSel.value) || 1;
     state.episode = 1;
     state.resumeAt = 0;
     await populateEpisodes(true);
+    renderEpisodePicker();
     savePlaybackProgress();
     loadPlayer();
   });
@@ -1664,6 +1687,71 @@ async function setupTv() {
   });
 
   $('nextep-btn').addEventListener('click', goNextEpisode);
+}
+
+function closeEpisodePicker() {
+  const panel = $('episode-picker');
+  if (panel) panel.hidden = true;
+}
+
+function renderEpisodePicker() {
+  const panel = $('episode-picker');
+  const seasonSelect = $('episode-picker-season');
+  const grid = $('episode-picker-grid');
+  if (!panel || !seasonSelect || !grid || state?.type !== 'tv') return;
+  const seasons = (tvData?.seasons || []).filter(season => Number(season.season_number) > 0);
+  seasonSelect.innerHTML = seasons.map(season => `<option value="${season.season_number}">Sezonul ${season.season_number} · ${season.episode_count || '?'} episoade</option>`).join('');
+  seasonSelect.value = String(state.season);
+  if (!seasonSelect.value && seasonSelect.options.length) seasonSelect.value = seasonSelect.options[0].value;
+  const season = Number(seasonSelect.value || state.season || 1);
+  const data = seasonCache[`${state.id}-${season}`];
+  const episodes = data?.episodes || [];
+  grid.innerHTML = episodes.length ? episodes.map(episode => {
+    const title = episode.name || `Episodul ${episode.episode_number}`;
+    const image = episode.still_path ? `<img src="https://image.tmdb.org/t/p/w342${episode.still_path}" alt="${esc(title)}" loading="lazy">` : '<span class="episode-picker-placeholder">▶</span>';
+    return `<button class="episode-picker-card" type="button" data-season="${season}" data-episode="${episode.episode_number}" aria-label="Sezonul ${season}, episodul ${episode.episode_number}, ${esc(title)}">${image}<span>E${episode.episode_number} · ${esc(title)}</span></button>`;
+  }).join('') : '<span class="episode-picker-placeholder">Episoadele se încarcă…</span>';
+  grid.querySelectorAll('.episode-picker-card').forEach(card => card.addEventListener('click', () => {
+    state.season = Number(card.dataset.season) || 1;
+    state.episode = Number(card.dataset.episode) || 1;
+    $('season-select').value = String(state.season);
+    $('episode-select').value = String(state.episode);
+    savePlaybackProgress();
+    closeEpisodePicker();
+    loadPlayer();
+  }));
+}
+
+async function openEpisodePicker() {
+  if (state?.type !== 'tv') return;
+  const panel = $('episode-picker');
+  if (!panel) return;
+  panel.hidden = false;
+  renderEpisodePicker();
+  const season = Number($('episode-picker-season')?.value || state.season || 1);
+  if (!seasonCache[`${state.id}-${season}`]) {
+    try { seasonCache[`${state.id}-${season}`] = await tmdb(`/tv/${state.id}/season/${season}`); } catch {}
+    renderEpisodePicker();
+  }
+  document.dispatchEvent(new Event('rioma:focus-episode-picker'));
+}
+
+function setupEpisodePicker() {
+  const open = $('own-next');
+  const close = $('episode-picker-close');
+  const season = $('episode-picker-season');
+  if (!open || open.dataset.episodePickerBound === 'true') return;
+  open.dataset.episodePickerBound = 'true';
+  open.addEventListener('click', openEpisodePicker);
+  close?.addEventListener('click', closeEpisodePicker);
+  season?.addEventListener('change', async () => {
+    const seasonNumber = Number(season.value) || 1;
+    if (!seasonCache[`${state.id}-${seasonNumber}`]) {
+      try { seasonCache[`${state.id}-${seasonNumber}`] = await tmdb(`/tv/${state.id}/season/${seasonNumber}`); } catch {}
+    }
+    renderEpisodePicker();
+  });
+  renderEpisodePicker();
 }
 
 async function populateEpisodes(setToState) {
@@ -1693,6 +1781,7 @@ async function populateEpisodes(setToState) {
     episodeSel.value = state.episode;
   }
   updateNextBtn();
+  renderEpisodePicker();
 }
 
 function episodeCountFor(seasonNum) {
@@ -1718,9 +1807,9 @@ function updateNextBtn() {
   btn.title = next ? `Următorul: S${next.season} E${next.episode}` : 'Nu există următorul episod';
   const ownNext = $('own-next');
   if (ownNext) {
-    ownNext.hidden = state?.type !== 'tv' || !next;
-    ownNext.title = next ? `Următorul: S${next.season} E${next.episode}` : 'Nu există următorul episod';
-    ownNext.setAttribute('aria-label', next ? `Următorul episod, sezonul ${next.season}, episodul ${next.episode}` : 'Următorul episod indisponibil');
+    ownNext.hidden = state?.type !== 'tv';
+    ownNext.title = 'Alege sezonul și episodul';
+    ownNext.setAttribute('aria-label', 'Alege sezonul și episodul');
   }
 }
 
@@ -1731,7 +1820,6 @@ async function goNextEpisode(isAutomatic = false) {
     return;
   }
   $('next-episode-action').hidden = true;
-  $('own-next').hidden = true;
   const seasonChanged = next.season !== state.season;
   state.season = next.season;
   state.episode = next.episode;
@@ -1925,6 +2013,16 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
         .map(group => group.filter(vis)).filter(group => group.length).forEach(items => secs.push({ items }));
       return secs;
     }
+    const episodePicker = $('episode-picker');
+    if (episodePicker && !episodePicker.hidden) {
+      const close = [$('episode-picker-close')].filter(vis);
+      const season = [$('episode-picker-season')].filter(vis);
+      const cards = [...document.querySelectorAll('#episode-picker-grid .episode-picker-card')].filter(vis);
+      if (close.length) secs.push({ key: 'episode-picker-close', items: close });
+      if (season.length) secs.push({ key: 'episode-picker-season', items: season });
+      if (cards.length) secs.push({ key: 'episode-picker-cards', axis: 'horizontal', items: cards });
+      return secs;
+    }
     const header = [$('back-btn'), $('logo'), $('contribute-btn'), $('theme-toggle')].filter(vis);
     if (header.length) secs.push({ items: header });
     const tv = $('tv-panel');
@@ -1939,7 +2037,7 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
     const playerBack = [$('player-back-action')].filter(vis);
     if (playerBack.length) secs.push({ key: 'back', items: playerBack });
     const playerTimeline = [$('own-timeline')].filter(vis);
-    const playerButtons = [$('own-restart'), $('own-play'), $('own-back10'), $('own-forward10'), $('own-quality'), $('own-picture'), $('own-mute'), $('own-volume'), $('own-captions'), $('own-fullscreen')].filter(vis);
+    const playerButtons = [$('own-restart'), $('own-play'), $('own-back10'), $('own-forward10'), $('own-quality'), $('own-picture'), $('own-next'), $('own-mute'), $('own-volume'), $('own-captions'), $('own-fullscreen')].filter(vis);
     if (playerTimeline.length) secs.push({ key: 'timeline', items: playerTimeline });
     if (playerButtons.length) secs.push({ key: 'player-buttons', items: playerButtons });
     const completionItems = getCompletionFocusItems();
@@ -1985,6 +2083,14 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
   document.addEventListener('rioma:focus-subtitles', () => {
     const panel = $('subtitle-panel');
     const target = $('subtitle-language');
+    if (!panel || panel.hidden || !vis(target)) return;
+    active = true;
+    document.documentElement.classList.add('keynav');
+    setFocus(target, false);
+  });
+  document.addEventListener('rioma:focus-episode-picker', () => {
+    const panel = $('episode-picker');
+    const target = $('episode-picker-season');
     if (!panel || panel.hidden || !vis(target)) return;
     active = true;
     document.documentElement.classList.add('keynav');
@@ -2065,6 +2171,14 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
         // through its visible X button, as requested for the TV remote.
         return;
       }
+      const episodePicker = $('episode-picker');
+      if (episodePicker && !episodePicker.hidden) {
+        e.preventDefault();
+        closeEpisodePicker();
+        const pickerButton = $('own-next');
+        if (pickerButton && vis(pickerButton)) setFocus(pickerButton, false);
+        return;
+      }
       e.preventDefault();
       navigateBackFromPlayer();
       return;
@@ -2116,6 +2230,11 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
       const completion = getCompletionFocusItems();
       if (completion.length) {
         setFocus(completion[0], false);
+        return;
+      }
+      const episodePickerButton = $('own-next');
+      if (episodePickerButton && vis(episodePickerButton)) {
+        setFocus(episodePickerButton, false);
         return;
       }
       hideOwnControls();
