@@ -37,6 +37,7 @@ expect(stream.includes("event.source !== playerFrame.contentWindow"), 'player ev
 expect(stream.includes("event.source !== window.parent"), 'player remote keys are accepted only from the wrapper page');
 expect(stream.includes('providerReadyFallbackTimer') && stream.includes('Play must remain disabled until the provider confirms ready') && !stream.includes('providerReady = true;\n      const fallbackLoader'), 'player fallback never enables Play before provider ready');
 expect(stream.includes('function handleProviderError') && stream.includes("eventType.includes('error')") && stream.includes('handlePlayerFailure(state.server)'), 'provider errors stop playback and recover through the next source');
+expect(stream.includes('if (!state || state.server !== serverId) return;'), 'stale provider errors cannot trigger a second server fallback');
 expect(stream.includes('Keep processing this same arrow key') && stream.includes('if (!vis(cur)) {\n        cur = null;'), 'TV focus keeps the current D-pad action after controls restore');
 expect(index.includes('el.hidden || el.disabled') && index.includes("style.visibility !== 'hidden'") && stream.includes('el.hidden || el.disabled'), 'TV focus skips hidden, invisible, and disabled controls');
 expect(stream.includes('function loadPlayer() {\n  const nextProgressKey = progressIdentity();') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();'), 'player saves progress before replacing an unchanged source');

@@ -1797,6 +1797,7 @@ window.addEventListener('message', event => {
 });
 
 function handlePlayerFailure(serverId) {
+  if (!state || state.server !== serverId) return;
   updateServerStatus(serverId, 'failed');
   const next = SERVERS.find(s => !attemptedServers.has(s.id) && serverUrlResolvers[s.id]);
   if (!next) {
