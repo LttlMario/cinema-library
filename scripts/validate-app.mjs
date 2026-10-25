@@ -107,6 +107,7 @@ expect(index.includes('prefers-reduced-motion: reduce') && index.includes('scrol
 expect(index.includes('loading="lazy" fetchpriority="low" decoding="async"'), 'below-fold posters keep low fetch priority on TV and web');
 expect(index.includes('const candidates = items.slice(0, isTvMode ? 6 : 32)') && index.includes('i += isTvMode ? 4 : 8'), 'TV limits digital-release enrichment work during the initial load');
 expect(index.includes('const digitalSettlements = await Promise.allSettled(digitalRequests)') && index.includes('const digitalPages = digitalSettlements'), 'digital-release rows keep partial results when one TMDB request fails');
+expect(index.includes('homeWorkController.signal.aborted || document.documentElement.classList.contains(\'player-open\')'), 'digital-release enrichment stops between batches when the player opens');
 expect(index.includes('...(isTvMode ? [] : [loadTop10()])') && index.includes('Top 10 is below the first TV viewport'), 'TV defers the below-fold Top 10 request until after the initial paint');
 expect(siteShell.includes('aria-current="${active === key ? \'page\' : \'false\'}"') && siteShell.includes('aria-expanded="false"'), 'shell navigation exposes active page and dropdown state to TV WebViews');
 expect(siteShell.includes('data-nav="${key}"'), 'shell Home link exposes a stable semantic navigation key');
