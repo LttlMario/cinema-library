@@ -54,6 +54,7 @@ expect(tvIndex.includes('tvapp=1.7.8&fresh=1'), 'TV wrapper requests a fresh liv
 expect(tvMain.includes('tvapp=1.7.8&fresh=1'), 'TV retry path requests a fresh live document');
 expect(tvMain.includes('BACK_HANDSHAKE_TIMEOUT = 700'), 'TV Back uses the guarded handshake timeout');
 expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back acknowledgements only from the live page');
+expect(tvMain.includes('errorTimer') && tvMain.includes('clearTimeout(errorTimer)'), 'TV retry clears stale load-error timers');
 expect(tvConfig.includes('version="1.7.8"'), 'TV package version matches the wrapper source');
 expect(read('assets/site-shell.js').includes('let contentReturn = null'), 'secondary-page TV navigation remembers content return position');
 expect(read('assets/nav-parity.css').includes('html.tv-mode.keynav main'), 'secondary-page TV focus is visibly highlighted');
