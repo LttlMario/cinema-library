@@ -848,6 +848,7 @@ let lastOwnCommandAt = 0;
 let playerLoadStartedAt = 0;
 let playerControlMetricRecorded = false;
 let playerFrameMetricRecorded = false;
+let remoteFocusMetricRecorded = false;
 // A provider can emit a `play` event while its iframe is initializing.  Keep
 // that separate from an explicit user command so a fetch/restore race cannot
 // start playback before the viewer presses Play/OK.
@@ -1378,6 +1379,7 @@ function loadPlayer() {
   playerLoadStartedAt = performance.now();
   playerControlMetricRecorded = false;
   playerFrameMetricRecorded = false;
+  remoteFocusMetricRecorded = false;
   try { performance.mark('cinema-player-load-start'); } catch {}
   providerReady = false;
   providerErrorCount = 0;
@@ -2428,6 +2430,10 @@ window.addEventListener('beforeunload', () => {
     if (cur) cur.classList.remove('kf');
     cur = el;
     el.classList.add('kf');
+    if (!remoteFocusMetricRecorded && document.body.classList.contains('tv-mode') && playerLoadStartedAt) {
+      remoteFocusMetricRecorded = true;
+      markPlayerMilestone('remote-focus');
+    }
     if (el.closest('.custom-controls') || el === $('player-back-action')) {
       showOwnControls();
       $('player-wrap')?.classList.remove('controls-idle');
