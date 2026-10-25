@@ -7,6 +7,12 @@
       const keyCodes = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Enter: 13 };
       const visible = (el) => !!(el && el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && getComputedStyle(el).display !== 'none');
       const focusables = () => [...document.querySelectorAll('button,a,input,select,textarea,[tabindex="0"]')].filter(el => visible(el) && !el.disabled && el.getAttribute('tabindex') !== '-1');
+      let contentReturn = null;
+      const focusElement = (element) => {
+        if (!element) return;
+        element.focus({ preventScroll: true });
+        element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      };
       const moveFocus = (key) => {
         // The home page already has its own row-aware navigator.
         if (document.querySelector('#rows-container')) return;
@@ -15,6 +21,32 @@
         const current = document.activeElement;
         if (!items.includes(current)) { items[0].focus(); return; }
         if (key === 'Enter') { current.click(); return; }
+        const rail = [...document.querySelectorAll('.cinema-shell-header .nav-link, .cinema-shell-header #favorites-nav, .cinema-shell-header #search-toggle')].filter(visible);
+        const main = document.querySelector('main');
+        const content = main ? [...main.querySelectorAll('a,button,input,select,textarea,[tabindex="0"]')].filter(el => visible(el) && !el.disabled && el.getAttribute('tabindex') !== '-1') : [];
+        const railIndex = rail.indexOf(current);
+        if (railIndex >= 0) {
+          if (key === 'ArrowUp' || key === 'ArrowDown') {
+            const next = railIndex + (key === 'ArrowUp' ? -1 : 1);
+            if (rail[next]) focusElement(rail[next]);
+            return;
+          }
+          if (key === 'ArrowRight') {
+            const target = contentReturn && content.includes(contentReturn) ? contentReturn : content[0];
+            if (target) focusElement(target);
+            return;
+          }
+          return;
+        }
+        if (content.includes(current) && key === 'ArrowLeft' && main) {
+          const mainRect = main.getBoundingClientRect();
+          const currentRect = current.getBoundingClientRect();
+          if (currentRect.left <= mainRect.left + 24) {
+            contentReturn = current;
+            if (rail[0]) focusElement(rail[0]);
+            return;
+          }
+        }
         const from = current.getBoundingClientRect();
         const vertical = key === 'ArrowUp' || key === 'ArrowDown';
         const direction = key === 'ArrowUp' || key === 'ArrowLeft' ? -1 : 1;
@@ -66,7 +98,7 @@
   document.documentElement.classList.add('cinema-shell-page');
   document.body.classList.add('cinema-shell-page');
   const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = appUrl('assets/site-shell.css?v=20261025-stability13'); document.head.append(css);
-  const parityCss = document.createElement('link'); parityCss.rel = 'stylesheet'; parityCss.href = appUrl('assets/nav-parity.css?v=20261025-focus20'); document.head.append(parityCss);
+  const parityCss = document.createElement('link'); parityCss.rel = 'stylesheet'; parityCss.href = appUrl('assets/nav-parity.css?v=20261025-focus21'); document.head.append(parityCss);
   const main = document.querySelector('body>main');
   document.querySelectorAll('body>header,body>.top,body>footer').forEach((node) => node.remove());
   const navHtml = nav.map(([label, href, key]) => menus[key]
