@@ -61,7 +61,10 @@ self.addEventListener('fetch', event => {
       return;
     }
     event.respondWith(caches.match(request, cacheOptions).then(cached => {
-      const refresh = fetch(request).then(response => {
+      // The cached shell is returned immediately, but the background refresh
+      // must bypass the browser HTTP cache or a TV WebView can keep replaying
+      // the previous deployed document indefinitely.
+      const refresh = fetch(request, { cache: 'no-store' }).then(response => {
         if (response.ok) {
           const cacheKey = new Request(`${url.origin}${url.pathname}`);
           caches.open(CACHE).then(cache => cache.put(cacheKey, response.clone())).catch(() => {});
