@@ -27,7 +27,13 @@ self.addEventListener('fetch', event => {
     if (forceFresh) {
       event.respondWith(
         fetch(request, { cache: 'no-store' }).then(response => {
-          if (response.ok) caches.open(CACHE).then(cache => cache.put(request, response.clone()));
+          // Fresh player documents contain title/server query parameters and
+          // are intentionally not cached. Caching every TV retry would leave
+          // one permanent entry per movie/episode in the shell cache.
+          if (response.ok && url.pathname !== '/stream/index.html') {
+            const cacheKey = new Request(`${url.origin}${url.pathname}`);
+            caches.open(CACHE).then(cache => cache.put(cacheKey, response.clone()));
+          }
           return response;
         }).catch(() => caches.match(request, cacheOptions).then(cached => cached || caches.match('./404.html')))
       );
