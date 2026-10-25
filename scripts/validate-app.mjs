@@ -48,10 +48,11 @@ expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to preve
 expect(index.includes('cancelHomeWork()') && index.includes('resetHomeWork()'), 'homepage TMDB work is cancelled while the player opens');
 expect(index.includes('homeWorkGeneration') && index.includes('homeGeneration !== homeWorkGeneration'), 'intentional TMDB cancellations stay silent');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
-expect(index.includes('sw.js?v=20261025-v25'), 'page registers the current service-worker revision');
-expect(sw.includes('cinema-library-shell-v25'), 'service-worker cache revision matches the page');
+expect(index.includes('sw.js?v=20261025-v26'), 'page registers the current service-worker revision');
+expect(sw.includes('cinema-library-shell-v26-bounded-20261025'), 'service-worker cache revision matches the page');
 expect(sw.includes("url.searchParams.has('fresh')"), 'service-worker supports forced fresh document loads');
 expect(sw.includes("url.pathname !== '/stream/index.html'"), 'fresh player loads are not duplicated in the service-worker cache');
+expect(sw.includes('isStaticAsset') && sw.includes('request.destination'), 'service-worker does not cache arbitrary dynamic same-origin requests');
 
 expect(tvIndex.includes('tvapp=1.7.8&fresh=1'), 'TV wrapper requests a fresh live document');
 expect(tvMain.includes('tvapp=1.7.8&fresh=1'), 'TV retry path requests a fresh live document');
