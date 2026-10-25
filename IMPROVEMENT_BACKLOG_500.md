@@ -8,7 +8,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 2. [x] verifică tratarea erorilor de rețea pentru stabilitatea playerului.
 3. [x] adaugă timeout și mesaj de retry pentru stabilitatea playerului.
 4. [x] previne comenzile duplicate pentru stabilitatea playerului.
-5. [ ] salvează starea înainte de schimbarea sursei pentru stabilitatea playerului.
+5. [x] salvează starea înainte de schimbarea sursei pentru stabilitatea playerului.
 6. [x] testează revenirea după pierderea conexiunii pentru stabilitatea playerului.
 7. [x] limitează operațiile concurente pentru stabilitatea playerului.
 8. [ ] elimină listener-ele la închiderea componentei pentru stabilitatea playerului.
