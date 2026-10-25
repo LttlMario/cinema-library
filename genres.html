@@ -32,14 +32,31 @@
   </main>
   <footer class="site-footer"><div class="footer-main"><div class="footer-links"><div><h3>Linkuri</h3><a href="catalog.html?type=movie">Filme</a><a href="catalog.html?type=tv">Seriale</a><a href="watch-together.html">Vezi împreună</a><a href="catalog.html?mode=top">Top IMDB</a></div><div><h3>Genuri</h3><a href="genres.html">Toate genurile</a><a href="catalog.html?type=movie&genre=28">Filme de acțiune</a><a href="catalog.html?type=movie&genre=27">Filme horror</a><a href="catalog.html?type=movie&genre=878">Filme SF</a></div><div><h3>Informații</h3><a href="contact.html">Contact</a><a href="terms.html">Termeni și condiții</a><a href="sitemap.html">Hartă site</a><a href="privacy.html">Confidențialitate</a></div></div><div class="footer-about"><h3>Despre noi</h3><p>Cinema Library este un catalog pentru filme și seriale, cu linkuri către servicii media terțe.</p><p>Nu stocăm fișiere video pe serverele noastre. Disponibilitatea și subtitrările pot varia în funcție de sursă.</p><div class="footer-features"><span>♛ Calitate înaltă</span><span>▶ Gratuit, mereu</span><span>ϟ Încărcare rapidă</span><span>▣ Subtitrări multiple</span></div></div></div><div class="footer-bottom"><span class="footer-copy">© 2026 Cinema Library</span><div class="footer-bottom-links"><a href="sitemap.html">Hartă site</a><a href="contact.html">Contact</a><a href="terms.html">Termeni și condiții</a><a href="privacy.html">Confidențialitate</a></div></div></footer>
   <script>
-    const token='__TMDB_TOKEN__', $=id=>document.getElementById(id), grid=$('genre-grid'), status=$('status'); let catalogs={movie:[],tv:[]}, current='movie';
+    const token='__TMDB_TOKEN__', $=id=>document.getElementById(id), grid=$('genre-grid'), status=$('status'); let catalogs={movie:[],tv:[]}, current='movie', genreRequestId=0, genreController=null;
     const searchInput=$('search')||$('shell-search'), themeButton=$('theme-toggle')||$('shell-theme'), favoritesButton=$('favorites-nav')||$('shell-favorites');
     const savedTheme=localStorage.getItem('cinemalibrary_theme');if(savedTheme==='light')document.documentElement.dataset.theme='light';if(themeButton)themeButton.addEventListener('click',()=>{const light=document.documentElement.dataset.theme==='light';document.documentElement.dataset.theme=light?'':'light';localStorage.setItem('cinemalibrary_theme',light?'dark':'light')});if(favoritesButton)favoritesButton.addEventListener('click',()=>location.href='index.html#favorites');
+    async function fetchGenreJson(url,options={}){
+      for(let attempt=1;attempt<=2;attempt+=1){
+        try{
+          const response=await fetch(url,options);
+          if(response.ok||![429,500,502,503,504].includes(response.status)||attempt===2)return response;
+        }catch(error){if(options.signal?.aborted||attempt===2)throw error}
+        await new Promise((resolve,reject)=>{
+          const timer=setTimeout(done,250*attempt);
+          const abort=()=>{clearTimeout(timer);options.signal?.removeEventListener('abort',abort);const error=new Error('Genre retry cancelled');error.name='AbortError';reject(error)};
+          function done(){options.signal?.removeEventListener('abort',abort);resolve()}
+          options.signal?.addEventListener('abort',abort,{once:true});
+        });
+      }
+    }
     async function load(){
+      const request=++genreRequestId;if(genreController)genreController.abort();genreController=new AbortController();const controller=genreController;const timeout=setTimeout(()=>controller.abort(),10000);
       try{
-        const [movies,shows]=await Promise.all(['movie','tv'].map(type=>fetch(`https://api.themoviedb.org/3/genre/${type}/list?language=ro-RO`,{headers:{Authorization:`Bearer ${token}`,accept:'application/json'}}).then(r=>r.json())));
-        catalogs.movie=movies.genres||[]; catalogs.tv=shows.genres||[]; render();
-      }catch{status.textContent='Genurile nu sunt disponibile momentan.'}
+        const cacheKey='cinemalibrary_genres_v1';let cached=null;try{cached=JSON.parse(localStorage.getItem(cacheKey)||'null')}catch{}
+        if(cached&&Date.now()-cached.time<24*60*60*1000){catalogs=cached.data;render();return}
+        const [movies,shows]=await Promise.all(['movie','tv'].map(type=>fetchGenreJson(`https://api.themoviedb.org/3/genre/${type}/list?language=ro-RO`,{headers:{Authorization:`Bearer ${token}`,accept:'application/json'},signal:controller.signal}).then(response=>{if(!response.ok)throw new Error('genres');return response.json()})));
+        if(request!==genreRequestId)return;catalogs={movie:movies.genres||[],tv:shows.genres||[]};try{localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:catalogs}))}catch{}render();
+      }catch(error){if(error.name!=='AbortError'&&request===genreRequestId)status.textContent='Genurile nu sunt disponibile momentan.'}finally{clearTimeout(timeout)}
     }
     function render(){const query=(searchInput?.value||'').trim().toLocaleLowerCase('ro-RO');const list=catalogs[current].filter(g=>g.name.toLocaleLowerCase('ro-RO').includes(query));status.textContent=`${list.length} genuri disponibile pentru ${current==='movie'?'filme':'seriale'}`;grid.innerHTML=list.map(g=>`<a class="genre-card" href="catalog.html?type=${current}&genre=${g.id}"><strong>${g.name}</strong><span aria-hidden="true">›</span></a>`).join('')||'<p class="empty">Nu am găsit niciun gen pentru căutarea ta.</p>'}
     document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{current=tab.dataset.type;document.querySelectorAll('.tab').forEach(x=>{const active=x===tab;x.classList.toggle('active',active);x.setAttribute('aria-selected',String(active))});render()}));if(searchInput)searchInput.addEventListener('input',render);load();
@@ -48,3 +65,4 @@
 <script src="assets/tv-pointer.js"></script>
 </body>
 </html>
+
