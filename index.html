@@ -1829,16 +1829,14 @@ async function loadDigitalRow(cfg) {
   const scroller = buildRow(rowCfg);
 
   try {
-    const [r1, r2, p1, p2] = await Promise.all([
-      tmdb(endpointRecent),
-      tmdb(`${endpointRecent}&page=2`),
-      tmdb(endpointPopular),
-      tmdb(`${endpointPopular}&page=2`),
-    ]);
+    const digitalRequests = document.documentElement.classList.contains('tv-mode')
+      ? [tmdb(endpointRecent), tmdb(endpointPopular)]
+      : [tmdb(endpointRecent), tmdb(`${endpointRecent}&page=2`), tmdb(endpointPopular), tmdb(`${endpointPopular}&page=2`)];
+    const digitalPages = await Promise.all(digitalRequests);
 
     // Merge both result sets, deduplicate by id
     const seen = new Set();
-    const items = [...(r1.results || []), ...(r2.results || []), ...(p1.results || []), ...(p2.results || [])]
+    const items = digitalPages.flatMap(page => page.results || [])
       .filter(r => {
         if (!r.poster_path || seen.has(r.id)) return false;
         seen.add(r.id);
@@ -1852,7 +1850,7 @@ async function loadDigitalRow(cfg) {
     // page responsive and avoids a burst of release-date requests that can
     // trigger rate limits on slower connections.
     const drDates = [];
-    const candidates = items.slice(0, 32);
+    const candidates = items.slice(0, document.documentElement.classList.contains('tv-mode') ? 12 : 32);
     for (let i = 0; i < candidates.length; i += 8) {
       const batch = await Promise.all(candidates.slice(i, i + 8).map(async item => {
         try {
