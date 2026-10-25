@@ -1,4 +1,3 @@
-
 # Backlog Cinema Library — 500 îmbunătățiri
 
 Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se verifică progresiv; nu reprezintă promisiunea că toate sunt deja implementate.
@@ -44,7 +43,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 34. [ ] verifică starea după schimbarea episodului pentru navigarea cu telecomanda.
 35. [ ] adaugă fallback pentru răspuns invalid pentru navigarea cu telecomanda.
 36. [ ] măsoară timpul până la primul cadru pentru navigarea cu telecomanda.
-37. [ ] măsoară timpul până la primul control pentru navigarea cu telecomanda.
+37. [x] măsoară timpul până la primul control pentru navigarea cu telecomanda.
 38. [ ] verifică funcționarea pe ecran mic pentru navigarea cu telecomanda.
 39. [ ] verifică funcționarea pe WebView TV pentru navigarea cu telecomanda.
 40. [ ] adaugă feedback vizibil pentru utilizator pentru navigarea cu telecomanda.
