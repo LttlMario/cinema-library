@@ -2747,8 +2747,13 @@ async function showGenreResults(type, genreId, genreName) {
     const firstPage = await pagePromises[0];
     if (requestId !== genreRequestId || abortController.signal.aborted) return;
     mergePages([firstPage]);
-    const pages = await Promise.all(pagePromises.slice(1));
+    const pageSettlements = await Promise.allSettled(pagePromises.slice(1));
     if (requestId !== genreRequestId || abortController.signal.aborted) return;
+    // Optional pages must not invalidate the first visible page when one
+    // request is rate-limited or temporarily unavailable.
+    const pages = pageSettlements
+      .filter(result => result.status === 'fulfilled')
+      .map(result => result.value);
     mergePages([firstPage, ...pages]);
     if (searchAbortController === abortController) searchAbortController = null;
   } catch {
