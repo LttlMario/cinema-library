@@ -2253,7 +2253,7 @@ window.addEventListener('message', event => {
     const overlay = $('rioma-overlay');
     if (overlay && !overlay.hidden && frame?.contentWindow) {
       frame.contentWindow.postMessage({ type: 'rioma:remote-key', key }, '*');
-    } else if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter'].includes(key)) {
+    } else if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter','Back','BrowserBack','GoBack','XF86Back'].includes(key)) {
       document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
     }
   }
@@ -2380,6 +2380,10 @@ function closeModal(fromPop) {
   // Closing by any means other than Back itself unwinds the modal's
   // history entry, so the next Back doesn't have to be pressed twice.
   if (fromPop !== true && history.state && history.state.cinemalibraryModal) history.back();
+}
+
+function signalBackHandled() {
+  if (window.parent !== window) window.parent.postMessage({ type: 'cinema:back-handled' }, '*');
 }
 
 window.addEventListener('popstate', () => {
@@ -2846,6 +2850,31 @@ $('clear-filters').addEventListener('click', () => {
       const now = performance.now();
       if (now - lastNavAt < 70) { e.preventDefault(); return; }
       lastNavAt = now;
+    }
+
+    if (['Back', 'BrowserBack', 'GoBack', 'XF86Back'].includes(k) || e.keyCode === 10009 || e.keyCode === 461) {
+      const modal = $('modal-backdrop');
+      const openSubmenu = document.querySelector('.nav-submenu.open');
+      const searchOpen = searchWrap?.classList.contains('open') || searchWrap?.classList.contains('search-open');
+      if (modal?.classList.contains('open')) {
+        e.preventDefault();
+        signalBackHandled();
+        closeModal();
+        return;
+      }
+      if (openSubmenu) {
+        e.preventDefault();
+        signalBackHandled();
+        openSubmenu.classList.remove('open');
+        return;
+      }
+      if (searchOpen) {
+        e.preventDefault();
+        signalBackHandled();
+        resetSearch();
+        searchWrap?.classList.remove('open', 'search-open');
+        return;
+      }
     }
 
     if (!active) {
