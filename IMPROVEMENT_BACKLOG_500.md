@@ -5,7 +5,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 ## Stabilitatea playerului
 
 1. [x] adaugă un test de pornire fără autoplay pentru stabilitatea playerului.
-2. [ ] verifică tratarea erorilor de rețea pentru stabilitatea playerului.
+2. [x] verifică tratarea erorilor de rețea pentru stabilitatea playerului.
 3. [x] adaugă timeout și mesaj de retry pentru stabilitatea playerului.
 4. [x] previne comenzile duplicate pentru stabilitatea playerului.
 5. [ ] salvează starea înainte de schimbarea sursei pentru stabilitatea playerului.
@@ -13,7 +13,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 7. [x] limitează operațiile concurente pentru stabilitatea playerului.
 8. [ ] elimină listener-ele la închiderea componentei pentru stabilitatea playerului.
 9. [ ] verifică starea după schimbarea episodului pentru stabilitatea playerului.
-10. [ ] adaugă fallback pentru răspuns invalid pentru stabilitatea playerului.
+10. [x] adaugă fallback pentru răspuns invalid pentru stabilitatea playerului.
 11. [ ] măsoară timpul până la primul cadru pentru stabilitatea playerului.
 12. [ ] măsoară timpul până la primul control pentru stabilitatea playerului.
 13. [ ] verifică funcționarea pe ecran mic pentru stabilitatea playerului.
@@ -561,5 +561,6 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 498. [ ] verifică compatibilitatea cu browserul TV pentru release și operare.
 499. [ ] adaugă scenariu de regresie pentru release și operare.
 500. [ ] marchează rezultatul în checklist pentru release și operare.
+
 
 
