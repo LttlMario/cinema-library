@@ -38,7 +38,7 @@
     loaded = false;
     loading.hidden = false;
     error.hidden = true;
-    frame.src = 'https://cinema.panel-pro.ro/?tv=1&tvapp=1.7.6&retry=' + Date.now();
+    frame.src = 'https://cinema.panel-pro.ro/?tv=1&tvapp=1.7.7&fresh=1&retry=' + Date.now();
     window.setTimeout(showError, 15000);
   }
 
