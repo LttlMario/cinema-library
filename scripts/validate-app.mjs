@@ -85,6 +85,7 @@ expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back
 expect(tvMain.includes("event.target !== document.body && event.target !== frame"), 'TV wrapper does not steal focus from its own controls');
 expect(tvMain.includes('MEDIA_KEYS') && tvMain.includes('registerMediaKeys') && tvMain.includes('MediaPlayPause'), 'TV wrapper forwards registered media keys to the player');
 expect(stream.includes("['MediaPlayPause', 'MediaPlay', 'MediaPause']") && stream.includes('MediaFastForward'), 'player handles TV media transport keys');
+expect(stream.includes("k === 'MediaTrackNext'") && stream.includes("k === 'MediaTrackPrevious'"), 'player handles next and previous media keys');
 expect(tvMain.includes('errorTimer') && tvMain.includes('clearTimeout(errorTimer)'), 'TV retry clears stale load-error timers');
 expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://cinesrc.st') && tvIndex.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'TV wrapper preconnects to image, video and subtitle origins');
 expect(tvConfig.includes('version="1.7.8"'), 'TV package version matches the wrapper source');
