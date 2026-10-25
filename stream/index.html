@@ -1452,6 +1452,11 @@ function normalizePlayerPayload(message) {
 window.addEventListener('message', event => {
   const allowedOrigin = event.origin === 'https://cinesrc.st' || event.origin.endsWith('.cinesrc.st');
   if (!allowedOrigin) return;
+  // Only the active Cinesrc iframe may drive player state.  The page can also
+  // contain a trailer or recommendation iframe; accepting their generic
+  // `play`/`pause` messages can desynchronise our controls and subtitles.
+  const playerFrame = $('player');
+  if (!playerFrame || event.source !== playerFrame.contentWindow) return;
   const message = event.data || {};
   const payload = normalizePlayerPayload(message);
   const eventType = String(message.type || message.event || payload.event || '').toLowerCase();
