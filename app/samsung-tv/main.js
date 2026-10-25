@@ -9,7 +9,7 @@
   var errorTimer = 0;
   var backHandledByWeb = false;
   var backRequestId = 0;
-  var BACK_HANDSHAKE_TIMEOUT = 700;
+  var BACK_HANDSHAKE_TIMEOUT = 1200;
   var LIVE_ORIGIN = 'https://cinema.panel-pro.ro';
   var BACK_KEY = 10009;
   var EXIT_KEYS = { 10182: true, 27: true };
