@@ -200,5 +200,13 @@
   }
   window.addEventListener('resize', centerSearch);
   document.addEventListener('DOMContentLoaded', bind, { once: true });
-  new MutationObserver(bind).observe(document.documentElement, { childList: true, subtree: true });
+  const headerObserver = new MutationObserver(() => {
+    const header = document.querySelector('.cinema-shell-header, #header');
+    if (!header) return;
+    bind();
+    if (header.dataset.homeNavFix === '1') headerObserver.disconnect();
+  });
+  if (!document.querySelector('.cinema-shell-header, #header')) {
+    headerObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
 })();
