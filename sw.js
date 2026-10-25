@@ -1,8 +1,8 @@
-const CACHE = 'cinema-library-shell-v20-stability-20261025';
+const CACHE = 'cinema-library-shell-v21-stability-20261025';
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
-  './assets/site-shell.css', './assets/site-shell.js', './assets/icons/cinema-library-favicon.png'
+  './assets/site-shell.css', './assets/site-shell.js', './assets/nav-parity.css', './assets/icons/cinema-library-favicon.png'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
@@ -19,7 +19,7 @@ self.addEventListener('fetch', event => {
   const isShell = url.pathname === '/' || [
     '/index.html', '/catalog.html', '/genres.html', '/stream/index.html',
     '/404.html', '/contribute.html', '/manifest.webmanifest',
-    '/assets/site-shell.css', '/assets/site-shell.js'
+    '/assets/site-shell.css', '/assets/site-shell.js', '/assets/nav-parity.css'
   ].includes(url.pathname);
   if (isShell) {
     const cacheOptions = url.pathname === '/stream/index.html' ? {} : { ignoreSearch: true };
