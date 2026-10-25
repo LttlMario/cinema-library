@@ -1,4 +1,4 @@
-const CACHE = 'cinema-library-shell-v35-cache-safe-20261025';
+const CACHE = 'cinema-library-shell-v36-cache-first-20261025';
 const SHELL_ASSET_TIMEOUT = 8000;
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
@@ -79,11 +79,17 @@ self.addEventListener('fetch', event => {
     event.respondWith(fetch(request).catch(() => caches.match(request)));
     return;
   }
-  event.respondWith(fetch(request).then(response => {
-    if (!response.ok) return response;
-    const copy = response.clone();
-    caches.open(CACHE).then(cache => cache.put(request, copy)).catch(() => {});
-    return response;
-  }).catch(() => caches.match(request).then(response => response || caches.match('./404.html'))));
+  event.respondWith(caches.match(request).then(cached => {
+    const refresh = fetch(request, { cache: 'no-store' }).then(response => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE).then(cache => cache.put(request, copy)).catch(() => {});
+      }
+      return response;
+    }).catch(() => cached || caches.match('./404.html'));
+    // Reuse a known-good static asset immediately on TV, while refreshing it
+    // in the background for the next navigation.
+    return cached || refresh;
+  }));
 });
 
