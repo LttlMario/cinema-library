@@ -113,6 +113,7 @@ expect(index.includes('...(isTvMode ? [] : [loadTop10()])') && index.includes('T
 expect(siteShell.includes('aria-current="${active === key ? \'page\' : \'false\'}"') && siteShell.includes('aria-expanded="false"'), 'shell navigation exposes active page and dropdown state to TV WebViews');
 expect(siteShell.includes('data-nav="${key}"'), 'shell Home link exposes a stable semantic navigation key');
 expect(siteShell.includes('function') && siteShell.includes('syncShellMenuState') && siteShell.includes('MutationObserver'), 'shell navigation keeps aria-expanded synchronized with visible dropdowns');
+expect(siteShell.includes('const shellMenuObservers = []') && siteShell.includes('observer.disconnect()'), 'secondary-page menu observers are cleaned up on page exit');
 expect(siteShell.includes("style.opacity !== '0'") && siteShell.includes("style.pointerEvents !== 'none'") && siteShell.includes('el.offsetWidth > 0'), 'secondary-page TV focus excludes invisible Search controls');
 expect(homeNavFix.includes('function setSearchA11yState') && homeNavFix.includes("input.setAttribute('aria-hidden', String(!open))") && homeNavFix.includes('input.tabIndex = open ? 0 : -1'), 'closed Search is hidden from TV accessibility focus until opened');
 expect(siteShell.includes('aria-expanded="false"') && siteShell.includes("setAttribute('aria-expanded', 'true')") && homeNavFix.includes("setAttribute('aria-expanded', 'false')"), 'search toggle exposes and updates its expanded state');
