@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2352,11 +2353,13 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
 
   function vis(el) {
     if (!el || !el.getClientRects().length) return false;
-    if (el.hidden || el.getAttribute('aria-hidden') === 'true') return false;
+    if (el.hidden || el.disabled || el.getAttribute('aria-hidden') === 'true') return false;
     // A timed-out player control still has a layout box, but it is not an
     // actionable TV focus target while it is translated away from the screen.
     // Ignore that state so D-pad focus cannot land on an invisible button.
     if (el.closest('.tv-hidden, .controls-idle')) return false;
+    const style = getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
     return true;
   }
 
