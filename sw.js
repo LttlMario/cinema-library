@@ -1,4 +1,4 @@
-const CACHE = 'cinema-library-shell-v29-cache-safe-20261025';
+const CACHE = 'cinema-library-shell-v30-cache-safe-20261025';
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
