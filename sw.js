@@ -1,4 +1,4 @@
-const CACHE = 'cinema-library-shell-v32-cache-safe-20261025';
+const CACHE = 'cinema-library-shell-v33-cache-safe-20261025';
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
@@ -54,7 +54,10 @@ self.addEventListener('fetch', event => {
     }
     event.respondWith(caches.match(request, cacheOptions).then(cached => {
       const refresh = fetch(request).then(response => {
-        if (response.ok) caches.open(CACHE).then(cache => cache.put(request, response.clone())).catch(() => {});
+        if (response.ok) {
+          const cacheKey = new Request(`${url.origin}${url.pathname}`);
+          caches.open(CACHE).then(cache => cache.put(cacheKey, response.clone())).catch(() => {});
+        }
         return response;
       }).catch(() => cached || caches.match('./404.html'));
       return cached || refresh;
