@@ -2,6 +2,10 @@
 
 Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se verifică progresiv; nu reprezintă promisiunea că toate sunt deja implementate.
 
+## Scopul acestei etape
+
+Implementarea se limitează la primele 100 de îmbunătățiri; după atingerea pragului 100, etapa se oprește.
+
 ## Stabilitatea playerului
 
 1. [x] adaugă un test de pornire fără autoplay pentru stabilitatea playerului.
