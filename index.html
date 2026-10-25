@@ -1231,7 +1231,8 @@ function writeTmdbCache(cache) {
   clearTimeout(tmdbCacheWriteTimer);
   tmdbCacheWriteTimer = setTimeout(() => { try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(tmdbCacheMemory)); } catch {} }, 700);
 }
-const tmdb = async path => {
+const tmdb = async (path, options = {}) => {
+  const silent = options?.silent === true;
   const localizedPath = `${path}${path.includes('?') ? '&' : '?'}language=ro-RO`;
   const cache = readTmdbCache();
   const cached = cache[localizedPath];
@@ -1252,7 +1253,7 @@ const tmdb = async path => {
   } catch (error) {
     if (cached) return cached.data;
     const message = error.name === 'AbortError' ? 'TMDB nu a răspuns la timp.' : 'Catalogul TMDB nu este disponibil momentan.';
-    toast(message);
+    if (!silent) toast(message);
     throw new Error(message);
   }
 };
@@ -1765,11 +1766,11 @@ async function loadFranchiseRow(cfg) {
   if (document.documentElement.classList.contains('player-open')) return;
   const scroller = buildRow({ ...cfg, anchor: null });
   const directItems = await Promise.allSettled((cfg.items || []).map(async ([media, id]) => {
-    const data = await tmdb(`/${media}/${id}`);
+    const data = await tmdb(`/${media}/${id}`, { silent: true });
     return { ...data, media_type: media };
   }));
   const collectionItems = await Promise.allSettled((cfg.collections || []).map(async id => {
-    const data = await tmdb(`/collection/${id}`);
+    const data = await tmdb(`/collection/${id}`, { silent: true });
     return (data.parts || []).map(item => ({ ...item, media_type: 'movie' }));
   }));
   if (document.documentElement.classList.contains('player-open')) return;
