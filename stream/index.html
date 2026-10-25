@@ -793,6 +793,7 @@ let subtitleResults = [];
 let selectedSubtitleFileId = null;
 let subtitleAutoToken = 0;
 let subtitleAutoController = null;
+let subtitleRequestController = null;
 let subtitleFallbackTimer = 0;
 let subtitleDisplayTimer = 0;
 let providerTimeSignals = 0;
@@ -1056,7 +1057,18 @@ function startSubtitleFallbackClock(loadToken) {
     updateSubtitleDisplay(ownCurrentTime);
   }, 250);
 }
-function clearOwnSubtitles() { subtitleCues = []; subtitleOffset = 0; stopSubtitleDisplayLoop(); $('subtitle-layer').hidden = true; if ($('subtitle-status')) $('subtitle-status').textContent = 'Subtitrarea a fost oprită.'; }
+function clearOwnSubtitles() {
+  subtitleAutoToken += 1;
+  subtitleAutoController?.abort();
+  subtitleAutoController = null;
+  subtitleRequestController?.abort();
+  subtitleRequestController = null;
+  subtitleCues = [];
+  subtitleOffset = 0;
+  stopSubtitleDisplayLoop();
+  $('subtitle-layer').hidden = true;
+  if ($('subtitle-status')) $('subtitle-status').textContent = 'Subtitrarea a fost oprită.';
+}
 function toggleSubtitlePanel() {
   const panel = $('subtitle-panel');
   if (!panel) return;
@@ -1074,22 +1086,30 @@ function setupSubtitlePanel() {
   });
   $('subtitle-search')?.addEventListener('click', async () => {
     const status = $('subtitle-status'); if (!state) return;
+    subtitleRequestController?.abort();
+    const controller = new AbortController();
+    subtitleRequestController = controller;
     status.textContent = 'Se caută subtitrări online…';
     try {
       const params = new URLSearchParams({ tmdb_id: state.id, type: state.type, season: String(state.season || 1), episode: String(state.episode || 1), languages: $('subtitle-language').value });
-      const response = await fetch(subtitleApiUrl(`/api/subtitles/search?${params}`)); const payload = await response.json();
+      const response = await fetch(subtitleApiUrl(`/api/subtitles/search?${params}`), { signal: controller.signal }); const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Căutarea online nu este disponibilă pe acest server.');
       subtitleResults = (payload.data || []).flatMap(item => (item.attributes?.files || []).map(file => ({ id:file.file_id, language:item.attributes.language, release:item.attributes.release || 'Subtitrare', downloads:item.attributes.download_count || 0 })));
       $('subtitle-results').innerHTML = subtitleResults.map((item, i) => `<option value="${i}">${esc(item.language.toUpperCase())} · ${esc(item.release)} · ${item.downloads} descărcări</option>`).join('');
       $('subtitle-results').hidden = !subtitleResults.length; $('subtitle-load').hidden = !subtitleResults.length; selectedSubtitleFileId = subtitleResults[0]?.id || null;
       status.textContent = subtitleResults.length ? `${subtitleResults.length} rezultate găsite.` : 'Nu am găsit subtitrări.';
-    } catch (error) { status.textContent = error.message || 'Căutarea online a eșuat.'; }
+    } catch (error) { if (error.name !== 'AbortError') status.textContent = error.message || 'Căutarea online a eșuat.'; }
+    finally { if (subtitleRequestController === controller) subtitleRequestController = null; }
   });
   $('subtitle-results')?.addEventListener('change', event => { selectedSubtitleFileId = subtitleResults[Number(event.target.value)]?.id || null; });
   $('subtitle-load')?.addEventListener('click', async () => {
     if (!selectedSubtitleFileId) return; const status = $('subtitle-status'); status.textContent = 'Se descarcă subtitrarea…';
-    try { const response = await fetch(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`)); if (!response.ok) throw new Error('Descărcarea subtitrării a eșuat.'); subtitleCues = parseSubtitles(await response.text()); subtitleOffset = 0; status.textContent = `Subtitrarea a fost încărcată (${subtitleCues.length} replici).`; startSubtitleDisplayLoop(); }
-    catch (error) { status.textContent = error.message || 'Subtitrarea nu a putut fi încărcată.'; }
+    subtitleRequestController?.abort();
+    const controller = new AbortController();
+    subtitleRequestController = controller;
+    try { const response = await fetch(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`), { signal: controller.signal }); if (!response.ok) throw new Error('Descărcarea subtitrării a eșuat.'); subtitleCues = parseSubtitles(await response.text()); subtitleOffset = 0; status.textContent = `Subtitrarea a fost încărcată (${subtitleCues.length} replici).`; startSubtitleDisplayLoop(); }
+    catch (error) { if (error.name !== 'AbortError') status.textContent = error.message || 'Subtitrarea nu a putut fi încărcată.'; }
+    finally { if (subtitleRequestController === controller) subtitleRequestController = null; }
   });
   $('subtitle-file')?.addEventListener('change', async event => { const file = event.target.files?.[0]; if (!file) return; subtitleCues = parseSubtitles(await file.text()); subtitleOffset = 0; $('subtitle-status').textContent = `${file.name} a fost încărcat.`; startSubtitleDisplayLoop(); });
   $('subtitle-clear')?.addEventListener('click', clearOwnSubtitles);
@@ -1221,6 +1241,8 @@ function loadPlayer() {
   subtitleAutoToken += 1;
   subtitleAutoController?.abort();
   subtitleAutoController = null;
+  subtitleRequestController?.abort();
+  subtitleRequestController = null;
   stopSubtitleDisplayLoop();
   subtitleCues = [];
   $('subtitle-layer').hidden = true;
