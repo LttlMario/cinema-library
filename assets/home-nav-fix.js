@@ -98,7 +98,12 @@
     }, { once: true });
 
     const pageBase = new URL('./', location.href);
-    const go = (path) => { location.href = new URL(path, pageBase).href; };
+    const tvMode = new URLSearchParams(location.search).get('tv') === '1';
+    const go = (path) => {
+      const target = new URL(path, pageBase);
+      if (tvMode) target.searchParams.set('tv', '1');
+      location.href = target.href;
+    };
 
     const favorites = header.querySelector('#favorites-nav');
     if (favorites && !favorites.dataset.homeNavFixBound) {
