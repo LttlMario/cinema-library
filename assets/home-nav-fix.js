@@ -124,6 +124,7 @@
         searchToggle.setAttribute('aria-expanded', 'true');
         centerSearch();
         search.focus();
+        document.dispatchEvent(new Event('cinema:search-opened'));
       });
       search.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
@@ -138,6 +139,7 @@
           search.style.setProperty('pointer-events', 'none', 'important');
           search.style.setProperty('display', 'none', 'important');
           searchToggle.focus({ preventScroll: true });
+          document.dispatchEvent(new Event('cinema:search-closed'));
           return;
         }
         if (event.key === 'Enter' && search.value.trim()) {
@@ -176,6 +178,7 @@
       toggle.setAttribute('aria-expanded', 'true');
       centerSearch();
       input.focus();
+      document.dispatchEvent(new Event('cinema:search-opened'));
     }, true);
   }
   window.addEventListener('resize', centerSearch);
