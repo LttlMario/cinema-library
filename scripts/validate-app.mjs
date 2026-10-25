@@ -10,7 +10,7 @@ const expect = (condition, message) => { checks.push(message); if (!condition) f
 for (const file of ['sw.js', 'app/samsung-tv/main.js']) {
   execFileSync(process.execPath, ['--check', file], { stdio: 'pipe' });
 }
-for (const file of ['index.html', 'stream/index.html']) {
+for (const file of ['index.html', 'stream/index.html', 'catalog.html', 'genres.html']) {
   const source = read(file);
   const scripts = source.split('<script').slice(1)
     .map(part => part.split('>').slice(1).join('>').split('</script>')[0])
@@ -53,6 +53,8 @@ expect(stream.includes('A manual search takes ownership of the subtitle request 
 expect(stream.includes('Never trust a stale/partial subtitle cache entry') && stream.includes('Fișierul de subtitrare nu conține replici valide'), 'invalid cached subtitles fall back to a fresh valid file');
 expect(index.includes('async function fetchTmdbWithRetry') && stream.includes('async function fetchTmdbWithRetry') && index.includes('429, 500, 502, 503, 504'), 'catalog and player retry transient TMDB failures');
 expect(index.includes('function waitForTmdbRetry') && index.includes('signal.removeEventListener') && index.includes("error.name = 'AbortError'"), 'TMDB retry delays cancel immediately with the owning page request');
+const catalog = read('catalog.html');
+expect(catalog.includes('async function fetchCatalogJson') && catalog.includes('429,500,502,503,504') && catalog.includes("setTimeout(()=>controller.abort(),10000)"), 'catalog retries transient TMDB failures and cancels slow requests');
 expect(stream.includes('let loadedProgressKey') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();\n    state.episode'), 'episode changes preserve progress under the old episode key');
 expect(stream.includes("document.visibilityState === 'hidden'") && stream.includes('persistCurrentPlayback();'), 'player saves progress when the TV page loses visibility');
 expect(stream.includes('stopSubtitleDisplayLoop();') && stream.includes('stopPlaybackHeartbeat();') && stream.includes('stopSubtitleFallbackClock();') && stream.includes('if (!ownPaused && providerReady)') && stream.includes('if (!providerTimeSignals) startSubtitleFallbackClock(playerLoadToken);'), 'player suspends local polling while the TV page is hidden and resumes every required clock during playback');
