@@ -2052,6 +2052,10 @@ async function scheduleModalTrailer(item) {
 }
 
 async function openModal(item) {
+  // Capture the originating card before any async TMDB work.  For TV items
+  // `loadTvSeasons()` may take a moment; waiting until the modal is painted
+  // would otherwise let a remote keypress overwrite the return target.
+  if (window.__knavModalWillOpen) window.__knavModalWillOpen();
   const type    = mediaOf(item);
   const isMovie = type === 'movie';
   const title   = item.title || item.name;
@@ -2971,9 +2975,12 @@ $('clear-filters').addEventListener('click', () => {
   }, true);
 
   /* Hooks called by openModal/closeModal so focus follows the modal */
-  window.__knavModalOpened = () => {
+  window.__knavModalWillOpen = () => {
     if (!active) return;
     lastCard = cur;
+  };
+  window.__knavModalOpened = () => {
+    if (!active) return;
     setFocus($('modal-watch-btn'), false);
   };
   window.__knavModalClosed = () => {
