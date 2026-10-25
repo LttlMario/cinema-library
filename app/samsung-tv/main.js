@@ -10,6 +10,7 @@
   var backHandledByWeb = false;
   var backRequestId = 0;
   var BACK_HANDSHAKE_TIMEOUT = 700;
+  var LIVE_ORIGIN = 'https://cinema.panel-pro.ro';
   var BACK_KEY = 10009;
   var EXIT_KEYS = { 10182: true, 27: true };
   var MEDIA_KEYS = {
@@ -87,9 +88,17 @@
     frame.setAttribute('tabindex', '0');
     try { frame.focus(); frame.contentWindow.focus(); } catch (_) {}
   }
+  function handleFrameError() {
+    loaded = false;
+    window.clearTimeout(errorTimer);
+    errorTimer = 0;
+    loading.hidden = true;
+    error.hidden = false;
+  }
   function bindFrame(nextFrame) {
     frame = nextFrame;
     frame.addEventListener('load', handleFrameLoad);
+    frame.addEventListener('error', handleFrameError);
   }
   bindFrame(frame);
   retry.addEventListener('click', retryLoad);
@@ -119,7 +128,7 @@
       backHandledByWeb = false;
       // Let the live page/player handle Back first. The player uses this to
       // activate its own fullscreen Back button and return to the popup.
-      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: 'Back' }, '*'); } catch (_) {}
+      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: 'Back' }, LIVE_ORIGIN); } catch (_) {}
       window.setTimeout(function () {
         if (requestId !== backRequestId || backHandledByWeb) return;
         try {
@@ -131,12 +140,12 @@
       event.preventDefault();
       exitApplication();
     } else if (MEDIA_KEYS[code]) {
-      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: MEDIA_KEYS[code] }, '*'); } catch (_) {}
+      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: MEDIA_KEYS[code] }, LIVE_ORIGIN); } catch (_) {}
       event.preventDefault();
     } else if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
       // If Samsung keeps focus on the outer document, forward the remote
       // command into the live web page inside the iframe.
-      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: key }, '*'); } catch (_) {}
+      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: key }, LIVE_ORIGIN); } catch (_) {}
       event.preventDefault();
     }
   }, true);
