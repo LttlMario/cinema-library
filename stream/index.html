@@ -1167,6 +1167,7 @@ function toggleVolumeControl() {
   const open = controls.classList.toggle('volume-open');
   button.setAttribute('aria-expanded', String(open));
   button.setAttribute('title', open ? 'Ascunde volumul' : 'Arată volumul');
+  document.dispatchEvent(new CustomEvent(open ? 'rioma:volume-opened' : 'rioma:volume-closed'));
 }
 function setupOwnControls() {
   $('own-play').addEventListener('click', toggleOwnPlayback);
@@ -2330,6 +2331,20 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
     const panel = $('watch-check-prompt');
     const target = $('watch-check-continue');
     if (!panel || panel.hidden || !vis(target)) return;
+    active = true;
+    document.documentElement.classList.add('keynav');
+    setFocus(target, false);
+  });
+  document.addEventListener('rioma:volume-opened', () => {
+    const target = $('own-volume');
+    if (!target || !vis(target)) return;
+    active = true;
+    document.documentElement.classList.add('keynav');
+    setFocus(target, false);
+  });
+  document.addEventListener('rioma:volume-closed', () => {
+    const target = $('own-mute');
+    if (!target || !vis(target)) return;
     active = true;
     document.documentElement.classList.add('keynav');
     setFocus(target, false);
