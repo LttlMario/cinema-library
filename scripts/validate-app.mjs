@@ -55,6 +55,7 @@ expect(index.includes('async function fetchTmdbWithRetry') && stream.includes('a
 expect(index.includes('function waitForTmdbRetry') && index.includes('signal.removeEventListener') && index.includes("error.name = 'AbortError'"), 'TMDB retry delays cancel immediately with the owning page request');
 const catalog = read('catalog.html');
 expect(catalog.includes('async function fetchCatalogJson') && catalog.includes('429,500,502,503,504') && catalog.includes("setTimeout(()=>controller.abort(),10000)"), 'catalog retries transient TMDB failures and cancels slow requests');
+expect(catalog.includes('let staleData=null') && catalog.includes('date salvate local'), 'catalog falls back to expired local data when TMDB is unavailable');
 const genres = read('genres.html');
 expect(genres.includes('async function fetchGenreJson') && genres.includes('genreRequestId') && genres.includes('cinemalibrary_genres_v1'), 'genres reuse cancellable retry and bounded local cache logic');
 expect(!catalog.includes('assets/tv-pointer.js') && !genres.includes('assets/tv-pointer.js') && siteShell.includes('const moveFocus = (key)'), 'secondary TV pages use the shared natural D-pad navigator instead of the competing free pointer');
