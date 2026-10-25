@@ -1212,7 +1212,10 @@ const TMDB_CACHE_KEY = 'cinemalibrary_tmdb_cache_v2';
 const TMDB_CACHE_TTL = document.documentElement.classList.contains('tv-mode') ? 30 * 60 * 1000 : 5 * 60 * 1000;
 const TMDB_CACHE_STORE = document.documentElement.classList.contains('tv-mode') ? localStorage : sessionStorage;
 const TMDB_CACHE_MAX_ENTRIES = document.documentElement.classList.contains('tv-mode') ? 90 : 180;
-const TMDB_MAX_IN_FLIGHT = 5;
+// Samsung WebViews become noticeably less responsive when several JSON
+// parses and image/layout tasks arrive together. Keep desktop throughput at
+// five requests, but limit TV to three concurrent TMDB calls.
+const TMDB_MAX_IN_FLIGHT = document.documentElement.classList.contains('tv-mode') ? 3 : 5;
 let tmdbInFlight = 0;
 const tmdbQueue = [];
 const tmdbPending = new Map();
