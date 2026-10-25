@@ -2805,7 +2805,14 @@ $('clear-filters').addEventListener('click', () => {
     if (header.length) secs.push({ key: 'header', items: header, axis: 'vertical' });
 
     const searchOpen = searchWrap?.classList.contains('open') || searchWrap?.classList.contains('search-open');
-    if (searchOpen && vis(searchInput)) secs.push({ key: 'search-input', axis: 'vertical', items: [searchInput] });
+    if (searchOpen) {
+      if (vis(searchInput)) secs.push({ key: 'search-input', axis: 'vertical', items: [searchInput] });
+      const openSuggestions = [...document.querySelectorAll('#search-suggestions .search-suggestion')].filter(vis);
+      if (openSuggestions.length) secs.push({ key: 'search-suggestions', axis: 'vertical', items: openSuggestions });
+      // Keep the open Search flow self-contained even when the full results
+      // grid has already replaced the homepage rows below it.
+      if (secs.length && (vis(searchInput) || openSuggestions.length)) return secs;
+    }
     const suggestions = [...document.querySelectorAll('#search-suggestions .search-suggestion')].filter(vis);
     if (suggestions.length) secs.push({ key: 'search-suggestions', axis: 'vertical', items: suggestions });
 
