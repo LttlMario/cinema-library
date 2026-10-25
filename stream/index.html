@@ -732,7 +732,8 @@ const TMDB_CACHE_KEY = 'cinemalibrary_tmdb_cache_v2';
 // TV mode is reserved for the Samsung wrapper. The TV's normal web browser
 // should use the same behavior as the desktop website.
 const tvUserAgent = '';
-const isTvClient = document.body.classList.contains('tv-mode') || new URLSearchParams(location.search).get('player-tv') === '1';
+const clientParams = new URLSearchParams(location.search);
+const isTvClient = document.body.classList.contains('tv-mode') || clientParams.get('player-tv') === '1' || clientParams.get('tv') === '1';
 const TMDB_CACHE_TTL = isTvClient ? 30 * 60 * 1000 : 5 * 60 * 1000;
 const TMDB_CACHE_STORE = isTvClient ? localStorage : sessionStorage;
 const TMDB_CACHE_MAX_ENTRIES = isTvClient ? 60 : 120;
