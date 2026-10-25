@@ -60,6 +60,8 @@
 
   function retryLoad() {
     loaded = false;
+    backRequestId += 1;
+    backHandledByWeb = false;
     window.clearTimeout(errorTimer);
     loading.hidden = false;
     error.hidden = true;
@@ -75,6 +77,7 @@
     if (!loaded) {
       loading.hidden = true;
       error.hidden = false;
+      try { retry.focus(); } catch (_) {}
     }
   }
 
@@ -90,10 +93,13 @@
   }
   function handleFrameError() {
     loaded = false;
+    backRequestId += 1;
+    backHandledByWeb = false;
     window.clearTimeout(errorTimer);
     errorTimer = 0;
     loading.hidden = true;
     error.hidden = false;
+    try { retry.focus(); } catch (_) {}
   }
   function bindFrame(nextFrame) {
     frame = nextFrame;
