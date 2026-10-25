@@ -38,7 +38,7 @@ expect(stream.includes("event.source !== window.parent"), 'player remote keys ar
 expect(stream.includes('providerReadyFallbackTimer') && stream.includes('Play must remain disabled until the provider confirms ready') && !stream.includes('providerReady = true;\n      const fallbackLoader'), 'player fallback never enables Play before provider ready');
 expect(stream.includes('function handleProviderError') && stream.includes("eventType.includes('error')") && stream.includes('handlePlayerFailure(state.server)'), 'provider errors stop playback and recover through the next source');
 expect(stream.includes('Keep processing this same arrow key') && stream.includes('if (!vis(cur)) {\n        cur = null;'), 'TV focus keeps the current D-pad action after controls restore');
-expect(stream.includes('function loadPlayer() {\n  // Preserve the current position before replacing the iframe.') && stream.includes('persistCurrentPlayback();\n  attemptedServers.add(state.server);'), 'player saves progress before replacing its source');
+expect(stream.includes('function loadPlayer() {\n  const nextProgressKey = progressIdentity();') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();'), 'player saves progress before replacing an unchanged source');
 expect(stream.includes('const TMDB_CACHE_MAX_ENTRIES = isTvClient ? 60 : 120') && stream.includes('slice(0, TMDB_CACHE_MAX_ENTRIES)'), 'player TMDB cache is bounded for TV and web');
 expect(stream.includes('lastOwnCommandKey') && stream.includes('now - lastOwnCommandAt < 180'), 'rapid duplicate Play/Pause commands are ignored');
 expect(stream.includes('playerLoadStartedAt') && stream.includes("markPlayerMilestone('controls')") && stream.includes("markPlayerMilestone('first-frame-signal')"), 'player records time-to-controls and first-frame milestones locally');
@@ -48,6 +48,7 @@ expect(stream.includes('async function fetchSubtitle') && stream.includes('timed
 expect(stream.includes('A manual search takes ownership of the subtitle request slot') && stream.includes('subtitleAutoController?.abort()'), 'manual subtitle actions cancel automatic subtitle work before fetching');
 expect(stream.includes('Never trust a stale/partial subtitle cache entry') && stream.includes('Fișierul de subtitrare nu conține replici valide'), 'invalid cached subtitles fall back to a fresh valid file');
 expect(index.includes('async function fetchTmdbWithRetry') && stream.includes('async function fetchTmdbWithRetry') && index.includes('429, 500, 502, 503, 504'), 'catalog and player retry transient TMDB failures');
+expect(stream.includes('let loadedProgressKey') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();\n    state.episode'), 'episode changes preserve progress under the old episode key');
 expect((index.match(/fonts\.googleapis\.com\/css2/g) || []).length === 1 && (stream.match(/fonts\.googleapis\.com\/css2/g) || []).length === 1, 'web and player combine Google Fonts into one request');
 expect(stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return; }"), 'TV remote Enter opens the episode picker directly');
 expect(stream.includes('subtitleAutoController') && stream.includes('signal: controller.signal'), 'automatic subtitle fetches are cancelled when the player load changes');
