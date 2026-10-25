@@ -2273,7 +2273,22 @@ $('player-error-retry').addEventListener('click', () => {
   loadPlayer();
 });
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') persistCurrentPlayback();
+  if (document.visibilityState === 'hidden') {
+    persistCurrentPlayback();
+    // A Samsung WebView can keep the iframe alive while the page is covered
+    // by the TV shell or a system dialog. Stop local polling in that state so
+    // it cannot compete with the provider or accumulate work during resume.
+    stopSubtitleDisplayLoop();
+    stopPlaybackHeartbeat();
+    stopSubtitleFallbackClock();
+    stopWatchCheckTimer();
+    return;
+  }
+  if (!ownPaused && providerReady) {
+    if (subtitleCues.length) startSubtitleDisplayLoop();
+    startPlaybackHeartbeat(playerLoadToken);
+    armWatchCheckTimer();
+  }
 });
 window.addEventListener('pagehide', persistCurrentPlayback);
 window.addEventListener('beforeunload', persistCurrentPlayback);
