@@ -2549,7 +2549,7 @@ function renderSearchSuggestions(items) {
     const title = item.title || item.name;
     const year = (item.release_date || item.first_air_date || '').slice(0, 4);
     const poster = item.poster_path ? `https://image.tmdb.org/t/p/w92${item.poster_path}` : '';
-    button.innerHTML = `${poster ? `<img src="${poster}" alt="">` : '<span></span>'}<span><strong>${escapeSearchText(title)}</strong><small>${item.media_type === 'tv' ? 'Serial' : 'Film'}${year ? ` · ${year}` : ''}</small></span>`;
+    button.innerHTML = `${poster ? `<img src="${poster}" alt="" loading="lazy" decoding="async">` : '<span></span>'}<span><strong>${escapeSearchText(title)}</strong><small>${item.media_type === 'tv' ? 'Serial' : 'Film'}${year ? ` · ${year}` : ''}</small></span>`;
     button.addEventListener('click', () => { suggestionBox.classList.remove('visible'); openModal(item); });
     suggestionBox.appendChild(button);
   });
