@@ -1459,7 +1459,7 @@ function playerUrl(item, season = 1, episode = 1) {
   const p = new URLSearchParams({ server: CINEMA_PLAYER_ID });
   p.set('tv', '1');
   if (new URLSearchParams(window.location.search).get('tv') === '1') p.set('player-tv', '1');
-  p.set('v', '20261025-stability16');
+  p.set('v', '20261025-stability17');
   const subtitlePreference = localStorage.getItem('cinemalibrary_subtitle_v1') || 'ro';
   p.set('sub', subtitlePreference === 'en' ? 'en' : 'ro');
   const type = mediaOf(item);
@@ -1513,7 +1513,7 @@ function makeCard(item, { drDate = null, removeKey = null } = {}) {
     <span class="card-badge ${isMovie ? 'movie' : 'tv'}">${isMovie ? 'Film' : 'Serial'}</span>
     ${showDrBadge ? `<span class="card-dr-badge"><span class="card-dr-dot"></span>Digital</span>` : ''}
     ${imgSrc
-      ? `<img class="card-poster" src="${imgSrc}" alt="${esc(title)}" loading="lazy" decoding="async" onerror="this.parentNode.replaceChild(makePlaceholder('${esc(title).replace(/'/g,"")}'),this)">`
+      ? `<img class="card-poster" src="${imgSrc}" alt="${esc(title)}" loading="lazy" fetchpriority="low" decoding="async" onerror="this.parentNode.replaceChild(makePlaceholder('${esc(title).replace(/'/g,"")}'),this)">`
       : `<div class="card-poster-placeholder"><span style="font-size:2rem">🎬</span><span>${esc(title)}</span></div>`}
     <div class="card-info">
       <div class="card-info-top">
