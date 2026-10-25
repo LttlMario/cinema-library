@@ -2401,6 +2401,16 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
       if (!ownPaused) toggleOwnPlayback();
       return;
     }
+    if (k === 'MediaTrackNext') {
+      e.preventDefault();
+      goNextEpisode();
+      return;
+    }
+    if (k === 'MediaTrackPrevious') {
+      e.preventDefault();
+      seekOwn(-30);
+      return;
+    }
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
     if (arrows[k]) {
       const now = performance.now();
