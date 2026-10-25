@@ -1203,6 +1203,7 @@ const FRANCHISE_ROWS = [
 let currentFilter = 'all';
 let searchResults = [];
 let searchRequestId = 0;
+let genreRequestId = 0;
 let currentModalItem = null;
 let modalTrailerTimer = null;
 let modalTrailerToken = 0;
@@ -2604,6 +2605,7 @@ clearBtn.addEventListener('click', () => {
 function resetSearch() {
   searchAbortController?.abort();
   searchAbortController = null;
+  genreRequestId += 1;
   suggestionBox.classList.remove('visible');
   suggestionBox.innerHTML = '';
   $('search-results-section').classList.remove('visible');
@@ -2703,6 +2705,10 @@ function renderSearchResults() {
 }
 
 async function showGenreResults(type, genreId, genreName) {
+  const requestId = ++genreRequestId;
+  searchAbortController?.abort();
+  const abortController = new AbortController();
+  searchAbortController = abortController;
   $('search-results-section').classList.add('visible');
   $('main').style.display = 'none';
   $('hero').style.display = 'none';
@@ -2721,8 +2727,11 @@ async function showGenreResults(type, genreId, genreName) {
     // TMDB returns only 20 results per page. Load several pages so a genre
     // selection is useful beyond the first screen of popular titles.
     const pages = await Promise.all(
-      Array.from({ length: 5 }, (_, i) => tmdb(`${endpoint}&page=${i + 1}`))
+      Array.from({ length: document.documentElement.classList.contains('tv-mode') ? 2 : 5 }, (_, i) =>
+        tmdb(`${endpoint}&page=${i + 1}`, { signal: abortController.signal })
+      )
     );
+    if (requestId !== genreRequestId || abortController.signal.aborted) return;
     const seen = new Set();
     searchResults = pages.flatMap(data => data.results || [])
       .filter(item => {
@@ -2733,10 +2742,13 @@ async function showGenreResults(type, genreId, genreName) {
       .map(item => ({ ...item, media_type: type }));
     $('search-spinner').style.display = 'none';
     renderSearchResults();
+    if (searchAbortController === abortController) searchAbortController = null;
   } catch {
+    if (abortController.signal.aborted || requestId !== genreRequestId) return;
     $('search-spinner').style.display = 'none';
     $('search-empty').style.display = 'block';
     $('search-count').textContent = 'Nu s-au putut încărca titlurile.';
+    if (searchAbortController === abortController) searchAbortController = null;
   }
 }
 
