@@ -47,7 +47,7 @@
   </main>
   <script src="assets/site-shell.js?v=20261025-shell15"></script>
   <script>
-    const token='__TMDB_TOKEN__',q=new URLSearchParams(location.search),mode=q.get('mode'),type=q.get('type')==='tv'?'tv':'movie',genre=q.get('genre')||'',names={28:'Acțiune',27:'Horror',878:'SF',53:'Thriller'},sortParam=q.get('sort');
+    const token='__TMDB_TOKEN__',q=new URLSearchParams(location.search),tvMode=q.get('tv')==='1',mode=q.get('mode'),type=q.get('type')==='tv'?'tv':'movie',genre=q.get('genre')||'',names={28:'Acțiune',27:'Horror',878:'SF',53:'Thriller'},sortParam=q.get('sort');
     let page=1,items=[],requestId=0,controller=null;const $=id=>document.getElementById(id);
     const sortAliases={latest:'primary_release_date.desc',top:'vote_average.desc'};
     if(sortAliases[sortParam]) $('sort').value=sortAliases[sortParam];
@@ -72,7 +72,7 @@
       }
     }
     function render(totalPages){
-      $('grid').innerHTML=items.map(x=>{const title=x.title||x.name||'Fără titlu';const href=`stream/?type=${type}&id=${encodeURIComponent(x.id)}&server=3&sub=ro`;return `<article class="catalog-card"><a href="${href}" aria-label="Deschide ${esc(title)}"><span class="catalog-badge">${type==='tv'?'SERIAL':'FILM'}</span><img loading="lazy" decoding="async" src="https://image.tmdb.org/t/p/w342${x.poster_path}" alt="Poster: ${esc(title)}"><p>${esc(title)}</p></a></article>`}).join('');
+      $('grid').innerHTML=items.map(x=>{const title=x.title||x.name||'Fără titlu';const href=`stream/?type=${type}&id=${encodeURIComponent(x.id)}&server=3&sub=ro${tvMode?'&tv=1':''}`;return `<article class="catalog-card"><a href="${href}" aria-label="Deschide ${esc(title)}"><span class="catalog-badge">${type==='tv'?'SERIAL':'FILM'}</span><img loading="lazy" decoding="async" src="https://image.tmdb.org/t/p/w342${x.poster_path}" alt="Poster: ${esc(title)}"><p>${esc(title)}</p></a></article>`}).join('');
       $('more').style.display=totalPages&&page<Math.min(totalPages,20)?'block':'none';
     }
     async function load(){
