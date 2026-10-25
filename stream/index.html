@@ -842,6 +842,7 @@ let subtitleFallbackTimer = 0;
 let subtitleDisplayTimer = 0;
 let providerTimeSignals = 0;
 let playbackHeartbeatTimer = 0;
+let playbackRecoveryTimer = 0;
 let lastPlaybackSignalAt = 0;
 let playbackRecoveryUsed = false;
 let providerReadyFallbackTimer = 0;
@@ -905,6 +906,10 @@ function stopPlaybackHeartbeat() {
     clearInterval(playbackHeartbeatTimer);
     playbackHeartbeatTimer = 0;
   }
+  if (playbackRecoveryTimer) {
+    clearTimeout(playbackRecoveryTimer);
+    playbackRecoveryTimer = 0;
+  }
 }
 function startPlaybackHeartbeat(loadToken) {
   stopPlaybackHeartbeat();
@@ -919,7 +924,8 @@ function startPlaybackHeartbeat(loadToken) {
       toast('Redarea pare blocată. Reiau conexiunea…');
       // Repeating play recovers the provider in most TV WebViews while
       // preserving the current position and avoiding a destructive iframe reload.
-      window.setTimeout(() => {
+      playbackRecoveryTimer = window.setTimeout(() => {
+        playbackRecoveryTimer = 0;
         if (loadToken === playerLoadToken && providerReady && !ownPaused) requestProviderPlay(loadToken);
       }, 350);
     } else {
