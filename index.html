@@ -1282,6 +1282,12 @@ function writeTmdbCache(cache) {
   clearTimeout(tmdbCacheWriteTimer);
   tmdbCacheWriteTimer = setTimeout(() => { try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(tmdbCacheMemory)); } catch {} }, 700);
 }
+function flushTmdbCache() {
+  clearTimeout(tmdbCacheWriteTimer);
+  tmdbCacheWriteTimer = 0;
+  if (!tmdbCacheMemory) return;
+  try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(tmdbCacheMemory)); } catch {}
+}
 async function fetchTmdbWithRetry(url, options = {}) {
   const maxAttempts = 2;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
@@ -3187,7 +3193,7 @@ function cleanupHomeRuntime() {
   searchAbortController = null;
   clearTimeout(searchTimer);
   clearTimeout(modalTrailerTimer);
-  clearTimeout(tmdbCacheWriteTimer);
+  flushTmdbCache();
   clearInterval(heroTimer);
   heroTimer = null;
   searchTimer = null;

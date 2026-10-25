@@ -41,6 +41,7 @@ expect(stream.includes('Keep processing this same arrow key') && stream.includes
 expect(index.includes('el.hidden || el.disabled') && index.includes("style.visibility !== 'hidden'") && stream.includes('el.hidden || el.disabled'), 'TV focus skips hidden, invisible, and disabled controls');
 expect(stream.includes('function loadPlayer() {\n  const nextProgressKey = progressIdentity();') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();'), 'player saves progress before replacing an unchanged source');
 expect(stream.includes('const TMDB_CACHE_MAX_ENTRIES = isTvClient ? 60 : 120') && stream.includes('slice(0, TMDB_CACHE_MAX_ENTRIES)'), 'player TMDB cache is bounded for TV and web');
+expect(stream.includes('function flushTmdbCache()') && stream.includes('flushTmdbCache();'), 'player TMDB cache flushes before page exit');
 expect(stream.includes('lastOwnCommandKey') && stream.includes('now - lastOwnCommandAt < 180'), 'rapid duplicate Play/Pause commands are ignored');
 expect(stream.includes('playerLoadStartedAt') && stream.includes("markPlayerMilestone('controls')") && stream.includes("markPlayerMilestone('first-frame-signal')"), 'player records time-to-controls and first-frame milestones locally');
 expect(stream.includes('id="player-error-retry"') && stream.includes("rioma:focus-player-error") && stream.includes('attemptedServers.delete(state?.server)'), 'player errors expose a retry action that is reachable by TV focus');
@@ -78,6 +79,7 @@ expect(index.includes('const tmdb = async (path, options = {})') && index.includ
 expect(index.includes('pending.homeGeneration === homeGeneration') && index.includes('pending.signal.aborted') && index.includes('pending.promise'), 'TMDB deduplication does not reuse cancelled work from an older navigation');
 expect(index.includes('if (!silent) toast(message)'), 'optional TMDB requests stay silent on isolated failures');
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
+expect(index.includes('function flushTmdbCache()') && index.includes('flushTmdbCache();'), 'home TMDB cache flushes before page exit');
 expect(index.includes('cancelHomeWork()') && index.includes('resetHomeWork()'), 'homepage TMDB work is cancelled while the player opens');
 expect(index.includes('homeWorkGeneration') && index.includes('homeGeneration !== homeWorkGeneration'), 'intentional TMDB cancellations stay silent');
 expect(index.includes("TMDB_MAX_IN_FLIGHT = document.documentElement.classList.contains('tv-mode') ? 3 : 5"), 'TV limits concurrent TMDB requests to protect WebView responsiveness');
