@@ -52,6 +52,7 @@ expect(index.includes('FRANCHISE_ROWS.forEach((cfg, index)') && index.includes('
 expect(index.includes('#rows-container .row {') && index.includes('content-visibility: auto'), 'web and TV rows defer below-the-fold layout work');
 expect(index.includes('Personalization is secondary to the first paint') && index.includes('if (!isTvMode) loadPersonalizedRow();'), 'web personalization waits until core homepage content is loaded');
 expect(siteShell.includes('aria-current="${active === key ? \'page\' : \'false\'}"') && siteShell.includes('aria-expanded="false"'), 'shell navigation exposes active page and dropdown state to TV WebViews');
+expect(siteShell.includes('function') && siteShell.includes('syncShellMenuState') && siteShell.includes('MutationObserver'), 'shell navigation keeps aria-expanded synchronized with visible dropdowns');
 expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseRowInternal'), 'franchise row requests are deduplicated while a row is loading');
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
 expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
