@@ -57,6 +57,7 @@ expect(siteShell.includes('aria-current="${active === key ? \'page\' : \'false\'
 expect(siteShell.includes('function') && siteShell.includes('syncShellMenuState') && siteShell.includes('MutationObserver'), 'shell navigation keeps aria-expanded synchronized with visible dropdowns');
 expect(siteShell.includes('aria-expanded="false"') && siteShell.includes("setAttribute('aria-expanded', 'true')") && homeNavFix.includes("setAttribute('aria-expanded', 'false')"), 'search toggle exposes and updates its expanded state');
 expect(index.includes('<div class="search-wrap" id="search-wrap">') && !index.includes('<div class="search-wrap open" id="search-wrap">'), 'TV starts with the sidebar Search button visible, not the floating field');
+expect(index.includes('<a class="nav-link active" href="index.html" data-nav="home" aria-current="page">Acasă</a>'), 'Home is a native focusable navigation control on the TV layout');
 expect(homeNavFix.includes("location.hash === '#favorites'") && homeNavFix.includes("favorites.setAttribute('aria-current'"), 'watchlist remains the active red destination on the favorites hash');
 expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseRowInternal'), 'franchise row requests are deduplicated while a row is loading');
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
