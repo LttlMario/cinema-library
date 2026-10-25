@@ -1217,7 +1217,9 @@ const tmdbPending = new Map();
 let tmdbCacheMemory = null;
 let tmdbCacheWriteTimer = 0;
 let homeWorkController = new AbortController();
+let homeWorkGeneration = 0;
 function cancelHomeWork() {
+  homeWorkGeneration += 1;
   homeWorkController.abort();
 }
 function resetHomeWork() {
@@ -1255,6 +1257,7 @@ function writeTmdbCache(cache) {
 }
 const tmdb = async (path, options = {}) => {
   const silent = options?.silent === true;
+  const homeGeneration = homeWorkGeneration;
   const localizedPath = `${path}${path.includes('?') ? '&' : '?'}language=ro-RO`;
   const cache = readTmdbCache();
   const cached = cache[localizedPath];
@@ -1290,6 +1293,7 @@ const tmdb = async (path, options = {}) => {
     return await request;
   } catch (error) {
     if (cached) return cached.data;
+    if (error.name === 'AbortError' && (options?.signal?.aborted || homeGeneration !== homeWorkGeneration)) throw error;
     const message = error.name === 'AbortError' ? 'TMDB nu a răspuns la timp.' : 'Catalogul TMDB nu este disponibil momentan.';
     if (!silent) toast(message);
     throw new Error(message);
