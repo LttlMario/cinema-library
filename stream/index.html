@@ -787,6 +787,8 @@ let providerTimeSignals = 0;
 let playbackHeartbeatTimer = 0;
 let lastPlaybackSignalAt = 0;
 let playbackRecoveryUsed = false;
+let progressSaveTimer = 0;
+let lastProgressSaveAt = 0;
 let controlsPaintAt = 0;
 let controlsPaintTimer = 0;
 let resumePromptShown = false;
@@ -1319,6 +1321,21 @@ function savePlaybackProgress() {
   } catch {}
 }
 
+function schedulePlaybackProgressSave() {
+  const now = performance.now();
+  if (now - lastProgressSaveAt >= 5000) {
+    lastProgressSaveAt = now;
+    savePlaybackProgress();
+    return;
+  }
+  if (progressSaveTimer) return;
+  progressSaveTimer = window.setTimeout(() => {
+    progressSaveTimer = 0;
+    lastProgressSaveAt = performance.now();
+    savePlaybackProgress();
+  }, Math.max(250, 5000 - (now - lastProgressSaveAt)));
+}
+
 function clearPlaybackProgress() {
   try {
     const key = `${state.type}-${state.id}`;
@@ -1511,7 +1528,7 @@ window.addEventListener('message', event => {
   if (Number.isFinite(progress) && state?.server === 3) {
     state.resumeAt = progress;
     if (completed) clearPlaybackProgress();
-    else savePlaybackProgress();
+    else schedulePlaybackProgressSave();
   }
   if (shouldAutoNext) {
     autoNextEpisodeToken += 1;
