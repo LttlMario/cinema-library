@@ -2804,6 +2804,8 @@ $('clear-filters').addEventListener('click', () => {
     ].filter(vis);
     if (header.length) secs.push({ key: 'header', items: header, axis: 'vertical' });
 
+    const searchOpen = searchWrap?.classList.contains('open') || searchWrap?.classList.contains('search-open');
+    if (searchOpen && vis(searchInput)) secs.push({ key: 'search-input', axis: 'vertical', items: [searchInput] });
     const suggestions = [...document.querySelectorAll('#search-suggestions .search-suggestion')].filter(vis);
     if (suggestions.length) secs.push({ key: 'search-suggestions', axis: 'vertical', items: suggestions });
 
@@ -2840,6 +2842,15 @@ $('clear-filters').addEventListener('click', () => {
     setFocus((header || secs[0]).items[0]);
   }
 
+  document.addEventListener('cinema:search-opened', () => {
+    if (!active || !vis(searchInput)) return;
+    setFocus(searchInput, false);
+  });
+  document.addEventListener('cinema:search-closed', () => {
+    if (!active || !vis($('search-toggle'))) return;
+    setFocus($('search-toggle'), false);
+  });
+
   function move(dx, dy) {
     // The hero auto-rotates: re-attach to the now-active slide's button
     if (cur && cur.classList.contains('hero-play') && !vis(cur)) {
@@ -2854,8 +2865,13 @@ $('clear-filters').addEventListener('click', () => {
     const ii = sec.items.indexOf(cur);
 
     if (sec.key === 'search-suggestions' && dy < 0) {
-      const searchButton = $('search-toggle');
-      if (searchButton && vis(searchButton)) { setFocus(searchButton, false); return; }
+      const searchField = vis(searchInput) ? searchInput : $('search-toggle');
+      if (searchField && vis(searchField)) { setFocus(searchField, false); return; }
+    }
+    if (sec.key === 'search-input' && dy) {
+      const target = dy < 0 ? $('search-toggle') : document.querySelector('#search-suggestions .search-suggestion');
+      if (target && vis(target)) { setFocus(target, false); return; }
+      if (dy < 0 && vis($('search-toggle'))) { setFocus($('search-toggle'), false); return; }
     }
 
     if (dx) {
