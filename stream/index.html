@@ -1925,12 +1925,14 @@ async function openEpisodePicker() {
   if (!panel) return;
   panel.hidden = false;
   renderEpisodePicker();
+  // Move TV focus immediately; the season request may take several seconds
+  // on a WebView and must not leave the newly opened picker unfocused.
+  document.dispatchEvent(new Event('rioma:focus-episode-picker'));
   const season = Number($('episode-picker-season')?.value || state.season || 1);
   if (!seasonCache[`${state.id}-${season}`]) {
     try { seasonCache[`${state.id}-${season}`] = await tmdb(`/tv/${state.id}/season/${season}`); } catch {}
     renderEpisodePicker();
   }
-  document.dispatchEvent(new Event('rioma:focus-episode-picker'));
 }
 
 function setupEpisodePicker() {
