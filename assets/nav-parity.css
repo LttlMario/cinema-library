@@ -29,6 +29,15 @@
   box-shadow: 0 4px 18px rgba(229,9,20,.28) !important;
 }
 
+/* Watchlist is a real navigation destination too; keep its active state
+   identical to Home/Movies/TV Shows instead of losing the red marker. */
+:is(#header, .cinema-shell-header) #favorites-nav.active {
+  background: #e50914 !important;
+  border: 0 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 18px rgba(229,9,20,.28) !important;
+}
+
 /* Remote/keyboard focus is the pressed-looking state on TV. */
 :is(#header, .cinema-shell-header) .nav-link:focus,
 :is(#header, .cinema-shell-header) .library-nav-btn:focus,
