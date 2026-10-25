@@ -3003,6 +3003,7 @@ $('clear-filters').addEventListener('click', () => {
 
     const ae = document.activeElement;
     const typing = ae && ae.tagName === 'INPUT';
+    const searchOpen = searchWrap?.classList.contains('open') || searchWrap?.classList.contains('search-open');
 
     if (k === 'Escape') {
       if (typing) ae.blur();
@@ -3010,6 +3011,15 @@ $('clear-filters').addEventListener('click', () => {
     }
 
     if (typing) {
+      if ((k === 'ArrowUp' || k === 'ArrowDown') && searchOpen && ae === searchInput) {
+        e.preventDefault();
+        const target = k === 'ArrowUp'
+          ? $('search-toggle')
+          : document.querySelector('#search-suggestions .search-suggestion');
+        if (target && target.getClientRects().length) setFocus(target, false);
+        else { cur = searchInput; searchInput.focus({ preventScroll: true }); }
+        return;
+      }
       if (k === 'ArrowUp' || k === 'ArrowDown') ae.blur();  // leave the field, then move
       else return;                  // ←/→ move the caret, Enter searches (native)
     }
