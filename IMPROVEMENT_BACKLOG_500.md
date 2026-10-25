@@ -18,7 +18,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 12. [x] măsoară timpul până la primul control pentru stabilitatea playerului.
 13. [ ] verifică funcționarea pe ecran mic pentru stabilitatea playerului.
 14. [ ] verifică funcționarea pe WebView TV pentru stabilitatea playerului.
-15. [ ] adaugă feedback vizibil pentru utilizator pentru stabilitatea playerului.
+15. [x] adaugă feedback vizibil pentru utilizator pentru stabilitatea playerului.
 16. [x] păstrează focusul după acțiune pentru stabilitatea playerului.
 17. [x] testează apăsarea rapidă repetată pentru stabilitatea playerului.
 18. [x] previne blocarea UI în timpul fetchului pentru stabilitatea playerului.
