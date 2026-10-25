@@ -26,6 +26,7 @@ const sw = read('sw.js');
 const tvIndex = read('app/samsung-tv/index.html');
 const tvMain = read('app/samsung-tv/main.js');
 const tvConfig = read('app/samsung-tv/config.xml');
+const siteShell = read('assets/site-shell.js');
 
 expect(stream.includes('autoplay=false'), 'provider URL keeps autoplay disabled');
 expect(stream.includes('if (!playbackIntent)'), 'provider play events require explicit playback intent');
@@ -50,6 +51,7 @@ expect(index.includes('homeWorkGeneration') && index.includes('homeGeneration !=
 expect(index.includes('FRANCHISE_ROWS.forEach((cfg, index)') && index.includes('index * 350'), 'web franchise rows are staggered to avoid a post-paint request burst');
 expect(index.includes('#rows-container .row {') && index.includes('content-visibility: auto'), 'web and TV rows defer below-the-fold layout work');
 expect(index.includes('Personalization is secondary to the first paint') && index.includes('if (!isTvMode) loadPersonalizedRow();'), 'web personalization waits until core homepage content is loaded');
+expect(siteShell.includes('aria-current="${active === key ? \'page\' : \'false\'}"') && siteShell.includes('aria-expanded="false"'), 'shell navigation exposes active page and dropdown state to TV WebViews');
 expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseRowInternal'), 'franchise row requests are deduplicated while a row is loading');
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
 expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
