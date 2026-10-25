@@ -75,6 +75,7 @@ expect(tvIndex.includes('tvapp=1.7.8') && !tvIndex.includes('tvapp=1.7.8&fresh=1
 expect(tvMain.includes('tvapp=1.7.8&fresh=1'), 'TV retry path requests a fresh live document');
 expect(tvMain.includes('BACK_HANDSHAKE_TIMEOUT = 700'), 'TV Back uses the guarded handshake timeout');
 expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back acknowledgements only from the live page');
+expect(tvMain.includes("event.target !== document.body && event.target !== frame"), 'TV wrapper does not steal focus from its own controls');
 expect(tvMain.includes('errorTimer') && tvMain.includes('clearTimeout(errorTimer)'), 'TV retry clears stale load-error timers');
 expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://cinesrc.st') && tvIndex.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'TV wrapper preconnects to image, video and subtitle origins');
 expect(tvConfig.includes('version="1.7.8"'), 'TV package version matches the wrapper source');
