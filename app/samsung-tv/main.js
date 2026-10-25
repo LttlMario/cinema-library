@@ -62,7 +62,11 @@
     window.clearTimeout(errorTimer);
     loading.hidden = false;
     error.hidden = true;
-    frame.src = 'https://cinema.panel-pro.ro/?tv=1&tvapp=1.7.8&fresh=1&retry=' + Date.now();
+    var nextFrame = frame.cloneNode(false);
+    nextFrame.removeAttribute('src');
+    frame.replaceWith(nextFrame);
+    bindFrame(nextFrame);
+    nextFrame.src = 'https://cinema.panel-pro.ro/?tv=1&tvapp=1.7.9&fresh=1&retry=' + Date.now();
     errorTimer = window.setTimeout(showError, 15000);
   }
 
@@ -73,7 +77,7 @@
     }
   }
 
-  frame.addEventListener('load', function () {
+  function handleFrameLoad() {
     loaded = true;
     window.clearTimeout(errorTimer);
     errorTimer = 0;
@@ -82,7 +86,12 @@
     error.hidden = true;
     frame.setAttribute('tabindex', '0');
     try { frame.focus(); frame.contentWindow.focus(); } catch (_) {}
-  });
+  }
+  function bindFrame(nextFrame) {
+    frame = nextFrame;
+    frame.addEventListener('load', handleFrameLoad);
+  }
+  bindFrame(frame);
   retry.addEventListener('click', retryLoad);
   window.addEventListener('message', function (event) {
     // Ignore acknowledgements from unrelated frames or browser extensions.
@@ -100,6 +109,10 @@
   document.addEventListener('keydown', function (event) {
     var code = Number(event.keyCode || event.which);
     var key = event.key || ({37:'ArrowLeft', 38:'ArrowUp', 39:'ArrowRight', 40:'ArrowDown', 13:'Enter'}[code] || '');
+    // Keep the wrapper's retry control native. Forwarding its arrows into the
+    // iframe makes the error state impossible to operate with the remote.
+    if (event.target === retry) return;
+    if (!loaded && code !== BACK_KEY && !EXIT_KEYS[code]) return;
     if (code === BACK_KEY) {
       event.preventDefault();
       var requestId = ++backRequestId;
@@ -129,3 +142,4 @@
   }, true);
   errorTimer = window.setTimeout(showError, 15000);
 }());
+
