@@ -44,7 +44,7 @@
     function render(){const query=(searchInput?.value||'').trim().toLocaleLowerCase('ro-RO');const list=catalogs[current].filter(g=>g.name.toLocaleLowerCase('ro-RO').includes(query));status.textContent=`${list.length} genuri disponibile pentru ${current==='movie'?'filme':'seriale'}`;grid.innerHTML=list.map(g=>`<a class="genre-card" href="catalog.html?type=${current}&genre=${g.id}"><strong>${g.name}</strong><span aria-hidden="true">›</span></a>`).join('')||'<p class="empty">Nu am găsit niciun gen pentru căutarea ta.</p>'}
     document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{current=tab.dataset.type;document.querySelectorAll('.tab').forEach(x=>{const active=x===tab;x.classList.toggle('active',active);x.setAttribute('aria-selected',String(active))});render()}));if(searchInput)searchInput.addEventListener('input',render);load();
   </script>
-  <script src="assets/site-shell.js?v=20261025-shell14"></script>
+  <script src="assets/site-shell.js?v=20261025-shell15"></script>
 <script src="assets/tv-pointer.js"></script>
 </body>
 </html>
