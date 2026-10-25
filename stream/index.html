@@ -2557,9 +2557,14 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
     // element. Restore the controls before calculating the next D-pad target.
     if (cur && !vis(cur)) {
       showOwnControls();
-      if (!vis(cur)) { cur = null; focusInitial(); }
-      e.preventDefault();
-      return;
+      if (!vis(cur)) {
+        cur = null;
+        focusInitial();
+        e.preventDefault();
+        return;
+      }
+      // Keep processing this same arrow key. The user should not need a
+      // second press just because the controls timed out a moment earlier.
     }
 
     if (k === 'Enter') {
