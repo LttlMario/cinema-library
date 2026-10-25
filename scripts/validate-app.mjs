@@ -43,6 +43,7 @@ expect(stream.includes('const TMDB_CACHE_MAX_ENTRIES = isTvClient ? 60 : 120') &
 expect(stream.includes('lastOwnCommandKey') && stream.includes('now - lastOwnCommandAt < 180'), 'rapid duplicate Play/Pause commands are ignored');
 expect(stream.includes('playerLoadStartedAt') && stream.includes("markPlayerMilestone('controls')") && stream.includes("markPlayerMilestone('first-frame-signal')"), 'player records time-to-controls and first-frame milestones locally');
 expect(stream.includes('id="player-error-retry"') && stream.includes("rioma:focus-player-error") && stream.includes('attemptedServers.delete(state?.server)'), 'player errors expose a retry action that is reachable by TV focus');
+expect(stream.includes("showPlayerError('Sursa video nu a răspuns la timp.')") && stream.includes('if (loadToken !== playerLoadToken || settled) return;'), 'slow provider loads expose an actionable timeout state');
 expect(stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return; }"), 'TV remote Enter opens the episode picker directly');
 expect(stream.includes('subtitleAutoController') && stream.includes('signal: controller.signal'), 'automatic subtitle fetches are cancelled when the player load changes');
 expect(stream.includes("if (error.name === 'AbortError') return;"), 'cancelled subtitle fetches do not show stale errors');
