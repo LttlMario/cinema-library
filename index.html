@@ -1944,7 +1944,10 @@ async function loadDigitalRow(cfg) {
     const digitalRequests = document.documentElement.classList.contains('tv-mode')
       ? [tmdb(endpointRecent), tmdb(endpointPopular)]
       : [tmdb(endpointRecent), tmdb(`${endpointRecent}&page=2`), tmdb(endpointPopular), tmdb(`${endpointPopular}&page=2`)];
-    const digitalPages = await Promise.all(digitalRequests);
+    const digitalSettlements = await Promise.allSettled(digitalRequests);
+    const digitalPages = digitalSettlements
+      .filter(result => result.status === 'fulfilled')
+      .map(result => result.value);
 
     // Merge both result sets, deduplicate by id
     const seen = new Set();
