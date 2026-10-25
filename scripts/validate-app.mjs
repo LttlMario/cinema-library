@@ -32,6 +32,7 @@ expect(stream.includes('if (!playbackIntent)'), 'provider play events require ex
 expect(stream.includes('requestProviderPlay'), 'all explicit play paths use the intent gate');
 expect(!/\bownCommand\(['"]play['"]\)/.test(stream.replace(/function requestProviderPlay[\s\S]*?\n}\n/, '')), 'no unguarded direct play command remains');
 expect(stream.includes("event.source !== playerFrame.contentWindow"), 'player events are accepted only from the active iframe');
+expect(stream.includes("event.source !== window.parent"), 'player remote keys are accepted only from the wrapper page');
 
 expect(index.includes('searchAbortController'), 'search requests are abortable');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
