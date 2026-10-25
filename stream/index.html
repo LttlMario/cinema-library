@@ -2277,7 +2277,8 @@ function toast(msg){
 /* ─── NAV ─── */
 // The site is deployed as a GitHub Pages project, so `/` points to the
 // account root. Resolve the parent directory to stay inside this repository.
-const HOME_URL = new URL('../', document.baseURI).href;
+const HOME_URL = new URL('../', document.baseURI);
+if (isTvClient) HOME_URL.searchParams.set('tv', '1');
 $('logo').addEventListener('click', () => { location.href = HOME_URL; });
 function navigateBackFromPlayer() {
   // A single Back action must leave fullscreen and return to the title popup,
