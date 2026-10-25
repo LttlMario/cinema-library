@@ -4,13 +4,13 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 
 ## Stabilitatea playerului
 
-1. [ ] adaugă un test de pornire fără autoplay pentru stabilitatea playerului.
+1. [x] adaugă un test de pornire fără autoplay pentru stabilitatea playerului.
 2. [ ] verifică tratarea erorilor de rețea pentru stabilitatea playerului.
-3. [ ] adaugă timeout și mesaj de retry pentru stabilitatea playerului.
-4. [ ] previne comenzile duplicate pentru stabilitatea playerului.
+3. [x] adaugă timeout și mesaj de retry pentru stabilitatea playerului.
+4. [x] previne comenzile duplicate pentru stabilitatea playerului.
 5. [ ] salvează starea înainte de schimbarea sursei pentru stabilitatea playerului.
-6. [ ] testează revenirea după pierderea conexiunii pentru stabilitatea playerului.
-7. [ ] limitează operațiile concurente pentru stabilitatea playerului.
+6. [x] testează revenirea după pierderea conexiunii pentru stabilitatea playerului.
+7. [x] limitează operațiile concurente pentru stabilitatea playerului.
 8. [ ] elimină listener-ele la închiderea componentei pentru stabilitatea playerului.
 9. [ ] verifică starea după schimbarea episodului pentru stabilitatea playerului.
 10. [ ] adaugă fallback pentru răspuns invalid pentru stabilitatea playerului.
@@ -21,13 +21,13 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 15. [ ] adaugă feedback vizibil pentru utilizator pentru stabilitatea playerului.
 16. [ ] păstrează focusul după acțiune pentru stabilitatea playerului.
 17. [ ] testează apăsarea rapidă repetată pentru stabilitatea playerului.
-18. [ ] previne blocarea UI în timpul fetchului pentru stabilitatea playerului.
-19. [ ] verifică anularea lucrului vechi pentru stabilitatea playerului.
-20. [ ] adaugă acoperire în validator pentru stabilitatea playerului.
+18. [x] previne blocarea UI în timpul fetchului pentru stabilitatea playerului.
+19. [x] verifică anularea lucrului vechi pentru stabilitatea playerului.
+20. [x] adaugă acoperire în validator pentru stabilitatea playerului.
 21. [ ] documentează comportamentul așteptat pentru stabilitatea playerului.
 22. [ ] verifică fallback-ul când datele lipsesc pentru stabilitatea playerului.
-23. [ ] verifică compatibilitatea cu browserul TV pentru stabilitatea playerului.
-24. [ ] adaugă scenariu de regresie pentru stabilitatea playerului.
+23. [x] verifică compatibilitatea cu browserul TV pentru stabilitatea playerului.
+24. [x] adaugă scenariu de regresie pentru stabilitatea playerului.
 25. [ ] marchează rezultatul în checklist pentru stabilitatea playerului.
 
 ## Navigarea cu telecomanda
