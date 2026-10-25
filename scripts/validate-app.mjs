@@ -38,6 +38,7 @@ expect(stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return
 expect(stream.includes('subtitleAutoController') && stream.includes('signal: controller.signal'), 'automatic subtitle fetches are cancelled when the player load changes');
 expect(stream.includes("if (error.name === 'AbortError') return;"), 'cancelled subtitle fetches do not show stale errors');
 expect(stream.includes('const tmdbInFlight = new Map()') && stream.includes('tmdbInFlight.get(localizedPath)'), 'player TMDB requests are deduplicated while in flight');
+expect(stream.includes('subtitleRequestController') && stream.includes("subtitleRequestController?.abort()"), 'manual subtitle requests are cancelled on stop or player changes');
 
 expect(index.includes('searchAbortController'), 'search requests are abortable');
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
