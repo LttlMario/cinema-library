@@ -145,8 +145,8 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 ## TMDB și datele catalogului
 
 126. [ ] adaugă un test de pornire fără autoplay pentru tmdb și datele catalogului.
-127. [ ] verifică tratarea erorilor de rețea pentru tmdb și datele catalogului.
-128. [ ] adaugă timeout și mesaj de retry pentru tmdb și datele catalogului.
+127. [x] verifică tratarea erorilor de rețea pentru tmdb și datele catalogului.
+128. [x] adaugă timeout și mesaj de retry pentru tmdb și datele catalogului.
 129. [ ] previne comenzile duplicate pentru tmdb și datele catalogului.
 130. [ ] salvează starea înainte de schimbarea sursei pentru tmdb și datele catalogului.
 131. [ ] testează revenirea după pierderea conexiunii pentru tmdb și datele catalogului.
