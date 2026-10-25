@@ -25,7 +25,17 @@ self.addEventListener('fetch', event => {
     '/assets/site-shell.css', '/assets/site-shell.js', '/assets/home-nav-fix.js', '/assets/nav-parity.css'
   ].includes(url.pathname);
   if (isShell) {
-    const cacheOptions = url.pathname === '/stream/index.html' ? {} : { ignoreSearch: true };
+    // Player URLs contain the selected title, episode, server and subtitle.
+    // Never cache those dynamic query variants: otherwise a TV cache can grow
+    // once per episode and replay the wrong player state after navigation.
+    if (url.pathname === '/stream/index.html') {
+      event.respondWith(
+        fetch(request, { cache: url.searchParams.has('fresh') || request.cache === 'reload' ? 'no-store' : 'default' })
+          .catch(() => caches.match(new Request(`${url.origin}${url.pathname}`)).then(cached => cached || caches.match('./404.html')))
+      );
+      return;
+    }
+    const cacheOptions = { ignoreSearch: true };
     const forceFresh = url.searchParams.has('fresh') || request.cache === 'reload';
     if (forceFresh) {
       event.respondWith(
@@ -33,7 +43,7 @@ self.addEventListener('fetch', event => {
           // Fresh player documents contain title/server query parameters and
           // are intentionally not cached. Caching every TV retry would leave
           // one permanent entry per movie/episode in the shell cache.
-          if (response.ok && url.pathname !== '/stream/index.html') {
+          if (response.ok) {
             const cacheKey = new Request(`${url.origin}${url.pathname}`);
             caches.open(CACHE).then(cache => cache.put(cacheKey, response.clone())).catch(() => {});
           }
