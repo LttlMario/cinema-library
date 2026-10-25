@@ -2038,6 +2038,7 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
 (function () {
   let active = false;
   let cur = null;
+  let lastNavAt = 0;
 
   const vis = el => !!(el && el.getClientRects().length);
 
@@ -2216,6 +2217,11 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const k = e.key;
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (arrows[k]) {
+      const now = performance.now();
+      if (now - lastNavAt < 70) { e.preventDefault(); return; }
+      lastNavAt = now;
+    }
 
     if (['Escape', 'Backspace', 'BrowserBack', 'GoBack', 'Back', 'XF86Back'].includes(k) || e.keyCode === 10009 || e.keyCode === 461) {
       const watchCheck = $('watch-check-prompt');
