@@ -2727,7 +2727,8 @@ $('clear-filters').addEventListener('click', () => {
       const s = [{ key: null, items: [$('modal-close')] }];
       if ($('tv-selectors').style.display !== 'none')
         s.push({ key: null, items: [$('season-select'), $('episode-select')] });
-      s.push({ key: null, items: [$('modal-watch-btn'), $('modal-watched-btn'), $('modal-later-btn'), $('modal-favorite-btn'), $('modal-report-btn'), $('official-link')].filter(vis) });
+      // Keep remote focus in the same order as the visible popup actions.
+      s.push({ key: null, items: [$('modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn'), $('modal-report-btn'), $('official-link')].filter(vis) });
       return s;
     }
     const openSubmenu = document.querySelector('.nav-submenu.open');
