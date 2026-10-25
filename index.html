@@ -1518,6 +1518,12 @@ function makePlaceholder(title) {
   return d;
 }
 
+function appendCards(parent, items, options) {
+  const fragment = document.createDocumentFragment();
+  items.forEach(item => fragment.appendChild(makeCard(item, options)));
+  parent.appendChild(fragment);
+}
+
 /* ─── ROW BUILDER ─── */
 function buildRow(cfg, { top10 = false } = {}) {
   const row = document.createElement('section');
@@ -1691,7 +1697,7 @@ function renderLibraryRows() {
       row.querySelector('.row-head').appendChild(clear);
     }
     scroller.innerHTML = '';
-    items.slice(0, 12).forEach(entry => scroller.appendChild(makeCard(entry, { removeKey: section.clearable ? section.key : null })));
+    appendCards(scroller, items.slice(0, 12), { removeKey: section.clearable ? section.key : null });
     container.prepend(row);
   });
 }
@@ -1734,7 +1740,7 @@ async function loadPersonalizedRow() {
   const row = scroller.closest('.row');
   row.classList.add('personalized-row');
   scroller.innerHTML = '';
-  items.forEach(item => scroller.appendChild(makeCard(item)));
+  appendCards(scroller, items);
 }
 
 $('favorites-nav').addEventListener('click', () => {
@@ -1763,7 +1769,7 @@ async function loadRow(cfg) {
       .slice(0, 25);
     scroller.innerHTML = '';
     if (!items.length) { scroller.closest('.row').remove(); return; }
-    items.forEach(item => scroller.appendChild(makeCard(item)));
+  appendCards(scroller, items);
   } catch (e) {
     scroller.closest('.row').remove();
   }
@@ -1795,7 +1801,7 @@ async function loadFranchiseRow(cfg) {
     });
   if (!items.length) { scroller.closest('.row')?.remove(); return; }
   scroller.innerHTML = '';
-  items.forEach(item => scroller.appendChild(makeCard(item)));
+  appendCards(scroller, items);
 }
 
 /* ─── RECENTLY ON DIGITAL ROW ─── */
@@ -1862,7 +1868,7 @@ async function loadDigitalRow(cfg) {
     });
 
     scroller.innerHTML = '';
-    drDates.slice(0, 25).forEach(({ item }) => scroller.appendChild(makeCard(item)));
+    appendCards(scroller, drDates.slice(0, 25).map(({ item }) => item));
   } catch (e) {
     scroller.closest('.row').remove();
   }
