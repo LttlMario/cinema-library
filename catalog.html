@@ -86,7 +86,9 @@
         $('status').textContent='Catalogul nu este disponibil momentan. Încearcă din nou.';$('more').style.display='none'
       }finally{clearTimeout(timeout);if(current===requestId){$('grid').setAttribute('aria-busy','false');$('more').disabled=false}}
     }
-    $('sort').onchange=()=>{page=1;items=[];load()};$('more').onclick=()=>{page++;load()};load();
+    $('sort').onchange=()=>{page=1;items=[];load()};$('more').onclick=()=>{page++;load()};
+    window.addEventListener('pagehide',()=>{controller?.abort()},{once:true});
+    load();
   </script>
 </body>
 </html>
