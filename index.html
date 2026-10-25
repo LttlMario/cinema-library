@@ -2581,10 +2581,14 @@ $('clear-filters').addEventListener('click', () => {
   renderLibraryRows();
   const isTvMode = document.documentElement.classList.contains('tv-mode');
   if (!isTvMode) loadPersonalizedRow();
-  await Promise.all([loadGenres(), loadHero(), loadTop10()]);
-  populateAdvancedFilters();
+  // Start the hero, genre map, top-10 row and first content rows together.
+  // The old sequence waited for three TMDB requests before even creating
+  // skeletons, which made the TV WebView look frozen during first paint.
+  const warmup = Promise.allSettled([loadGenres(), loadHero(), loadTop10()]);
   const initialRows = isTvMode ? CATEGORY_ROWS.slice(0, 3) : CATEGORY_ROWS;
-  for (const cfg of initialRows) loadRow(cfg);
+  const initialLoads = initialRows.map(cfg => loadRow(cfg));
+  await Promise.allSettled([warmup, ...initialLoads]);
+  populateAdvancedFilters();
   if (isTvMode) {
     const deferred = () => {
       loadPersonalizedRow();
