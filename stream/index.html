@@ -724,11 +724,17 @@ const tvUserAgent = '';
 const isTvClient = document.body.classList.contains('tv-mode') || new URLSearchParams(location.search).get('player-tv') === '1';
 const TMDB_CACHE_TTL = isTvClient ? 30 * 60 * 1000 : 5 * 60 * 1000;
 const TMDB_CACHE_STORE = isTvClient ? localStorage : sessionStorage;
+let tmdbCacheMemory = null;
+let tmdbCacheWriteTimer = 0;
 function readTmdbCache() {
-  try { return JSON.parse(TMDB_CACHE_STORE.getItem(TMDB_CACHE_KEY) || '{}'); } catch { return {}; }
+  if (tmdbCacheMemory) return tmdbCacheMemory;
+  try { tmdbCacheMemory = JSON.parse(TMDB_CACHE_STORE.getItem(TMDB_CACHE_KEY) || '{}'); } catch { tmdbCacheMemory = {}; }
+  return tmdbCacheMemory;
 }
 function writeTmdbCache(cache) {
-  try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(cache)); } catch {}
+  tmdbCacheMemory = cache;
+  clearTimeout(tmdbCacheWriteTimer);
+  tmdbCacheWriteTimer = setTimeout(() => { try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(tmdbCacheMemory)); } catch {} }, 700);
 }
 const tmdb = async path => {
   const localizedPath = `${path}${path.includes('?') ? '&' : '?'}language=ro-RO`;
@@ -770,12 +776,16 @@ let ownDuration = 0;
 let providerReady = false;
 let subtitleCues = [];
 let subtitleOffset = 0;
+let subtitleCursor = 0;
+let subtitleLastTime = -1;
 let subtitleResults = [];
 let selectedSubtitleFileId = null;
 let subtitleAutoToken = 0;
 let subtitleFallbackTimer = 0;
 let subtitleDisplayTimer = 0;
 let providerTimeSignals = 0;
+let controlsPaintAt = 0;
+let controlsPaintTimer = 0;
 let resumePromptShown = false;
 let resumeDecision = null;
 let resumePlayerReady = false;
@@ -794,7 +804,13 @@ function ownFormatTime(value) {
   const seconds = Math.max(0, Number(value) || 0);
   return `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
 }
-function updateOwnControls() {
+function updateOwnControls(force = false) {
+  const now = performance.now();
+  if (!force && now - controlsPaintAt < 120) {
+    if (!controlsPaintTimer) controlsPaintTimer = window.setTimeout(() => { controlsPaintTimer = 0; updateOwnControls(true); }, 120);
+    return;
+  }
+  controlsPaintAt = now;
   const play = $('own-play');
   const mute = $('own-mute');
   const timeline = $('own-timeline');
@@ -885,7 +901,8 @@ function parseSubtitles(text) {
     const [start, end] = lines[index].split('-->').map(part => part.trim().split(/\s+/)[0]);
     const time = value => { const parts = value.replace(',', '.').split(':').map(Number); return parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1]; };
     return { start: time(start), end: time(end), text: lines.slice(index + 1).join('\n').replace(/<[^>]+>/g, '') };
-  }).filter(item => item && Number.isFinite(item.start) && Number.isFinite(item.end) && item.text);
+  }).filter(item => item && Number.isFinite(item.start) && Number.isFinite(item.end) && item.text)
+    .sort((a, b) => a.start - b.start);
 }
 function updateSubtitleSettings() {
   const text = $('subtitle-text');
@@ -901,7 +918,12 @@ function updateSubtitleDisplay(currentTime = ownCurrentTime) {
   if (!layer || !text) return;
   if (ownPaused) { text.textContent = ''; layer.hidden = true; return; }
   const time = Number(currentTime) || 0;
-  const cue = subtitleCues.find(item => time + subtitleOffset >= item.start && time + subtitleOffset <= item.end);
+  const adjusted = time + subtitleOffset;
+  if (adjusted < subtitleLastTime) subtitleCursor = 0;
+  subtitleLastTime = adjusted;
+  while (subtitleCursor < subtitleCues.length && subtitleCues[subtitleCursor].end < adjusted) subtitleCursor++;
+  const candidate = subtitleCues[subtitleCursor];
+  const cue = candidate && adjusted >= candidate.start && adjusted <= candidate.end ? candidate : null;
   text.textContent = cue?.text || '';
   layer.hidden = !cue;
 }
@@ -947,8 +969,10 @@ function stopSubtitleDisplayLoop() {
 }
 function startSubtitleDisplayLoop() {
   stopSubtitleDisplayLoop();
+  subtitleCursor = 0;
+  subtitleLastTime = -1;
   updateSubtitleDisplay(ownCurrentTime);
-  subtitleDisplayTimer = window.setInterval(() => updateSubtitleDisplay(ownCurrentTime), 120);
+  subtitleDisplayTimer = window.setInterval(() => updateSubtitleDisplay(ownCurrentTime), 220);
 }
 function stopSubtitleFallbackClock() {
   if (subtitleFallbackTimer) { clearInterval(subtitleFallbackTimer); subtitleFallbackTimer = 0; }
