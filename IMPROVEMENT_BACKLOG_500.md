@@ -204,11 +204,11 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 177. [ ] verifică tratarea erorilor de rețea pentru progres și reluare.
 178. [ ] adaugă timeout și mesaj de retry pentru progres și reluare.
 179. [ ] previne comenzile duplicate pentru progres și reluare.
-180. [ ] salvează starea înainte de schimbarea sursei pentru progres și reluare.
+180. [x] salvează starea înainte de schimbarea sursei pentru progres și reluare.
 181. [ ] testează revenirea după pierderea conexiunii pentru progres și reluare.
 182. [ ] limitează operațiile concurente pentru progres și reluare.
 183. [ ] elimină listener-ele la închiderea componentei pentru progres și reluare.
-184. [ ] verifică starea după schimbarea episodului pentru progres și reluare.
+184. [x] verifică starea după schimbarea episodului pentru progres și reluare.
 185. [ ] adaugă fallback pentru răspuns invalid pentru progres și reluare.
 186. [ ] măsoară timpul până la primul cadru pentru progres și reluare.
 187. [ ] măsoară timpul până la primul control pentru progres și reluare.
