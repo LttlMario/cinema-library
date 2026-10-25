@@ -1362,6 +1362,7 @@ function syncUrl() {
   if (state.type === 'tv') { p.set('s', state.season); p.set('e', state.episode); }
   p.set('server', state.server);
   p.set('sub', state.subtitle);
+  if (isTvClient) p.set('tv', '1');
   history.replaceState(null, '', `${location.pathname}?${p.toString()}`);
 }
 
@@ -1593,6 +1594,7 @@ function recommendationUrl(item) {
     params.set('s', '1');
     params.set('e', '1');
   }
+  if (isTvClient) params.set('tv', '1');
   if (document.body.classList.contains('embedded')) params.set('embedded', '1');
   return `${location.pathname}?${params.toString()}`;
 }
