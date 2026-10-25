@@ -2174,7 +2174,15 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
   let cur = null;
   let lastNavAt = 0;
 
-  const vis = el => !!(el && el.getClientRects().length);
+  function vis(el) {
+    if (!el || !el.getClientRects().length) return false;
+    if (el.hidden || el.getAttribute('aria-hidden') === 'true') return false;
+    // A timed-out player control still has a layout box, but it is not an
+    // actionable TV focus target while it is translated away from the screen.
+    // Ignore that state so D-pad focus cannot land on an invisible button.
+    if (el.closest('.tv-hidden, .controls-idle')) return false;
+    return true;
+  }
 
   function handleRemoteKey(key) {
     if (!key) return;
@@ -2270,6 +2278,10 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
 
   function focusInitial() {
     if (document.body.classList.contains('embedded') && vis($('own-play'))) { showOwnControls(); setFocus($('own-play')); return; }
+    // When the player is already open, the first remote arrow should restore
+    // the timeline instead of jumping to a hidden header or an invisible Back
+    // button. This mirrors the native TV-player focus model.
+    if (vis($('own-timeline'))) { showOwnControls(); setFocus($('own-timeline')); return; }
     const sel = document.querySelector('.server-card.selected');
     if (sel && vis(sel)) { setFocus(sel); return; }
     const secs = getSections();
@@ -2413,6 +2425,15 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
         e.preventDefault();
         activateCurrent();
       }
+      return;
+    }
+
+    // Controls may auto-hide while the remote focus remains on the previous
+    // element. Restore the controls before calculating the next D-pad target.
+    if (cur && !vis(cur)) {
+      showOwnControls();
+      if (!vis(cur)) { cur = null; focusInitial(); }
+      e.preventDefault();
       return;
     }
 
