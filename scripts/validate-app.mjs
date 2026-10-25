@@ -56,6 +56,7 @@ expect(index.includes('#rows-container .row {') && index.includes('content-visib
 expect(index.includes('Personalization is secondary to the first paint') && index.includes('if (!isTvMode) loadPersonalizedRow();'), 'web personalization waits until core homepage content is loaded');
 expect(siteShell.includes('aria-current="${active === key ? \'page\' : \'false\'}"') && siteShell.includes('aria-expanded="false"'), 'shell navigation exposes active page and dropdown state to TV WebViews');
 expect(siteShell.includes('function') && siteShell.includes('syncShellMenuState') && siteShell.includes('MutationObserver'), 'shell navigation keeps aria-expanded synchronized with visible dropdowns');
+expect(siteShell.includes("style.opacity !== '0'") && siteShell.includes("style.pointerEvents !== 'none'") && siteShell.includes('el.offsetWidth > 0'), 'secondary-page TV focus excludes invisible Search controls');
 expect(siteShell.includes('aria-expanded="false"') && siteShell.includes("setAttribute('aria-expanded', 'true')") && homeNavFix.includes("setAttribute('aria-expanded', 'false')"), 'search toggle exposes and updates its expanded state');
 expect(index.includes('<div class="search-wrap" id="search-wrap">') && !index.includes('<div class="search-wrap open" id="search-wrap">'), 'TV starts with the sidebar Search button visible, not the floating field');
 expect(index.includes('<a class="nav-link active" href="index.html" data-nav="home" aria-current="page">Acasă</a>'), 'Home is a native focusable navigation control on the TV layout');
