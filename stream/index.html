@@ -668,7 +668,7 @@ themeToggle.addEventListener('click', () => {
   updateThemeButton();
 });
 updateThemeButton();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js').catch(() => {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js?v=20261025-v28').catch(() => {});
 
 /* ─── CONFIG ─── */
 const API_BASE = "https://api.themoviedb.org/3";
@@ -2382,6 +2382,42 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
     if (cur === $('own-next')) { openEpisodePicker(); return; }
     cur.click();
   }
+
+  // Some Samsung WebViews deliver arrow keys to a focused range input without
+  // bubbling them reliably to the document navigator. Handle the timeline at
+  // the window capture phase so the TV remote still reaches the player controls.
+  window.addEventListener('keydown', e => {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.target !== $('own-timeline')) return;
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    if (!active) {
+      active = true;
+      document.documentElement.classList.add('keynav');
+      setFocus($('own-timeline'), false);
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      seekOwn(e.key === 'ArrowLeft' ? -10 : 10);
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      const button = [$('own-restart'), $('own-play'), $('own-back10'), $('own-forward10'), $('own-quality'), $('own-picture'), $('own-next'), $('own-mute'), $('own-volume'), $('own-captions'), $('own-fullscreen')].find(vis);
+      if (button) setFocus(button, false);
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    const completion = getCompletionFocusItems();
+    const target = completion[0] && vis(completion[0]) ? completion[0]
+      : (vis($('own-next')) ? $('own-next') : $('player-back-action'));
+    if (target && vis(target)) setFocus(target, false);
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
 
   document.addEventListener('keydown', e => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
