@@ -1968,6 +1968,7 @@ async function loadDigitalRow(cfg) {
     const isTvMode = document.documentElement.classList.contains('tv-mode');
     const candidates = items.slice(0, isTvMode ? 6 : 32);
     for (let i = 0; i < candidates.length; i += isTvMode ? 4 : 8) {
+      if (homeWorkController.signal.aborted || document.documentElement.classList.contains('player-open')) return;
       const batch = await Promise.all(candidates.slice(i, i + (isTvMode ? 4 : 8)).map(async item => {
         try {
           const drDate = await fetchDigitalData(item.id);
@@ -1977,6 +1978,7 @@ async function loadDigitalRow(cfg) {
         }
       }));
       drDates.push(...batch);
+      if (homeWorkController.signal.aborted || document.documentElement.classList.contains('player-open')) return;
     }
 
     // Sort by digital release date — newest first; nulls go to end
