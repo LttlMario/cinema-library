@@ -2126,7 +2126,9 @@ document.addEventListener('visibilitychange', () => {
 /* ─── GENRES ─── */
 async function loadGenres() {
   try {
-    const [m, t] = await Promise.all([tmdb('/genre/movie/list'), tmdb('/genre/tv/list')]);
+    const results = await Promise.allSettled([tmdb('/genre/movie/list'), tmdb('/genre/tv/list')]);
+    const m = results[0].status === 'fulfilled' ? results[0].value : { genres: [] };
+    const t = results[1].status === 'fulfilled' ? results[1].value : { genres: [] };
     genreCatalog.movie = m.genres || [];
     genreCatalog.tv = t.genres || [];
     [...(m.genres || []), ...(t.genres || [])].forEach(g => { genreMap[g.id] = g.name; });
