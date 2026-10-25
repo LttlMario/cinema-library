@@ -38,7 +38,7 @@
     loaded = false;
     loading.hidden = false;
     error.hidden = true;
-    frame.src = 'https://cinema.panel-pro.ro/?tv=1&tvapp=1.7.7&fresh=1&retry=' + Date.now();
+    frame.src = 'https://cinema.panel-pro.ro/?tv=1&tvapp=1.7.8&fresh=1&retry=' + Date.now();
     window.setTimeout(showError, 15000);
   }
 
@@ -59,6 +59,9 @@
   });
   retry.addEventListener('click', retryLoad);
   window.addEventListener('message', function (event) {
+    // Ignore acknowledgements from unrelated frames or browser extensions.
+    // Only the live page inside our wrapper may claim that Back was handled.
+    if (event.source !== frame.contentWindow) return;
     if (event.data && ['cinema:player-closed', 'cinema:back-handled'].includes(event.data.type)) backHandledByWeb = true;
   });
   document.addEventListener('focus', function () {
