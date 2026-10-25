@@ -801,6 +801,8 @@ let playbackHeartbeatTimer = 0;
 let lastPlaybackSignalAt = 0;
 let playbackRecoveryUsed = false;
 let providerReadyFallbackTimer = 0;
+let subtitleAutoStartTimer = 0;
+let subtitleAutoScheduledToken = 0;
 // A provider can emit a `play` event while its iframe is initializing.  Keep
 // that separate from an explicit user command so a fetch/restore race cannot
 // start playback before the viewer presses Play/OK.
@@ -1257,6 +1259,9 @@ function loadPlayer() {
   providerReady = false;
   clearTimeout(providerReadyFallbackTimer);
   providerReadyFallbackTimer = 0;
+  clearTimeout(subtitleAutoStartTimer);
+  subtitleAutoStartTimer = 0;
+  subtitleAutoScheduledToken = 0;
   resumePlayerReady = false;
   resumeDecisionAppliedToken = 0;
   const src = serverUrlResolvers[state.server](state);
@@ -1302,6 +1307,7 @@ function loadPlayer() {
       fallbackLoader?.setAttribute('aria-hidden', 'true');
       updateOwnControls(true);
       showOwnControls();
+      scheduleAutomaticSubtitleLoad(loadToken);
     }, 1800);
   };
   frame.onerror = fail;
@@ -1341,13 +1347,19 @@ function loadPlayer() {
   }, 12000);
   syncUrl();
   savePlaybackProgress();
-  // Do not compete with the provider's first-server search on slower TV
-  // browsers. The provider gets a short head start; Romanian subtitles still
-  // load automatically in the background and remain cached for next time.
-  window.setTimeout(() => {
-    if (loadToken === playerLoadToken) autoLoadRomanianSubtitle(loadToken);
-  }, 2500);
   if (state.title) updateTitleBar();
+}
+
+function scheduleAutomaticSubtitleLoad(loadToken) {
+  if (loadToken !== playerLoadToken || subtitleAutoScheduledToken === loadToken) return;
+  subtitleAutoScheduledToken = loadToken;
+  clearTimeout(subtitleAutoStartTimer);
+  // Let the provider finish its first media request before the subtitle API
+  // starts its own request. This is especially important on TV WebViews.
+  subtitleAutoStartTimer = window.setTimeout(() => {
+    subtitleAutoStartTimer = 0;
+    if (loadToken === playerLoadToken) autoLoadRomanianSubtitle(loadToken);
+  }, 120);
 }
 
 function hasResumeAvailable() {
@@ -1537,6 +1549,7 @@ window.addEventListener('message', event => {
     showOwnControls();
     if (waitingForResumeChoice) prepareResumeChoice();
     applyResumeDecision();
+    scheduleAutomaticSubtitleLoad(playerLoadToken);
     // Do not start playback automatically. The provider is ready, but the
     // viewer must explicitly press Play/OK before the first play command is
     // sent. This also prevents a TV WebView from starting during fetching.
