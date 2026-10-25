@@ -28,7 +28,23 @@
         if (!items.length) return;
         const current = document.activeElement;
         if (!items.includes(current)) { items[0].focus(); return; }
-        if (key === 'Enter') { current.click(); return; }
+        if (key === 'Enter') {
+          current.click();
+          if (current.matches('[data-shell-menu]')) {
+            window.requestAnimationFrame(() => {
+              const menu = document.getElementById(`shell-${current.dataset.shellMenu}`);
+              const first = menu?.classList.contains('open') && [...menu.querySelectorAll('a,button')].find(visible);
+              if (first) focusElement(first);
+            });
+          }
+          return;
+        }
+        const openMenu = current.closest('.nav-submenu.open');
+        if (openMenu && key === 'ArrowLeft') {
+          const parent = document.querySelector(`[data-menu="${openMenu.id}"]`);
+          if (parent && visible(parent)) focusElement(parent);
+          return;
+        }
         const rail = [...document.querySelectorAll('.cinema-shell-header .nav-link, .cinema-shell-header #favorites-nav, .cinema-shell-header #search-toggle')].filter(visible);
         const main = document.querySelector('main');
         const content = main ? [...main.querySelectorAll('a,button,input,select,textarea,[tabindex="0"]')].filter(el => visible(el) && !el.disabled && el.getAttribute('tabindex') !== '-1') : [];
