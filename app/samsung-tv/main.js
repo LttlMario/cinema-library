@@ -12,6 +12,26 @@
   var BACK_HANDSHAKE_TIMEOUT = 700;
   var BACK_KEY = 10009;
   var EXIT_KEYS = { 10182: true, 27: true };
+  var MEDIA_KEYS = {
+    10252: 'MediaPlayPause',
+    415: 'MediaPlay',
+    19: 'MediaPause',
+    413: 'MediaStop',
+    417: 'MediaFastForward',
+    412: 'MediaRewind',
+    10233: 'MediaTrackNext',
+    10232: 'MediaTrackPrevious'
+  };
+
+  function registerMediaKeys() {
+    try {
+      var device = window.tizen && tizen.tvinputdevice;
+      if (!device || typeof device.registerKey !== 'function') return;
+      Object.keys(MEDIA_KEYS).forEach(function (code) {
+        try { device.registerKey(MEDIA_KEYS[code]); } catch (_) {}
+      });
+    } catch (_) {}
+  }
 
   function currentApplication() {
     try {
@@ -24,6 +44,8 @@
     var app = currentApplication();
     if (app && typeof app.exit === 'function') app.exit();
   }
+
+  registerMediaKeys();
 
   function goBack() {
     try {
@@ -95,6 +117,9 @@
     } else if (EXIT_KEYS[code]) {
       event.preventDefault();
       exitApplication();
+    } else if (MEDIA_KEYS[code]) {
+      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: MEDIA_KEYS[code] }, '*'); } catch (_) {}
+      event.preventDefault();
     } else if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
       // If Samsung keeps focus on the outer document, forward the remote
       // command into the live web page inside the iframe.
