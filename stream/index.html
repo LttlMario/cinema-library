@@ -870,6 +870,7 @@ let resumeDecision = null;
 let resumePlayerReady = false;
 let resumeDecisionAppliedToken = 0;
 let watchCheckTimer = 0;
+let watchActivityController = null;
 let watchCheckShown = false;
 const WATCH_CHECK_IDLE_MS = 2 * 60 * 60 * 1000;
 let endRecommendationsShownForToken = 0;
@@ -1127,10 +1128,12 @@ function closeWatchCheck(continueWatching) {
   }
 }
 function setupWatchCheck() {
+  watchActivityController?.abort();
+  watchActivityController = new AbortController();
   $('watch-check-continue')?.addEventListener('click', () => closeWatchCheck(true));
   $('watch-check-stop')?.addEventListener('click', () => closeWatchCheck(false));
   ['pointermove', 'mousemove', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(eventName =>
-    document.addEventListener(eventName, registerWatchActivity, { passive: eventName !== 'keydown' })
+    document.addEventListener(eventName, registerWatchActivity, { passive: eventName !== 'keydown', signal: watchActivityController.signal })
   );
 }
 function stopSubtitleDisplayLoop() {
@@ -2353,6 +2356,8 @@ function cleanupPlayerRuntime() {
   clearTimeout(progressSaveTimer);
   clearTimeout(controlsPaintTimer);
   clearTimeout(watchCheckTimer);
+  watchActivityController?.abort();
+  watchActivityController = null;
   clearTimeout(window.__cinemaOwnControlsTimer);
   flushTmdbCache();
   playerLoadGuardTimer = 0;
