@@ -114,6 +114,7 @@
         event.stopPropagation();
         searchWrap.classList.add('search-open');
         searchWrap.classList.remove('open');
+        searchToggle.setAttribute('aria-expanded', 'true');
         centerSearch();
         search.focus();
       });
@@ -123,6 +124,7 @@
           search.value = '';
           search.blur();
           searchWrap.classList.remove('search-open', 'open');
+          searchToggle.setAttribute('aria-expanded', 'false');
           document.querySelector('#search-suggestions')?.classList.remove('visible');
           document.querySelector('#search-clear')?.classList.remove('visible');
           search.style.setProperty('opacity', '0', 'important');
@@ -164,6 +166,7 @@
       event.preventDefault();
       event.stopPropagation();
       wrap.classList.add('search-open', 'open');
+      toggle.setAttribute('aria-expanded', 'true');
       centerSearch();
       input.focus();
     }, true);
