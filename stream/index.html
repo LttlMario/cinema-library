@@ -1243,6 +1243,10 @@ function syncUrl() {
 
 /* ─── PLAYER ─── */
 function loadPlayer() {
+  // Preserve the current position before replacing the iframe. This covers
+  // source fallback, subtitle changes and episode changes without saving the
+  // reset 0:00 state from the newly-created player.
+  persistCurrentPlayback();
   attemptedServers.add(state.server);
   subtitleAutoToken += 1;
   subtitleAutoController?.abort();
