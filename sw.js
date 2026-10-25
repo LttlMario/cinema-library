@@ -32,7 +32,7 @@ self.addEventListener('fetch', event => {
           // one permanent entry per movie/episode in the shell cache.
           if (response.ok && url.pathname !== '/stream/index.html') {
             const cacheKey = new Request(`${url.origin}${url.pathname}`);
-            caches.open(CACHE).then(cache => cache.put(cacheKey, response.clone()));
+            caches.open(CACHE).then(cache => cache.put(cacheKey, response.clone())).catch(() => {});
           }
           return response;
         }).catch(() => caches.match(request, cacheOptions).then(cached => cached || caches.match('./404.html')))
@@ -41,7 +41,7 @@ self.addEventListener('fetch', event => {
     }
     event.respondWith(caches.match(request, cacheOptions).then(cached => {
       const refresh = fetch(request).then(response => {
-        if (response.ok) caches.open(CACHE).then(cache => cache.put(request, response.clone()));
+        if (response.ok) caches.open(CACHE).then(cache => cache.put(request, response.clone())).catch(() => {});
         return response;
       }).catch(() => cached || caches.match('./404.html'));
       return cached || refresh;
@@ -58,7 +58,7 @@ self.addEventListener('fetch', event => {
   event.respondWith(fetch(request).then(response => {
     if (!response.ok) return response;
     const copy = response.clone();
-    caches.open(CACHE).then(cache => cache.put(request, copy));
+    caches.open(CACHE).then(cache => cache.put(request, copy)).catch(() => {});
     return response;
   }).catch(() => caches.match(request).then(response => response || caches.match('./404.html'))));
 });
