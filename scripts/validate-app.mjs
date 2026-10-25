@@ -60,6 +60,7 @@ expect(catalog.includes('se actualizează') && catalog.includes('if(staleData&&c
 const genres = read('genres.html');
 expect(catalog.includes("window.addEventListener('pagehide',()=>{controller?.abort()}") && genres.includes("window.addEventListener('pagehide',()=>{genreController?.abort()}") , 'secondary pages cancel TMDB requests when unloaded');
 expect(genres.includes('let staleCatalogs=null') && genres.includes('Genurile salvate local'), 'genres fall back to expired local data when TMDB is unavailable');
+expect(genres.includes("status.textContent='Genurile salvate local se actualizează…'"), 'genres paint stale results before the refresh completes');
 expect(genres.includes('async function fetchGenreJson') && genres.includes('genreRequestId') && genres.includes('cinemalibrary_genres_v1'), 'genres reuse cancellable retry and bounded local cache logic');
 expect(!catalog.includes('assets/tv-pointer.js') && !genres.includes('assets/tv-pointer.js') && siteShell.includes('const moveFocus = (key)'), 'secondary TV pages use the shared natural D-pad navigator instead of the competing free pointer');
 expect(catalog.includes('preconnect" href="https://api.themoviedb.org') && catalog.includes('preconnect" href="https://image.tmdb.org') && genres.includes('preconnect" href="https://api.themoviedb.org'), 'secondary pages preconnect to TMDB and poster origins');

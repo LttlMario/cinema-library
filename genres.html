@@ -58,6 +58,7 @@
       try{
         const cacheKey='cinemalibrary_genres_v1';let cached=null;let staleCatalogs=null;try{cached=JSON.parse(localStorage.getItem(cacheKey)||'null')}catch{}
         if(cached){if(Date.now()-cached.time<24*60*60*1000){catalogs=cached.data;render();return}staleCatalogs=cached.data}
+        if(staleCatalogs){catalogs=staleCatalogs;render();status.textContent='Genurile salvate local se actualizează…'}
         const [movies,shows]=await Promise.all(['movie','tv'].map(type=>fetchGenreJson(`https://api.themoviedb.org/3/genre/${type}/list?language=ro-RO`,{headers:{Authorization:`Bearer ${token}`,accept:'application/json'},signal:controller.signal}).then(response=>{if(!response.ok)throw new Error('genres');return response.json()})));
         if(request!==genreRequestId)return;catalogs={movie:movies.genres||[],tv:shows.genres||[]};try{localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:catalogs}))}catch{}render();
       }catch(error){
