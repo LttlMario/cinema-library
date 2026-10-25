@@ -2815,7 +2815,12 @@ $('clear-filters').addEventListener('click', () => {
   let lastNavAt = 0;
   const mem = new Map(); // section key -> last item index
 
-  const vis = el => !!(el && el.getClientRects().length);
+  const vis = el => {
+    if (!el || !el.getClientRects().length || el.hidden || el.disabled) return false;
+    if (el.getAttribute('aria-hidden') === 'true') return false;
+    const style = getComputedStyle(el);
+    return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+  };
 
   function setFocus(el, scroll = true) {
     if (!el) return;
