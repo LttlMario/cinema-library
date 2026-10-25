@@ -152,6 +152,11 @@ expect(sw.includes('cinema-library-shell-v37-cache-first-20261025') && sw.includ
 expect(sw.includes('const refresh = fetch(request, { cache: \'no-store\' })') && sw.includes('return cached || refresh'), 'service-worker serves cached static assets before background refresh');
 expect(sw.includes('The cached shell is returned immediately') && sw.includes('const refresh = fetch(request, { cache: \'no-store\' })'), 'service-worker refreshes cached HTML from the network instead of the browser HTTP cache');
 expect(sw.includes('event.waitUntil(refresh.then(() => undefined, () => undefined))'), 'service-worker keeps background asset refresh alive');
+const requiredPlayerControls = ['player-back-action', 'own-play', 'own-timeline', 'own-quality', 'own-picture', 'own-next', 'own-mute', 'own-volume', 'own-captions', 'own-fullscreen', 'subtitle-close', 'episode-picker-close', 'player-error-retry', 'watch-check-continue', 'watch-check-stop'];
+expect(requiredPlayerControls.every(id => stream.includes(`id="${id}"`)), 'player audit covers every critical TV control');
+expect(stream.includes('function getSections()') && stream.includes('function activateCurrent()') && stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return; }"), 'player controls share the native D-pad focus and activation path');
+const requiredHomeControls = ['home-nav', 'favorites-nav', 'search-toggle', 'search', 'modal-watch-btn', 'modal-favorite-btn', 'modal-later-btn', 'modal-watched-btn'];
+expect(requiredHomeControls.every(id => index.includes(`id="${id}"`)), 'homepage audit covers the TV navigation and popup controls');
 expect(index.includes('registration.update()') && stream.includes('registration.update()') && sw.includes("cinema:skip-waiting"), 'TV and web check for a newer service-worker version at startup');
 expect(sw.includes("url.searchParams.has('fresh')"), 'service-worker supports forced fresh document loads');
 expect(sw.includes("if (url.pathname === '/stream/index.html')") && sw.includes('Never cache those dynamic query variants'), 'service-worker never caches dynamic player query variants');
