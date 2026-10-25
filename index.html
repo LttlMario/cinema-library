@@ -2593,7 +2593,17 @@ $('clear-filters').addEventListener('click', () => {
     const deferred = () => {
       loadPersonalizedRow();
       CATEGORY_ROWS.slice(3).forEach(cfg => loadRow(cfg));
-      FRANCHISE_ROWS.forEach(cfg => loadFranchiseRow(cfg));
+      // Do not flood the TV WebView with every universe at once. Two rows per
+      // batch keep the D-pad and scrolling responsive while preserving all
+      // curated content on the page.
+      let franchiseIndex = 0;
+      const loadFranchiseBatch = () => {
+        const batch = FRANCHISE_ROWS.slice(franchiseIndex, franchiseIndex + 2);
+        franchiseIndex += batch.length;
+        batch.forEach(cfg => loadFranchiseRow(cfg));
+        if (franchiseIndex < FRANCHISE_ROWS.length) window.setTimeout(loadFranchiseBatch, 900);
+      };
+      loadFranchiseBatch();
     };
     if ('requestIdleCallback' in window) requestIdleCallback(deferred, { timeout: 2500 });
     else setTimeout(deferred, 1200);
