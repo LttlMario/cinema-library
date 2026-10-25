@@ -1459,7 +1459,7 @@ function playerUrl(item, season = 1, episode = 1) {
   const p = new URLSearchParams({ server: CINEMA_PLAYER_ID });
   p.set('tv', '1');
   if (new URLSearchParams(window.location.search).get('tv') === '1') p.set('player-tv', '1');
-  p.set('v', '20261025-stability17');
+  p.set('v', '20261025-stability18');
   const subtitlePreference = localStorage.getItem('cinemalibrary_subtitle_v1') || 'ro';
   p.set('sub', subtitlePreference === 'en' ? 'en' : 'ro');
   const type = mediaOf(item);
@@ -1916,9 +1916,10 @@ async function loadDigitalRow(cfg) {
     // page responsive and avoids a burst of release-date requests that can
     // trigger rate limits on slower connections.
     const drDates = [];
-    const candidates = items.slice(0, document.documentElement.classList.contains('tv-mode') ? 12 : 32);
-    for (let i = 0; i < candidates.length; i += 8) {
-      const batch = await Promise.all(candidates.slice(i, i + 8).map(async item => {
+    const isTvMode = document.documentElement.classList.contains('tv-mode');
+    const candidates = items.slice(0, isTvMode ? 6 : 32);
+    for (let i = 0; i < candidates.length; i += isTvMode ? 4 : 8) {
+      const batch = await Promise.all(candidates.slice(i, i + (isTvMode ? 4 : 8)).map(async item => {
         try {
           const drDate = await fetchDigitalData(item.id);
           return { item, drDate };
