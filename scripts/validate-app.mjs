@@ -127,6 +127,9 @@ expect(stream.includes("const HOME_URL = new URL('../', document.baseURI)") && s
 expect(stream.includes("clientParams.get('player-tv') === '1' || clientParams.get('tv') === '1'"), 'Player detects both TV URL modes');
 expect(stream.includes('let watchActivityController = null') && stream.includes('watchActivityController?.abort()') && stream.includes('signal: watchActivityController.signal'), 'Watch activity listeners are removed with player cleanup');
 expect(stream.includes('href="${esc(HOME_URL.href)}"'), 'Player metadata errors keep the TV return URL');
+const wrapperMain = read('app/samsung-tv/main.js');
+expect(wrapperMain.includes("var appReady = false") && wrapperMain.includes("event.data.type === 'cinema:app-ready'") && wrapperMain.includes('readyTimer'), 'TV wrapper waits for the live page readiness handshake');
+expect(index.includes("window.parent.postMessage({ type: 'cinema:app-ready' }, '*')"), 'Web app announces first-paint readiness to the TV wrapper');
 expect(index.includes('<div class="search-wrap" id="search-wrap">') && !index.includes('<div class="search-wrap open" id="search-wrap">'), 'TV starts with the sidebar Search button visible, not the floating field');
 expect(index.includes('<a class="nav-link active" href="index.html" data-nav="home" aria-current="page">Acasă</a>'), 'Home is a native focusable navigation control on the TV layout');
 expect(homeNavFix.includes("cinema:search-opened") && homeNavFix.includes("cinema:search-closed") && index.includes("key: 'search-input'"), 'Search keeps the TV focus state synchronized while opening and closing');
