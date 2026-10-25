@@ -49,6 +49,7 @@ expect(stream.includes('A manual search takes ownership of the subtitle request 
 expect(stream.includes('Never trust a stale/partial subtitle cache entry') && stream.includes('Fișierul de subtitrare nu conține replici valide'), 'invalid cached subtitles fall back to a fresh valid file');
 expect(index.includes('async function fetchTmdbWithRetry') && stream.includes('async function fetchTmdbWithRetry') && index.includes('429, 500, 502, 503, 504'), 'catalog and player retry transient TMDB failures');
 expect(stream.includes('let loadedProgressKey') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();\n    state.episode'), 'episode changes preserve progress under the old episode key');
+expect(stream.includes("document.visibilityState === 'hidden'") && stream.includes('persistCurrentPlayback();'), 'player saves progress when the TV page loses visibility');
 expect((index.match(/fonts\.googleapis\.com\/css2/g) || []).length === 1 && (stream.match(/fonts\.googleapis\.com\/css2/g) || []).length === 1, 'web and player combine Google Fonts into one request');
 expect(stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return; }"), 'TV remote Enter opens the episode picker directly');
 expect(stream.includes('subtitleAutoController') && stream.includes('signal: controller.signal'), 'automatic subtitle fetches are cancelled when the player load changes');
