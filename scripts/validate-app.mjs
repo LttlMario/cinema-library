@@ -109,7 +109,7 @@ expect(index.includes('loading="lazy" fetchpriority="low" decoding="async"'), 'b
 expect(index.includes('const candidates = items.slice(0, isTvMode ? 6 : 32)') && index.includes('i += isTvMode ? 4 : 8'), 'TV limits digital-release enrichment work during the initial load');
 expect(index.includes('const digitalSettlements = await Promise.allSettled(digitalRequests)') && index.includes('const digitalPages = digitalSettlements'), 'digital-release rows keep partial results when one TMDB request fails');
 expect(index.includes('homeWorkController.signal.aborted || document.documentElement.classList.contains(\'player-open\')'), 'digital-release enrichment stops between batches when the player opens');
-expect(index.includes('...(isTvMode ? [] : [loadTop10()])') && index.includes('Top 10 is below the first TV viewport'), 'TV defers the below-fold Top 10 request until after the initial paint');
+expect(index.includes("const topLoad = isTvMode ? Promise.resolve() : loadTop10()") && index.includes('Top 10 is below the first TV viewport'), 'TV defers the below-fold Top 10 request until after the initial paint');
 expect(siteShell.includes('aria-current="${active === key ? \'page\' : \'false\'}"') && siteShell.includes('aria-expanded="false"'), 'shell navigation exposes active page and dropdown state to TV WebViews');
 expect(siteShell.includes('data-nav="${key}"'), 'shell Home link exposes a stable semantic navigation key');
 expect(siteShell.includes('function') && siteShell.includes('syncShellMenuState') && siteShell.includes('MutationObserver'), 'shell navigation keeps aria-expanded synchronized with visible dropdowns');
@@ -130,6 +130,7 @@ expect(stream.includes('href="${esc(HOME_URL.href)}"'), 'Player metadata errors 
 const wrapperMain = read('app/samsung-tv/main.js');
 expect(wrapperMain.includes("var appReady = false") && wrapperMain.includes("event.data.type === 'cinema:app-ready'") && wrapperMain.includes('readyTimer'), 'TV wrapper waits for the live page readiness handshake');
 expect(index.includes("window.parent.postMessage({ type: 'cinema:app-ready' }, '*')"), 'Web app announces first-paint readiness to the TV wrapper');
+expect(index.includes('const heroLoad = loadHero()') && index.includes('await Promise.allSettled([heroLoad, initialLoads[0]])'), 'TV readiness waits only for the hero and first visible row');
 expect(stream.includes('const tmdb = async (path, options = {})') && stream.includes('options.signal.addEventListener') && stream.includes('signal: controller.signal'), 'Player TMDB requests can be cancelled when the title changes');
 expect(stream.includes('let metadataAbortController = null') && stream.includes('metadataAbortController?.abort()') && stream.includes('tmdb(`/tv/${state.id}`, { signal: metadataController.signal })') && stream.includes('tmdb(`/movie/${state.id}`, { signal: metadataController.signal })'), 'Player metadata fetches stop when the player closes');
 expect(index.includes('site-shell.js?v=20261025-shell16') && index.includes('home-nav-fix.js?v=20261025-22') && read('catalog.html').includes('site-shell.js?v=20261025-shell16') && read('genres.html').includes('site-shell.js?v=20261025-shell16'), 'TV navigation assets use a fresh cache-busting version');
