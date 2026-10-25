@@ -140,7 +140,7 @@ expect(read('assets/nav-parity.css').includes('html.tv-mode.keynav main'), 'seco
 expect(read('assets/home-nav-fix.js').includes("event.key === 'Escape'") && read('assets/home-nav-fix.js').includes('searchToggle.focus'), 'Search Escape restores focus to the sidebar button');
 expect(homeNavFix.includes('headerObserver.disconnect()') && homeNavFix.includes("if (!document.querySelector('.cinema-shell-header, #header'))"), 'Search/focus observer disconnects after the shell is initialized');
 expect(siteShell.includes('const startHeroRotation') && siteShell.includes('if (document.hidden) stopHeroRotation()') && siteShell.includes('if (heroTimer || document.hidden) return'), 'secondary-page hero animation pauses while the page is hidden');
-expect(siteShell.includes('const loadHeroImage') && siteShell.includes('slide.dataset.bg') && siteShell.includes('loadHeroImage(slides[slideIndex])'), 'secondary-page hero loads only the visible slide image');
+expect(siteShell.includes('const loadHeroImage') && siteShell.includes('slide.dataset.bg') && siteShell.includes('hero.append(slide)') && siteShell.includes('loadHeroImage(slides[slideIndex])'), 'secondary-page hero loads only the visible slide image in stable order');
 
 console.log(`Cinema Library validation passed (${checks.length} checks).`);
 
