@@ -756,6 +756,19 @@ function writeTmdbCache(cache) {
   clearTimeout(tmdbCacheWriteTimer);
   tmdbCacheWriteTimer = setTimeout(() => { try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(tmdbCacheMemory)); } catch {} }, 700);
 }
+async function fetchTmdbWithRetry(url, options = {}) {
+  const maxAttempts = 2;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok || ![429, 500, 502, 503, 504].includes(response.status) || attempt === maxAttempts) return response;
+    } catch (error) {
+      if (options.signal?.aborted || attempt === maxAttempts) throw error;
+    }
+    await new Promise(resolve => setTimeout(resolve, 250 * attempt));
+  }
+  throw new Error('TMDB nu a răspuns după reîncercare.');
+}
 const tmdb = async path => {
   const localizedPath = `${path}${path.includes('?') ? '&' : '?'}language=ro-RO`;
   const cache = readTmdbCache();
@@ -767,7 +780,7 @@ const tmdb = async path => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
     try {
-      const r = await fetch(`${API_BASE}${localizedPath}`, { headers: HEADERS, signal: controller.signal });
+      const r = await fetchTmdbWithRetry(`${API_BASE}${localizedPath}`, { headers: HEADERS, signal: controller.signal });
       if (!r.ok) throw new Error(`TMDB request failed (${r.status})`);
       const data = await r.json();
       cache[localizedPath] = { time: Date.now(), data };
