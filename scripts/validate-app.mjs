@@ -56,6 +56,7 @@ expect(index.includes('function waitForTmdbRetry') && index.includes('signal.rem
 const catalog = read('catalog.html');
 expect(catalog.includes('async function fetchCatalogJson') && catalog.includes('429,500,502,503,504') && catalog.includes("setTimeout(()=>controller.abort(),10000)"), 'catalog retries transient TMDB failures and cancels slow requests');
 expect(catalog.includes('let staleData=null') && catalog.includes('date salvate local'), 'catalog falls back to expired local data when TMDB is unavailable');
+expect(catalog.includes('se actualizează') && catalog.includes('if(staleData&&current===requestId)'), 'catalog paints stale results before the refresh completes');
 const genres = read('genres.html');
 expect(catalog.includes("window.addEventListener('pagehide',()=>{controller?.abort()}") && genres.includes("window.addEventListener('pagehide',()=>{genreController?.abort()}") , 'secondary pages cancel TMDB requests when unloaded');
 expect(genres.includes('let staleCatalogs=null') && genres.includes('Genurile salvate local'), 'genres fall back to expired local data when TMDB is unavailable');

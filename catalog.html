@@ -78,7 +78,13 @@
       try{
         const cacheKey=`cinema_catalog_${type}_${mode||'all'}_${genre}_${$('sort').value}_${page}`;let data=null;let staleData=null;
         try{const cached=JSON.parse(sessionStorage.getItem(cacheKey)||'null');if(cached){if(Date.now()-cached.time<300000)data=cached.data;else staleData=cached.data}}catch{}
-        if(!data){const response=await fetchCatalogJson('https://api.themoviedb.org/3'+endpoint()+'&page='+page+'&language=ro-RO',{headers:{Authorization:`Bearer ${token}`,accept:'application/json'},signal:controller.signal});if(!response.ok)throw new Error('catalog');data=await response.json();try{sessionStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data}))}catch{}}
+        if(!data){
+          if(staleData&&current===requestId){
+            items=page===1?(staleData.results||[]).filter(x=>x.poster_path):[...items,...(staleData.results||[]).filter(x=>x.poster_path)];
+            render(staleData.total_pages);$('status').textContent=`${items.length} titluri afișate — se actualizează`;
+          }
+          const response=await fetchCatalogJson('https://api.themoviedb.org/3'+endpoint()+'&page='+page+'&language=ro-RO',{headers:{Authorization:`Bearer ${token}`,accept:'application/json'},signal:controller.signal});if(!response.ok)throw new Error('catalog');data=await response.json();try{sessionStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data}))}catch{}
+        }
         if(current!==requestId)return;items=page===1?(data.results||[]).filter(x=>x.poster_path):[...items,...(data.results||[]).filter(x=>x.poster_path)];render(data.total_pages);$('status').textContent=`${items.length} titluri afișate`;
       }catch(error){
         if(error.name==='AbortError')return;
