@@ -151,6 +151,7 @@ expect(tvMain.includes('MEDIA_KEYS') && tvMain.includes('registerMediaKeys') && 
 expect(stream.includes("['MediaPlayPause', 'MediaPlay', 'MediaPause']") && stream.includes('MediaFastForward'), 'player handles TV media transport keys');
 expect(stream.includes("k === 'MediaTrackNext'") && stream.includes("k === 'MediaTrackPrevious'"), 'player handles next and previous media keys');
 expect(stream.includes('Some Samsung WebViews deliver arrow keys') && stream.includes("e.target !== $('own-timeline')"), 'player handles native timeline arrow keys before WebView consumption');
+expect(stream.includes("document.addEventListener('keydown', e => {\n    if (e.defaultPrevented || e.altKey"), 'player general key handler ignores commands already consumed by a higher-priority control');
 expect(stream.includes('function returnToPopupFromPlayer()') && stream.includes('exitFullscreen'), 'player Back exits fullscreen before returning to the popup');
 expect(index.includes("event.data?.type === 'rioma:close'") && index.includes('overlay.requestFullscreen'), 'home overlay closes through the player handshake and requests fullscreen');
 expect(stream.includes("'rioma:volume-opened'") && stream.includes("setFocus(target, false)"), 'TV focus enters the volume slider when the volume button opens it');
