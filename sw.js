@@ -87,6 +87,9 @@ self.addEventListener('fetch', event => {
       }
       return response;
     }).catch(() => cached || caches.match('./404.html'));
+    // Keep the background refresh alive even when the cached response was
+    // returned immediately by a slower TV WebView.
+    event.waitUntil(refresh.then(() => undefined, () => undefined));
     // Reuse a known-good static asset immediately on TV, while refreshing it
     // in the background for the next navigation.
     return cached || refresh;
