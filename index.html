@@ -2872,6 +2872,9 @@ $('clear-filters').addEventListener('click', () => {
     }
   }
 
+  // Capture remote arrows before native button/select handling. Some TV
+  // WebViews stop key propagation on focused buttons, which otherwise makes
+  // navigation appear to work only for the first sidebar item.
   document.addEventListener('keydown', e => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const k = e.key;
@@ -2964,7 +2967,7 @@ $('clear-filters').addEventListener('click', () => {
     }
 
     if (arrows[k]) { e.preventDefault(); move(arrows[k][0], arrows[k][1]); }
-  });
+  }, true);
 
   /* Hooks called by openModal/closeModal so focus follows the modal */
   window.__knavModalOpened = () => {
