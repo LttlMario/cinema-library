@@ -1,4 +1,4 @@
-const CACHE = 'cinema-library-shell-v23-stability-20261025';
+const CACHE = 'cinema-library-shell-v24-stability-20261025';
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
@@ -23,6 +23,16 @@ self.addEventListener('fetch', event => {
   ].includes(url.pathname);
   if (isShell) {
     const cacheOptions = url.pathname === '/stream/index.html' ? {} : { ignoreSearch: true };
+    const forceFresh = url.searchParams.has('fresh') || request.cache === 'reload';
+    if (forceFresh) {
+      event.respondWith(
+        fetch(request, { cache: 'no-store' }).then(response => {
+          if (response.ok) caches.open(CACHE).then(cache => cache.put(request, response.clone()));
+          return response;
+        }).catch(() => caches.match(request, cacheOptions).then(cached => cached || caches.match('./404.html')))
+      );
+      return;
+    }
     event.respondWith(caches.match(request, cacheOptions).then(cached => {
       const refresh = fetch(request).then(response => {
         if (response.ok) caches.open(CACHE).then(cache => cache.put(request, response.clone()));
