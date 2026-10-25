@@ -34,6 +34,7 @@ expect(!/\bownCommand\(['"]play['"]\)/.test(stream.replace(/function requestProv
 expect(stream.includes("event.source !== playerFrame.contentWindow"), 'player events are accepted only from the active iframe');
 expect(stream.includes("event.source !== window.parent"), 'player remote keys are accepted only from the wrapper page');
 expect(stream.includes('providerReadyFallbackTimer'), 'player controls have a non-autoplay readiness fallback');
+expect(stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return; }"), 'TV remote Enter opens the episode picker directly');
 
 expect(index.includes('searchAbortController'), 'search requests are abortable');
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
