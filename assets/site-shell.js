@@ -176,6 +176,18 @@
     }
   }
 
+  // Keep the semantic dropdown state in sync with the class toggled by the
+  // handlers above. Samsung WebViews can use aria-expanded when deciding
+  // whether the remote focus should remain inside a menu.
+  const syncShellMenuState = () => document.querySelectorAll('[data-shell-menu]').forEach((button) => {
+    const menu = document.getElementById(`shell-${button.dataset.shellMenu}`);
+    button.setAttribute('aria-expanded', String(Boolean(menu?.classList.contains('open'))));
+  });
+  syncShellMenuState();
+  document.querySelectorAll('.nav-submenu').forEach((menu) => {
+    new MutationObserver(syncShellMenuState).observe(menu, { attributes: true, attributeFilter: ['class'] });
+  });
+
   // Launch every direct stream link in the same Rioma fullscreen surface.
   // This keeps catalog, genres and watch-together consistent with the home
   // modal without navigating to a separate details/player page.
