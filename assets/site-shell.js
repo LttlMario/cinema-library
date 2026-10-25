@@ -111,7 +111,7 @@
   document.querySelectorAll('body>header,body>.top,body>footer').forEach((node) => node.remove());
   const navHtml = nav.map(([label, href, key]) => menus[key]
     ? `<div class="nav-dropdown"><button class="nav-link ${active === key ? 'active' : ''}" type="button" data-shell-menu="${key}" data-menu="shell-${key}" aria-current="${active === key ? 'page' : 'false'}" aria-expanded="false">${label}</button><div class="nav-submenu" id="shell-${key}">${menus[key].map(([text, target]) => `<a href="${target}">${text}</a>`).join('')}</div></div>`
-    : `<a class="nav-link ${active === key ? 'active' : ''}" href="${href}" aria-current="${active === key ? 'page' : 'false'}">${label}</a>`).join('');
+    : `<a class="nav-link ${active === key ? 'active' : ''}" href="${href}" data-nav="${key}" aria-current="${active === key ? 'page' : 'false'}">${label}</a>`).join('');
   const header = document.createElement('header');
   header.className = 'cinema-shell-header';
   header.id = 'header';
