@@ -49,6 +49,16 @@ html.keynav :is(#header, .cinema-shell-header) .kf {
   box-shadow: 0 4px 18px rgba(229,9,20,.28) !important;
 }
 
+html.tv-mode html.keynav main a:focus,
+html.tv-mode html.keynav main button:focus,
+html.tv-mode html.keynav main input:focus,
+html.tv-mode html.keynav main select:focus,
+html.tv-mode html.keynav main [tabindex="0"]:focus {
+  outline: 3px solid #e50914 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgba(229,9,20,.24) !important;
+}
+
 :is(#header, .cinema-shell-header) .theme-toggle { display: none !important; }
 :is(#header, .cinema-shell-header) .nav-dropdown { width: calc(100% - 28px) !important; margin-left: 14px !important; margin-right: 14px !important; }
 :is(#header, .cinema-shell-header) .nav-dropdown > .nav-link { width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
