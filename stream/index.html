@@ -1058,6 +1058,7 @@ function setupSubtitlePanel() {
     if (!panel) return;
     panel.hidden = true;
     showOwnControls();
+    document.dispatchEvent(new Event('rioma:subtitle-closed'));
   });
   $('subtitle-search')?.addEventListener('click', async () => {
     const status = $('subtitle-status'); if (!state) return;
@@ -1877,7 +1878,10 @@ function setupEpisodePicker() {
   if (!open || open.dataset.episodePickerBound === 'true') return;
   open.dataset.episodePickerBound = 'true';
   open.addEventListener('click', openEpisodePicker);
-  close?.addEventListener('click', closeEpisodePicker);
+  close?.addEventListener('click', () => {
+    closeEpisodePicker();
+    document.dispatchEvent(new Event('rioma:episode-picker-closed'));
+  });
   season?.addEventListener('change', async () => {
     const seasonNumber = Number(season.value) || 1;
     if (!seasonCache[`${state.id}-${seasonNumber}`]) {
@@ -2228,6 +2232,20 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
     const panel = $('episode-picker');
     const target = $('episode-picker-season');
     if (!panel || panel.hidden || !vis(target)) return;
+    active = true;
+    document.documentElement.classList.add('keynav');
+    setFocus(target, false);
+  });
+  document.addEventListener('rioma:subtitle-closed', () => {
+    const target = $('own-captions');
+    if (!target || !vis(target)) return;
+    active = true;
+    document.documentElement.classList.add('keynav');
+    setFocus(target, false);
+  });
+  document.addEventListener('rioma:episode-picker-closed', () => {
+    const target = $('own-next');
+    if (!target || !vis(target)) return;
     active = true;
     document.documentElement.classList.add('keynav');
     setFocus(target, false);
