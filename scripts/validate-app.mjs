@@ -125,6 +125,7 @@ expect(read('catalog.html').includes("tvMode=q.get('tv')==='1'") && read('catalo
 expect(stream.includes("if (isTvClient) p.set('tv', '1')") && stream.includes("if (isTvClient) params.set('tv', '1')"), 'Player URL and recommendations preserve TV mode');
 expect(stream.includes("const HOME_URL = new URL('../', document.baseURI)") && stream.includes("if (isTvClient) HOME_URL.searchParams.set('tv', '1')"), 'Player exit preserves TV mode');
 expect(stream.includes("clientParams.get('player-tv') === '1' || clientParams.get('tv') === '1'"), 'Player detects both TV URL modes');
+expect(stream.includes('let watchActivityController = null') && stream.includes('watchActivityController?.abort()') && stream.includes('signal: watchActivityController.signal'), 'Watch activity listeners are removed with player cleanup');
 expect(index.includes('<div class="search-wrap" id="search-wrap">') && !index.includes('<div class="search-wrap open" id="search-wrap">'), 'TV starts with the sidebar Search button visible, not the floating field');
 expect(index.includes('<a class="nav-link active" href="index.html" data-nav="home" aria-current="page">Acasă</a>'), 'Home is a native focusable navigation control on the TV layout');
 expect(homeNavFix.includes("cinema:search-opened") && homeNavFix.includes("cinema:search-closed") && index.includes("key: 'search-input'"), 'Search keeps the TV focus state synchronized while opening and closing');
