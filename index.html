@@ -2995,6 +2995,11 @@ $('clear-filters').addEventListener('click', () => {
       if (arrows[k]) {
         active = true;
         document.documentElement.classList.add('keynav');
+        if (document.activeElement === searchInput && (k === 'ArrowUp' || k === 'ArrowDown')) {
+          setFocus(searchInput, false);
+          e.preventDefault();
+          return;
+        }
         if (cur && vis(cur)) setFocus(cur); else focusInitial();
         e.preventDefault();
       }
