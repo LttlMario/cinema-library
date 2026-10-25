@@ -90,8 +90,8 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 ## Performanța web
 
 76. [ ] adaugă un test de pornire fără autoplay pentru performanța web.
-77. [ ] verifică tratarea erorilor de rețea pentru performanța web.
-78. [ ] adaugă timeout și mesaj de retry pentru performanța web.
+77. [x] verifică tratarea erorilor de rețea pentru performanța web.
+78. [x] adaugă timeout și mesaj de retry pentru performanța web.
 79. [ ] previne comenzile duplicate pentru performanța web.
 80. [ ] salvează starea înainte de schimbarea sursei pentru performanța web.
 81. [ ] testează revenirea după pierderea conexiunii pentru performanța web.
