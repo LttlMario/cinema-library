@@ -1,11 +1,19 @@
-const CACHE = 'cinema-library-shell-v34-cache-safe-20261025';
+const CACHE = 'cinema-library-shell-v35-cache-safe-20261025';
+const SHELL_ASSET_TIMEOUT = 8000;
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
   './assets/site-shell.css', './assets/site-shell.js', './assets/home-nav-fix.js', './assets/nav-parity.css', './assets/icons/cinema-library-favicon.png'
 ];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => Promise.all(SHELL.map(asset => cache.add(asset).catch(() => null)))));
+  event.waitUntil(caches.open(CACHE).then(cache => Promise.all(SHELL.map(asset => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SHELL_ASSET_TIMEOUT);
+    return fetch(asset, { cache: 'no-cache', signal: controller.signal })
+      .then(response => response.ok ? cache.put(asset, response) : null)
+      .catch(() => null)
+      .finally(() => clearTimeout(timer));
+  }))));
   self.skipWaiting();
 });
 self.addEventListener('activate', event => {
