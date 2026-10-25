@@ -826,6 +826,7 @@ let subtitleCues = [];
 let subtitleOffset = 0;
 let subtitleCursor = 0;
 let subtitleLastTime = -1;
+let subtitleRenderedTime = -1;
 let subtitleResults = [];
 let selectedSubtitleFileId = null;
 let subtitleAutoToken = 0;
@@ -1062,8 +1063,13 @@ function updateSubtitleSettings() {
 function updateSubtitleDisplay(currentTime = ownCurrentTime) {
   const layer = $('subtitle-layer'), text = $('subtitle-text');
   if (!layer || !text) return;
-  if (ownPaused) { text.textContent = ''; layer.hidden = true; return; }
+  if (ownPaused) { subtitleRenderedTime = -1; text.textContent = ''; layer.hidden = true; return; }
   const time = Number(currentTime) || 0;
+  // Providers may send timeupdate much faster than the subtitle cadence.
+  // Avoid repeating the same textContent/layout work on every message while
+  // keeping a fresh render at least every 80ms for accurate cue changes.
+  if (subtitleRenderedTime >= 0 && Math.abs(time - subtitleRenderedTime) < 0.08) return;
+  subtitleRenderedTime = time;
   const adjusted = time + subtitleOffset;
   if (adjusted < subtitleLastTime) subtitleCursor = 0;
   subtitleLastTime = adjusted;
@@ -1119,6 +1125,7 @@ function startSubtitleDisplayLoop() {
   stopSubtitleDisplayLoop();
   subtitleCursor = 0;
   subtitleLastTime = -1;
+  subtitleRenderedTime = -1;
   updateSubtitleDisplay(ownCurrentTime);
   subtitleDisplayTimer = window.setInterval(() => updateSubtitleDisplay(ownCurrentTime), 220);
 }
@@ -1144,6 +1151,7 @@ function clearOwnSubtitles() {
   subtitleRequestController = null;
   subtitleCues = [];
   subtitleOffset = 0;
+  subtitleRenderedTime = -1;
   stopSubtitleDisplayLoop();
   $('subtitle-layer').hidden = true;
   if ($('subtitle-status')) $('subtitle-status').textContent = 'Subtitrarea a fost oprită.';
