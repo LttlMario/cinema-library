@@ -52,6 +52,7 @@ expect(stream.includes('subtitleRenderedTime') && stream.includes('Math.abs(time
 expect(stream.includes('const recommendationToken = playerLoadToken') && stream.includes('recommendationKey !== progressIdentity()'), 'stale recommendation responses cannot paint over a new episode');
 expect(stream.includes('recommendationAbortController') && stream.includes('tmdb(`/discover/movie?${query}`, { signal: controller.signal })'), 'end recommendation requests are cancelled when the player context changes');
 expect(index.includes('const firstPage = await pagePromises[0]') && index.includes('Promise.allSettled(pagePromises.slice(1))'), 'genre results paint the first page early and tolerate failed supplemental pages');
+expect(index.includes("const results = await Promise.allSettled([tmdb('/genre/movie/list'), tmdb('/genre/tv/list')])"), 'genre menu keeps the available catalog when one genre endpoint fails');
 expect(stream.includes('A manual search takes ownership of the subtitle request slot') && stream.includes('subtitleAutoController?.abort()'), 'manual subtitle actions cancel automatic subtitle work before fetching');
 expect(stream.includes('Never trust a stale/partial subtitle cache entry') && stream.includes('Fișierul de subtitrare nu conține replici valide'), 'invalid cached subtitles fall back to a fresh valid file');
 expect(index.includes('async function fetchTmdbWithRetry') && stream.includes('async function fetchTmdbWithRetry') && index.includes('429, 500, 502, 503, 504'), 'catalog and player retry transient TMDB failures');
