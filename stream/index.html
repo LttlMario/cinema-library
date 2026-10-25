@@ -1410,8 +1410,9 @@ function loadPlayer() {
     loader.classList.add('hide');
     loader.setAttribute('aria-hidden', 'true');
     // Do not replace a slow cross-origin player automatically. Some providers
-    // keep the iframe loading while their consent/ad layer initializes; doing
-    // an automatic failover here reloads the player and repeats the ad.
+    // keep the iframe loading while their consent/ad layer initializes; show
+    // an actionable retry instead of leaving the TV WebView on a black surface.
+    showPlayerError('Sursa video nu a răspuns la timp.');
   }, 12000);
   syncUrl();
   savePlaybackProgress();
