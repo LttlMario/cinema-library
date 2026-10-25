@@ -1137,6 +1137,20 @@ function toggleSubtitlePanel() {
   showOwnControls();
   if (!panel.hidden) window.setTimeout(() => document.dispatchEvent(new CustomEvent('rioma:focus-subtitles')), 0);
 }
+async function fetchSubtitle(url, controller) {
+  let timedOut = false;
+  const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 12000);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (error) {
+    if (timedOut) {
+      const timeoutError = new Error('Serverul de subtitrări nu a răspuns la timp. Apasă din nou pentru a reîncerca.');
+      timeoutError.name = 'SubtitleTimeoutError';
+      throw timeoutError;
+    }
+    throw error;
+  } finally { window.clearTimeout(timeout); }
+}
 function setupSubtitlePanel() {
   $('subtitle-close')?.addEventListener('click', () => {
     const panel = $('subtitle-panel');
@@ -1153,7 +1167,7 @@ function setupSubtitlePanel() {
     status.textContent = 'Se caută subtitrări online…';
     try {
       const params = new URLSearchParams({ tmdb_id: state.id, type: state.type, season: String(state.season || 1), episode: String(state.episode || 1), languages: $('subtitle-language').value });
-      const response = await fetch(subtitleApiUrl(`/api/subtitles/search?${params}`), { signal: controller.signal }); const payload = await response.json();
+      const response = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/search?${params}`), controller); const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Căutarea online nu este disponibilă pe acest server.');
       subtitleResults = (payload.data || []).flatMap(item => (item.attributes?.files || []).map(file => ({ id:file.file_id, language:item.attributes.language, release:item.attributes.release || 'Subtitrare', downloads:item.attributes.download_count || 0 })));
       $('subtitle-results').innerHTML = subtitleResults.map((item, i) => `<option value="${i}">${esc(item.language.toUpperCase())} · ${esc(item.release)} · ${item.downloads} descărcări</option>`).join('');
@@ -1168,7 +1182,7 @@ function setupSubtitlePanel() {
     subtitleRequestController?.abort();
     const controller = new AbortController();
     subtitleRequestController = controller;
-    try { const response = await fetch(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`), { signal: controller.signal }); if (!response.ok) throw new Error('Descărcarea subtitrării a eșuat.'); subtitleCues = parseSubtitles(await response.text()); subtitleOffset = 0; status.textContent = `Subtitrarea a fost încărcată (${subtitleCues.length} replici).`; startSubtitleDisplayLoop(); }
+    try { const response = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`), controller); if (!response.ok) throw new Error('Descărcarea subtitrării a eșuat.'); subtitleCues = parseSubtitles(await response.text()); subtitleOffset = 0; status.textContent = `Subtitrarea a fost încărcată (${subtitleCues.length} replici).`; startSubtitleDisplayLoop(); }
     catch (error) { if (error.name !== 'AbortError') status.textContent = error.message || 'Subtitrarea nu a putut fi încărcată.'; }
     finally { if (subtitleRequestController === controller) subtitleRequestController = null; }
   });
@@ -1193,7 +1207,7 @@ async function autoLoadRomanianSubtitle(loadToken) {
     const status = $('subtitle-status');
     if (status) status.textContent = 'Se caută automat subtitrarea în română…';
     const params = new URLSearchParams({ tmdb_id: state.id, type: state.type, season: String(state.season || 1), episode: String(state.episode || 1), languages: 'ro' });
-    const searchResponse = await fetch(subtitleApiUrl(`/api/subtitles/search?${params}`), { signal: controller.signal });
+    const searchResponse = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/search?${params}`), controller);
     const searchText = await searchResponse.text();
     let searchPayload = {};
     try { searchPayload = JSON.parse(searchText); } catch { throw new Error('Româna este solicitată automat de sursa Rioma. Căutarea suplimentară online necesită un backend securizat.'); }
@@ -1202,7 +1216,7 @@ async function autoLoadRomanianSubtitle(loadToken) {
     selectedSubtitleFileId = subtitleResults[0]?.id || null;
     if (!selectedSubtitleFileId) { if (status) status.textContent = 'Nu am găsit automat subtitrare în română pentru acest titlu.'; return; }
     const content = cachedContent || await (async () => {
-      const contentResponse = await fetch(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`), { signal: controller.signal });
+      const contentResponse = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`), controller);
       if (!contentResponse.ok) throw new Error('Subtitrarea nu a putut fi descărcată.');
       return contentResponse.text();
     })();
