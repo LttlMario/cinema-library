@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ro">
 <head>
@@ -62,7 +63,6 @@
     document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{current=tab.dataset.type;document.querySelectorAll('.tab').forEach(x=>{const active=x===tab;x.classList.toggle('active',active);x.setAttribute('aria-selected',String(active))});render()}));if(searchInput)searchInput.addEventListener('input',render);load();
   </script>
   <script src="assets/site-shell.js?v=20261025-shell15"></script>
-<script src="assets/tv-pointer.js"></script>
 </body>
 </html>
 
