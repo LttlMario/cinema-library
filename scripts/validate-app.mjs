@@ -47,6 +47,7 @@ expect(index.includes('searchAbortController'), 'search requests are abortable')
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
 expect(index.includes('cancelHomeWork()') && index.includes('resetHomeWork()'), 'homepage TMDB work is cancelled while the player opens');
 expect(index.includes('homeWorkGeneration') && index.includes('homeGeneration !== homeWorkGeneration'), 'intentional TMDB cancellations stay silent');
+expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
 expect(index.includes('sw.js?v=20261025-v26'), 'page registers the current service-worker revision');
 expect(sw.includes('cinema-library-shell-v26-bounded-20261025'), 'service-worker cache revision matches the page');
