@@ -47,6 +47,7 @@ expect(index.includes('searchAbortController'), 'search requests are abortable')
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
 expect(index.includes('cancelHomeWork()') && index.includes('resetHomeWork()'), 'homepage TMDB work is cancelled while the player opens');
 expect(index.includes('homeWorkGeneration') && index.includes('homeGeneration !== homeWorkGeneration'), 'intentional TMDB cancellations stay silent');
+expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
 expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
 expect(index.includes('sw.js?v=20261025-v26'), 'page registers the current service-worker revision');
