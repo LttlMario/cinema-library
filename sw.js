@@ -1,11 +1,11 @@
-const CACHE = 'cinema-library-shell-v33-cache-safe-20261025';
+const CACHE = 'cinema-library-shell-v34-cache-safe-20261025';
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
   './assets/site-shell.css', './assets/site-shell.js', './assets/home-nav-fix.js', './assets/nav-parity.css', './assets/icons/cinema-library-favicon.png'
 ];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
+  event.waitUntil(caches.open(CACHE).then(cache => Promise.all(SHELL.map(asset => cache.add(asset).catch(() => null)))));
   self.skipWaiting();
 });
 self.addEventListener('activate', event => {
