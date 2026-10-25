@@ -60,6 +60,7 @@
     const currentType = new URLSearchParams(location.search).get('type');
     const activeKey = currentPage === 'catalog.html' && currentType === 'movie' ? 'movies'
       : currentPage === 'catalog.html' && currentType === 'tv' ? 'series'
+      : (currentPage === 'index.html' || currentPage === '') && location.hash === '#favorites' ? 'favorites'
       : currentPage === 'index.html' || currentPage === '' ? 'home' : '';
     const restoreActive = () => {
       header.querySelectorAll('.nav-link').forEach((item) => {
@@ -70,6 +71,12 @@
             : item.dataset.shellMenu === activeKey);
         item.classList.toggle('active', shouldBeActive);
       });
+      const favorites = header.querySelector('#favorites-nav');
+      if (favorites) {
+        const shouldBeActive = activeKey === 'favorites';
+        favorites.classList.toggle('active', shouldBeActive);
+        favorites.setAttribute('aria-current', shouldBeActive ? 'page' : 'false');
+      }
     };
     restoreActive();
     [0, 250, 1000].forEach((delay) => setTimeout(restoreActive, delay));
