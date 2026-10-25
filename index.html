@@ -1248,6 +1248,10 @@ const tmdb = async (path, options = {}) => {
   if (pending) return pending;
   const request = queueTmdbRequest(async () => {
     const controller = new AbortController();
+    const externalSignal = options?.signal;
+    const abortRequest = () => controller.abort();
+    if (externalSignal?.aborted) controller.abort();
+    else externalSignal?.addEventListener('abort', abortRequest, { once: true });
     const timeout = setTimeout(() => controller.abort(), 10000);
     try {
       const r = await fetch(`${API_BASE}${localizedPath}`, { headers: HEADERS, signal: controller.signal });
@@ -1256,7 +1260,10 @@ const tmdb = async (path, options = {}) => {
       cache[localizedPath] = { time: Date.now(), data };
       writeTmdbCache(cache);
       return data;
-    } finally { clearTimeout(timeout); }
+    } finally {
+      clearTimeout(timeout);
+      externalSignal?.removeEventListener('abort', abortRequest);
+    }
   });
   tmdbPending.set(localizedPath, request);
   try {
@@ -2396,6 +2403,7 @@ window.addEventListener('popstate', () => {
 
 /* ─── SEARCH ─── */
 let searchTimer;
+let searchAbortController = null;
 const searchWrap  = $('search-wrap');
 const searchInput = $('search');
 const clearBtn    = $('search-clear');
@@ -2432,6 +2440,8 @@ $('search-toggle').addEventListener('click', () => {
 searchInput.addEventListener('input', () => {
   const q = searchInput.value.trim();
   clearBtn.classList.toggle('visible', q.length > 0);
+  searchAbortController?.abort();
+  searchAbortController = null;
   clearTimeout(searchTimer);
   if (!q) { resetSearch(); return; }
   searchTimer = setTimeout(() => doSearch(q), 280);
@@ -2457,6 +2467,8 @@ clearBtn.addEventListener('click', () => {
 });
 
 function resetSearch() {
+  searchAbortController?.abort();
+  searchAbortController = null;
   suggestionBox.classList.remove('visible');
   suggestionBox.innerHTML = '';
   $('search-results-section').classList.remove('visible');
@@ -2473,6 +2485,9 @@ function resetSearch() {
 
 async function doSearch(q) {
   const requestId = ++searchRequestId;
+  searchAbortController?.abort();
+  const abortController = new AbortController();
+  searchAbortController = abortController;
   $('search-results-section').classList.add('visible');
   $('main').style.display = 'none';
   $('hero').style.display = 'none';
@@ -2489,7 +2504,7 @@ async function doSearch(q) {
   try {
     const pageCount = document.documentElement.classList.contains('tv-mode') ? 2 : 5;
     const pages = await Promise.all(Array.from({ length: pageCount }, (_, i) =>
-      tmdb(`/search/multi?query=${encodeURIComponent(q)}&include_adult=false&page=${i + 1}`)
+      tmdb(`/search/multi?query=${encodeURIComponent(q)}&include_adult=false&page=${i + 1}`, { signal: abortController.signal })
     ));
     if (requestId !== searchRequestId) return;
     const all = pages.flatMap(page => page.results || []);
@@ -2505,7 +2520,9 @@ async function doSearch(q) {
     $('search-results-section').setAttribute('aria-busy', 'false');
     renderSearchResults();
     renderSearchSuggestions(searchResults);
+    if (searchAbortController === abortController) searchAbortController = null;
   } catch {
+    if (abortController.signal.aborted) return;
     if (requestId !== searchRequestId) return;
     $('search-spinner').style.display = 'none';
     $('search-results-section').setAttribute('aria-busy', 'false');
