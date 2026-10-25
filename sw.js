@@ -1,4 +1,4 @@
-const CACHE = 'cinema-library-shell-v25-stability-20261025';
+const CACHE = 'cinema-library-shell-v26-bounded-20261025';
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
@@ -46,6 +46,13 @@ self.addEventListener('fetch', event => {
       }).catch(() => cached || caches.match('./404.html'));
       return cached || refresh;
     }));
+    return;
+  }
+  // Only cache immutable/static assets. Dynamic routes and ad-hoc same-origin
+  // requests must not grow the TV cache indefinitely or replay stale data.
+  const isStaticAsset = ['style', 'script', 'font', 'image', 'manifest'].includes(request.destination);
+  if (!isStaticAsset) {
+    event.respondWith(fetch(request).catch(() => caches.match(request)));
     return;
   }
   event.respondWith(fetch(request).then(response => {
