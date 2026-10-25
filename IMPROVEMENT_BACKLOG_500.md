@@ -11,7 +11,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 5. [x] salvează starea înainte de schimbarea sursei pentru stabilitatea playerului.
 6. [x] testează revenirea după pierderea conexiunii pentru stabilitatea playerului.
 7. [x] limitează operațiile concurente pentru stabilitatea playerului.
-8. [ ] elimină listener-ele la închiderea componentei pentru stabilitatea playerului.
+8. [x] elimină listener-ele la închiderea componentei pentru stabilitatea playerului.
 9. [x] verifică starea după schimbarea episodului pentru stabilitatea playerului.
 10. [x] adaugă fallback pentru răspuns invalid pentru stabilitatea playerului.
 11. [x] măsoară timpul până la primul cadru pentru stabilitatea playerului.
@@ -28,7 +28,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 22. [ ] verifică fallback-ul când datele lipsesc pentru stabilitatea playerului.
 23. [x] verifică compatibilitatea cu browserul TV pentru stabilitatea playerului.
 24. [x] adaugă scenariu de regresie pentru stabilitatea playerului.
-25. [ ] marchează rezultatul în checklist pentru stabilitatea playerului.
+25. [x] marchează rezultatul în checklist pentru stabilitatea playerului.
 
 ## Navigarea cu telecomanda
 
