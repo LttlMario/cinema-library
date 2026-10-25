@@ -804,10 +804,15 @@ const tmdb = async path => {
 let state = null;          // { type, id, season, episode, server, subtitle, title }
 let tvData = null;         // /tv/{id} details
 const seasonCache = {};    // cached season episode lists
+let loadedProgressKey = '';
 const LIBRARY_KEYS = { favorites: 'cinemalibrary_favorites', watchLater: 'cinemalibrary_watch_later', history: 'cinemalibrary_history', progress: 'cinemalibrary_progress' };
 const readLibrary = key => { try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } };
 const writeLibrary = (key, value) => { try { localStorage.setItem(key, JSON.stringify((Array.isArray(value) ? value : []).slice(0, 30))); return true; } catch { toast('Biblioteca locală nu poate fi salvată în acest browser.'); return false; } };
 const libraryId = item => `${item.media_type || (item.title ? 'movie' : 'tv')}-${item.id}`;
+function progressIdentity(value = state) {
+  if (!value) return '';
+  return `${value.type}-${value.id}-${value.season || 1}-${value.episode || 1}`;
+}
 const attemptedServers = new Set();
 const PROGRESS_KEY = 'cinemalibrary_progress';
 let playerLoadToken = 0;
@@ -1340,10 +1345,11 @@ function syncUrl() {
 
 /* ─── PLAYER ─── */
 function loadPlayer() {
-  // Preserve the current position before replacing the iframe. This covers
-  // source fallback, subtitle changes and episode changes without saving the
-  // reset 0:00 state from the newly-created player.
-  persistCurrentPlayback();
+  const nextProgressKey = progressIdentity();
+  // Preserve the current position only while the loaded title/episode is
+  // unchanged. Episode changes save the old key before mutating state.
+  if (loadedProgressKey && loadedProgressKey === nextProgressKey) persistCurrentPlayback();
+  loadedProgressKey = nextProgressKey;
   attemptedServers.add(state.server);
   subtitleAutoToken += 1;
   subtitleAutoController?.abort();
@@ -2003,6 +2009,7 @@ async function setupTv() {
   setupEpisodePicker();
 
   seasonSel.addEventListener('change', async () => {
+    persistCurrentPlayback();
     state.season = parseInt(seasonSel.value) || 1;
     state.episode = 1;
     state.resumeAt = 0;
@@ -2012,6 +2019,7 @@ async function setupTv() {
     loadPlayer();
   });
   episodeSel.addEventListener('change', () => {
+    persistCurrentPlayback();
     state.episode = parseInt(episodeSel.value) || 1;
     state.resumeAt = 0;
     savePlaybackProgress();
@@ -2044,6 +2052,7 @@ function renderEpisodePicker() {
     return `<button class="episode-picker-card" type="button" data-season="${season}" data-episode="${episode.episode_number}" aria-label="Sezonul ${season}, episodul ${episode.episode_number}, ${esc(title)}">${image}<span>E${episode.episode_number} · ${esc(title)}</span></button>`;
   }).join('') : '<span class="episode-picker-placeholder">Episoadele se încarcă…</span>';
   grid.querySelectorAll('.episode-picker-card').forEach(card => card.addEventListener('click', () => {
+    persistCurrentPlayback();
     state.season = Number(card.dataset.season) || 1;
     state.episode = Number(card.dataset.episode) || 1;
     $('season-select').value = String(state.season);
@@ -2156,6 +2165,7 @@ async function goNextEpisode(isAutomatic = false) {
     if (!isAutomatic) toast('Următorul episod nu este disponibil.');
     return;
   }
+  persistCurrentPlayback();
   $('next-episode-action').hidden = true;
   const seasonChanged = next.season !== state.season;
   state.season = next.season;
