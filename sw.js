@@ -1,4 +1,4 @@
-const CACHE = 'cinema-library-shell-v19-tflix-nav-colors';
+const CACHE = 'cinema-library-shell-v20-stability-20261025';
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
