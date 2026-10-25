@@ -1167,6 +1167,7 @@ function toggleVolumeControl() {
   const open = controls.classList.toggle('volume-open');
   button.setAttribute('aria-expanded', String(open));
   button.setAttribute('title', open ? 'Ascunde volumul' : 'Arată volumul');
+  showOwnControls();
   document.dispatchEvent(new CustomEvent(open ? 'rioma:volume-opened' : 'rioma:volume-closed'));
 }
 function setupOwnControls() {
