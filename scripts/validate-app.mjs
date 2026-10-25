@@ -35,6 +35,8 @@ expect(stream.includes("event.source !== playerFrame.contentWindow"), 'player ev
 expect(stream.includes("event.source !== window.parent"), 'player remote keys are accepted only from the wrapper page');
 expect(stream.includes('providerReadyFallbackTimer'), 'player controls have a non-autoplay readiness fallback');
 expect(stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return; }"), 'TV remote Enter opens the episode picker directly');
+expect(stream.includes('subtitleAutoController') && stream.includes('signal: controller.signal'), 'automatic subtitle fetches are cancelled when the player load changes');
+expect(stream.includes("if (error.name === 'AbortError') return;"), 'cancelled subtitle fetches do not show stale errors');
 
 expect(index.includes('searchAbortController'), 'search requests are abortable');
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
