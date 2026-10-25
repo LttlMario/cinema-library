@@ -787,6 +787,7 @@ let providerTimeSignals = 0;
 let playbackHeartbeatTimer = 0;
 let lastPlaybackSignalAt = 0;
 let playbackRecoveryUsed = false;
+let providerReadyFallbackTimer = 0;
 // A provider can emit a `play` event while its iframe is initializing.  Keep
 // that separate from an explicit user command so a fetch/restore race cannot
 // start playback before the viewer presses Play/OK.
@@ -1210,6 +1211,8 @@ function loadPlayer() {
   const serverId = state.server;
   const loadToken = ++playerLoadToken;
   providerReady = false;
+  clearTimeout(providerReadyFallbackTimer);
+  providerReadyFallbackTimer = 0;
   resumePlayerReady = false;
   resumeDecisionAppliedToken = 0;
   const src = serverUrlResolvers[state.server](state);
@@ -1242,6 +1245,20 @@ function loadPlayer() {
     if (loadToken !== playerLoadToken) return;
     settled = true;
     updateServerStatus(serverId, 'online');
+    // Some WebViews receive the provider's ready postMessage late or not at
+    // all, even though the iframe has already created its video element. Keep
+    // the controls usable after a short grace period, but never start playback
+    // here: the explicit playbackIntent gate still requires Play/OK.
+    clearTimeout(providerReadyFallbackTimer);
+    providerReadyFallbackTimer = window.setTimeout(() => {
+      if (loadToken !== playerLoadToken || providerReady) return;
+      providerReady = true;
+      const fallbackLoader = $('player-loading');
+      fallbackLoader?.classList.add('hide');
+      fallbackLoader?.setAttribute('aria-hidden', 'true');
+      updateOwnControls(true);
+      showOwnControls();
+    }, 1800);
   };
   frame.onerror = fail;
   // Use replace so iframe loads don't pollute the browser history stack
@@ -1462,6 +1479,8 @@ window.addEventListener('message', event => {
   const eventType = String(message.type || message.event || payload.event || '').toLowerCase();
   if (eventType === 'cinesrc:ready' || eventType === 'ready') {
     providerReady = true;
+    clearTimeout(providerReadyFallbackTimer);
+    providerReadyFallbackTimer = 0;
     const readyLoader = $('player-loading');
     readyLoader?.classList.add('hide');
     readyLoader?.setAttribute('aria-hidden', 'true');
