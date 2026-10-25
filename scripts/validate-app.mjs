@@ -37,6 +37,7 @@ expect(stream.includes("event.source !== playerFrame.contentWindow"), 'player ev
 expect(stream.includes("event.source !== window.parent"), 'player remote keys are accepted only from the wrapper page');
 expect(stream.includes('providerReadyFallbackTimer') && stream.includes('Play must remain disabled until the provider confirms ready') && !stream.includes('providerReady = true;\n      const fallbackLoader'), 'player fallback never enables Play before provider ready');
 expect(stream.includes('function handleProviderError') && stream.includes("eventType.includes('error')") && stream.includes('handlePlayerFailure(state.server)'), 'provider errors stop playback and recover through the next source');
+expect(stream.includes('Keep processing this same arrow key') && stream.includes('if (!vis(cur)) {\n        cur = null;'), 'TV focus keeps the current D-pad action after controls restore');
 expect(stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return; }"), 'TV remote Enter opens the episode picker directly');
 expect(stream.includes('subtitleAutoController') && stream.includes('signal: controller.signal'), 'automatic subtitle fetches are cancelled when the player load changes');
 expect(stream.includes("if (error.name === 'AbortError') return;"), 'cancelled subtitle fetches do not show stale errors');
