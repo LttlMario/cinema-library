@@ -68,7 +68,11 @@
     if (event.source !== frame.contentWindow) return;
     if (event.data && ['cinema:player-closed', 'cinema:back-handled'].includes(event.data.type)) backHandledByWeb = true;
   });
-  document.addEventListener('focus', function () {
+  document.addEventListener('focus', function (event) {
+    // Do not steal focus from the wrapper's own controls (for example the
+    // retry button). Only restore focus when the outer document or iframe
+    // itself receives focus.
+    if (event.target !== document && event.target !== document.body && event.target !== frame) return;
     try { frame.focus(); frame.contentWindow.focus(); } catch (_) {}
   }, true);
   document.addEventListener('keydown', function (event) {
