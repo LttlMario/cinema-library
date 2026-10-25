@@ -1216,6 +1216,13 @@ const tmdbQueue = [];
 const tmdbPending = new Map();
 let tmdbCacheMemory = null;
 let tmdbCacheWriteTimer = 0;
+let homeWorkController = new AbortController();
+function cancelHomeWork() {
+  homeWorkController.abort();
+}
+function resetHomeWork() {
+  if (homeWorkController.signal.aborted) homeWorkController = new AbortController();
+}
 function pumpTmdbQueue() {
   while (tmdbInFlight < TMDB_MAX_IN_FLIGHT && tmdbQueue.length) {
     const job = tmdbQueue.shift();
@@ -1257,9 +1264,13 @@ const tmdb = async (path, options = {}) => {
   const request = queueTmdbRequest(async () => {
     const controller = new AbortController();
     const externalSignal = options?.signal;
+    const homeSignal = homeWorkController.signal;
     const abortRequest = () => controller.abort();
+    const abortHomeWork = () => controller.abort();
     if (externalSignal?.aborted) controller.abort();
     else externalSignal?.addEventListener('abort', abortRequest, { once: true });
+    if (homeSignal.aborted) controller.abort();
+    else homeSignal.addEventListener('abort', abortHomeWork, { once: true });
     const timeout = setTimeout(() => controller.abort(), 10000);
     try {
       const r = await fetch(`${API_BASE}${localizedPath}`, { headers: HEADERS, signal: controller.signal });
@@ -1271,6 +1282,7 @@ const tmdb = async (path, options = {}) => {
     } finally {
       clearTimeout(timeout);
       externalSignal?.removeEventListener('abort', abortRequest);
+      homeSignal.removeEventListener('abort', abortHomeWork);
     }
   });
   tmdbPending.set(localizedPath, request);
@@ -2234,6 +2246,7 @@ function closeRiomaOverlay() {
   overlay.hidden = true;
   overlay.classList.remove('open');
   document.documentElement.classList.remove('player-open');
+  resetHomeWork();
   startHeroTimer();
   if (frame) frame.src = 'about:blank';
   if (window.parent !== window) window.parent.postMessage({ type: 'cinema:player-closed' }, '*');
@@ -2244,6 +2257,7 @@ function openRiomaOverlay(url) {
   const frame = $('rioma-overlay-frame');
   if (!overlay || !frame) { window.location.href = url; return; }
   document.documentElement.classList.add('player-open');
+  cancelHomeWork();
   clearInterval(heroTimer);
   frame.src = url;
   frame.setAttribute('tabindex', '0');
