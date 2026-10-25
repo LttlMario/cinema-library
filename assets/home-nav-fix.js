@@ -93,7 +93,9 @@
     [0, 250, 1000].forEach((delay) => setTimeout(restoreActive, delay));
     const activeObserver = new MutationObserver(restoreActive);
     activeObserver.observe(header, { subtree: true, attributes: true, attributeFilter: ['class'] });
-    window.addEventListener('pagehide', () => activeObserver.disconnect(), { once: true });
+    window.addEventListener('pagehide', (event) => {
+      if (!event.persisted) activeObserver.disconnect();
+    }, { once: true });
 
     const pageBase = new URL('./', location.href);
     const go = (path) => { location.href = new URL(path, pageBase).href; };
