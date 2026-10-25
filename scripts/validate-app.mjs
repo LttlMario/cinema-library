@@ -39,6 +39,8 @@ expect(stream.includes('subtitleAutoController') && stream.includes('signal: con
 expect(stream.includes("if (error.name === 'AbortError') return;"), 'cancelled subtitle fetches do not show stale errors');
 expect(stream.includes('const tmdbInFlight = new Map()') && stream.includes('tmdbInFlight.get(localizedPath)'), 'player TMDB requests are deduplicated while in flight');
 expect(stream.includes('subtitleRequestController') && stream.includes("subtitleRequestController?.abort()"), 'manual subtitle requests are cancelled on stop or player changes');
+expect(stream.includes('<link rel="preconnect" href="https://cinesrc.st" crossorigin>') && stream.includes('<link rel="preconnect" href="https://api.themoviedb.org">'), 'player preconnects to the video provider and TMDB before fetching starts');
+expect(stream.includes('<link rel="preconnect" href="https://cinema-library-subtitles-api.bmariomihail.chatgpt.site">'), 'player preconnects to the subtitle API before automatic subtitle fetching');
 
 expect(index.includes('searchAbortController'), 'search requests are abortable');
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
