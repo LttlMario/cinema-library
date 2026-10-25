@@ -19,7 +19,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 13. [ ] verifică funcționarea pe ecran mic pentru stabilitatea playerului.
 14. [ ] verifică funcționarea pe WebView TV pentru stabilitatea playerului.
 15. [ ] adaugă feedback vizibil pentru utilizator pentru stabilitatea playerului.
-16. [ ] păstrează focusul după acțiune pentru stabilitatea playerului.
+16. [x] păstrează focusul după acțiune pentru stabilitatea playerului.
 17. [ ] testează apăsarea rapidă repetată pentru stabilitatea playerului.
 18. [x] previne blocarea UI în timpul fetchului pentru stabilitatea playerului.
 19. [x] verifică anularea lucrului vechi pentru stabilitatea playerului.
@@ -47,7 +47,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 38. [ ] verifică funcționarea pe ecran mic pentru navigarea cu telecomanda.
 39. [ ] verifică funcționarea pe WebView TV pentru navigarea cu telecomanda.
 40. [ ] adaugă feedback vizibil pentru utilizator pentru navigarea cu telecomanda.
-41. [ ] păstrează focusul după acțiune pentru navigarea cu telecomanda.
+41. [x] păstrează focusul după acțiune pentru navigarea cu telecomanda.
 42. [ ] testează apăsarea rapidă repetată pentru navigarea cu telecomanda.
 43. [ ] previne blocarea UI în timpul fetchului pentru navigarea cu telecomanda.
 44. [ ] verifică anularea lucrului vechi pentru navigarea cu telecomanda.
