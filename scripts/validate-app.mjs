@@ -1,4 +1,3 @@
-
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
@@ -140,6 +139,7 @@ expect(read('assets/site-shell.js').includes('let contentReturn = null'), 'secon
 expect(read('assets/nav-parity.css').includes('html.tv-mode.keynav main'), 'secondary-page TV focus is visibly highlighted');
 expect(read('assets/home-nav-fix.js').includes("event.key === 'Escape'") && read('assets/home-nav-fix.js').includes('searchToggle.focus'), 'Search Escape restores focus to the sidebar button');
 expect(homeNavFix.includes('headerObserver.disconnect()') && homeNavFix.includes("if (!document.querySelector('.cinema-shell-header, #header'))"), 'Search/focus observer disconnects after the shell is initialized');
+expect(siteShell.includes('const startHeroRotation') && siteShell.includes('if (document.hidden) stopHeroRotation()') && siteShell.includes('if (heroTimer || document.hidden) return'), 'secondary-page hero animation pauses while the page is hidden');
 
 console.log(`Cinema Library validation passed (${checks.length} checks).`);
 
