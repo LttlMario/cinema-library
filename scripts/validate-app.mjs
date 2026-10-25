@@ -66,6 +66,7 @@ expect(sw.includes('cinema-library-shell-v26-bounded-20261025'), 'service-worker
 expect(sw.includes("url.searchParams.has('fresh')"), 'service-worker supports forced fresh document loads');
 expect(sw.includes("url.pathname !== '/stream/index.html'"), 'fresh player loads are not duplicated in the service-worker cache');
 expect(sw.includes('isStaticAsset') && sw.includes('request.destination'), 'service-worker does not cache arbitrary dynamic same-origin requests');
+expect((sw.match(/cache\.put\([^\n]+\)\)\.catch\(\(\) => \{\}\)/g) || []).length >= 3, 'service-worker ignores cache quota failures without breaking the page');
 
 expect(tvIndex.includes('tvapp=1.7.8') && !tvIndex.includes('tvapp=1.7.8&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
 expect(tvMain.includes('tvapp=1.7.8&fresh=1'), 'TV retry path requests a fresh live document');
