@@ -801,6 +801,7 @@ let playbackHeartbeatTimer = 0;
 let lastPlaybackSignalAt = 0;
 let playbackRecoveryUsed = false;
 let providerReadyFallbackTimer = 0;
+let playerLoadGuardTimer = 0;
 let subtitleAutoStartTimer = 0;
 let subtitleAutoScheduledToken = 0;
 // A provider can emit a `play` event while its iframe is initializing.  Keep
@@ -1257,6 +1258,8 @@ function loadPlayer() {
   const serverId = state.server;
   const loadToken = ++playerLoadToken;
   providerReady = false;
+  clearTimeout(playerLoadGuardTimer);
+  playerLoadGuardTimer = 0;
   clearTimeout(providerReadyFallbackTimer);
   providerReadyFallbackTimer = 0;
   clearTimeout(subtitleAutoStartTimer);
@@ -1337,7 +1340,8 @@ function loadPlayer() {
   applyEnhancer();
   applyOwnPicture(localStorage.getItem(OWN_PICTURE_KEY) || 'standard');
   showOwnControls();
-  setTimeout(() => {
+  playerLoadGuardTimer = window.setTimeout(() => {
+    playerLoadGuardTimer = 0;
     if (loadToken !== playerLoadToken || settled) return;
     loader.classList.add('hide');
     loader.setAttribute('aria-hidden', 'true');
