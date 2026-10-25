@@ -178,7 +178,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 154. [ ] previne comenzile duplicate pentru subtitrări.
 155. [ ] salvează starea înainte de schimbarea sursei pentru subtitrări.
 156. [ ] testează revenirea după pierderea conexiunii pentru subtitrări.
-157. [ ] limitează operațiile concurente pentru subtitrări.
+157. [x] limitează operațiile concurente pentru subtitrări.
 158. [ ] elimină listener-ele la închiderea componentei pentru subtitrări.
 159. [ ] verifică starea după schimbarea episodului pentru subtitrări.
 160. [ ] adaugă fallback pentru răspuns invalid pentru subtitrări.
