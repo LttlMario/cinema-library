@@ -14,8 +14,8 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 8. [ ] elimină listener-ele la închiderea componentei pentru stabilitatea playerului.
 9. [ ] verifică starea după schimbarea episodului pentru stabilitatea playerului.
 10. [x] adaugă fallback pentru răspuns invalid pentru stabilitatea playerului.
-11. [ ] măsoară timpul până la primul cadru pentru stabilitatea playerului.
-12. [ ] măsoară timpul până la primul control pentru stabilitatea playerului.
+11. [x] măsoară timpul până la primul cadru pentru stabilitatea playerului.
+12. [x] măsoară timpul până la primul control pentru stabilitatea playerului.
 13. [ ] verifică funcționarea pe ecran mic pentru stabilitatea playerului.
 14. [ ] verifică funcționarea pe WebView TV pentru stabilitatea playerului.
 15. [ ] adaugă feedback vizibil pentru utilizator pentru stabilitatea playerului.
