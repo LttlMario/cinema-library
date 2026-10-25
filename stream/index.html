@@ -776,7 +776,7 @@ async function fetchTmdbWithRetry(url, options = {}) {
   }
   throw new Error('TMDB nu a răspuns după reîncercare.');
 }
-const tmdb = async path => {
+const tmdb = async (path, options = {}) => {
   const localizedPath = `${path}${path.includes('?') ? '&' : '?'}language=ro-RO`;
   const cache = readTmdbCache();
   const cached = cache[localizedPath];
@@ -785,6 +785,15 @@ const tmdb = async path => {
   if (pending) return pending;
   const request = (async () => {
     const controller = new AbortController();
+    const relayAbort = () => controller.abort();
+    if (options.signal) {
+      if (options.signal.aborted) {
+        const error = new Error('TMDB request cancelled');
+        error.name = 'AbortError';
+        throw error;
+      }
+      options.signal.addEventListener('abort', relayAbort, { once: true });
+    }
     const timeout = setTimeout(() => controller.abort(), 10000);
     try {
       const r = await fetchTmdbWithRetry(`${API_BASE}${localizedPath}`, { headers: HEADERS, signal: controller.signal });
@@ -798,7 +807,10 @@ const tmdb = async path => {
       const message = error.name === 'AbortError' ? 'TMDB nu a răspuns la timp.' : 'Catalogul TMDB nu este disponibil momentan.';
       toast(message);
       throw new Error(message);
-    } finally { clearTimeout(timeout); }
+    } finally {
+      clearTimeout(timeout);
+      options.signal?.removeEventListener('abort', relayAbort);
+    }
   })();
   tmdbInFlight.set(localizedPath, request);
   try {
