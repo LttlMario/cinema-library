@@ -1814,7 +1814,19 @@ async function loadRow(cfg) {
   }
 }
 
+const franchiseRowsInFlight = new Set();
 async function loadFranchiseRow(cfg) {
+  const key = String(cfg?.title || '');
+  if (franchiseRowsInFlight.has(key)) return;
+  franchiseRowsInFlight.add(key);
+  try {
+    await loadFranchiseRowInternal(cfg);
+  } finally {
+    franchiseRowsInFlight.delete(key);
+  }
+}
+
+async function loadFranchiseRowInternal(cfg) {
   if (document.documentElement.classList.contains('player-open')) return;
   const scroller = buildRow({ ...cfg, anchor: null });
   const directItems = await Promise.allSettled((cfg.items || []).map(async ([media, id]) => {
