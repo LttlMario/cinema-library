@@ -41,6 +41,7 @@ expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-late
 expect(index.includes('sw.js?v=20261025-v24'), 'page registers the current service-worker revision');
 expect(sw.includes('cinema-library-shell-v24'), 'service-worker cache revision matches the page');
 expect(sw.includes("url.searchParams.has('fresh')"), 'service-worker supports forced fresh document loads');
+expect(sw.includes("url.pathname !== '/stream/index.html'"), 'fresh player loads are not duplicated in the service-worker cache');
 
 expect(tvIndex.includes('tvapp=1.7.8&fresh=1'), 'TV wrapper requests a fresh live document');
 expect(tvMain.includes('tvapp=1.7.8&fresh=1'), 'TV retry path requests a fresh live document');
