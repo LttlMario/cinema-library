@@ -329,9 +329,9 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 290. [ ] adaugă feedback vizibil pentru utilizator pentru search și sugestii.
 291. [ ] păstrează focusul după acțiune pentru search și sugestii.
 292. [ ] testează apăsarea rapidă repetată pentru search și sugestii.
-293. [ ] previne blocarea UI în timpul fetchului pentru search și sugestii.
-294. [ ] verifică anularea lucrului vechi pentru search și sugestii.
-295. [ ] adaugă acoperire în validator pentru search și sugestii.
+293. [x] previne blocarea UI în timpul fetchului pentru search și sugestii.
+294. [x] verifică anularea lucrului vechi pentru search și sugestii.
+295. [x] adaugă acoperire în validator pentru search și sugestii.
 296. [ ] documentează comportamentul așteptat pentru search și sugestii.
 297. [ ] verifică fallback-ul când datele lipsesc pentru search și sugestii.
 298. [ ] verifică compatibilitatea cu browserul TV pentru search și sugestii.
