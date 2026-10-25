@@ -1209,6 +1209,7 @@ const $ = id => document.getElementById(id);
 const TMDB_CACHE_KEY = 'cinemalibrary_tmdb_cache_v2';
 const TMDB_CACHE_TTL = document.documentElement.classList.contains('tv-mode') ? 30 * 60 * 1000 : 5 * 60 * 1000;
 const TMDB_CACHE_STORE = document.documentElement.classList.contains('tv-mode') ? localStorage : sessionStorage;
+const TMDB_CACHE_MAX_ENTRIES = document.documentElement.classList.contains('tv-mode') ? 90 : 180;
 const TMDB_MAX_IN_FLIGHT = 5;
 let tmdbInFlight = 0;
 const tmdbQueue = [];
@@ -1234,6 +1235,13 @@ function readTmdbCache() {
   return tmdbCacheMemory;
 }
 function writeTmdbCache(cache) {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const entries = Object.entries(cache)
+    .filter(([, value]) => value && Number(value.time) >= cutoff)
+    .sort((a, b) => Number(b[1].time) - Number(a[1].time))
+    .slice(0, TMDB_CACHE_MAX_ENTRIES);
+  Object.keys(cache).forEach(key => delete cache[key]);
+  entries.forEach(([key, value]) => { cache[key] = value; });
   tmdbCacheMemory = cache;
   clearTimeout(tmdbCacheWriteTimer);
   tmdbCacheWriteTimer = setTimeout(() => { try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(tmdbCacheMemory)); } catch {} }, 700);
