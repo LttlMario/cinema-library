@@ -55,6 +55,7 @@ expect(index.includes('Personalization is secondary to the first paint') && inde
 expect(siteShell.includes('aria-current="${active === key ? \'page\' : \'false\'}"') && siteShell.includes('aria-expanded="false"'), 'shell navigation exposes active page and dropdown state to TV WebViews');
 expect(siteShell.includes('function') && siteShell.includes('syncShellMenuState') && siteShell.includes('MutationObserver'), 'shell navigation keeps aria-expanded synchronized with visible dropdowns');
 expect(siteShell.includes('aria-expanded="false"') && siteShell.includes("setAttribute('aria-expanded', 'true')") && homeNavFix.includes("setAttribute('aria-expanded', 'false')"), 'search toggle exposes and updates its expanded state');
+expect(homeNavFix.includes("location.hash === '#favorites'") && homeNavFix.includes("favorites.setAttribute('aria-current'"), 'watchlist remains the active red destination on the favorites hash');
 expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseRowInternal'), 'franchise row requests are deduplicated while a row is loading');
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
 expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
