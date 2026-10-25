@@ -238,9 +238,13 @@
     button.setAttribute('aria-expanded', String(Boolean(menu?.classList.contains('open'))));
   });
   syncShellMenuState();
+  const shellMenuObservers = [];
   document.querySelectorAll('.nav-submenu').forEach((menu) => {
-    new MutationObserver(syncShellMenuState).observe(menu, { attributes: true, attributeFilter: ['class'] });
+    const observer = new MutationObserver(syncShellMenuState);
+    observer.observe(menu, { attributes: true, attributeFilter: ['class'] });
+    shellMenuObservers.push(observer);
   });
+  window.addEventListener('pagehide', () => shellMenuObservers.forEach(observer => observer.disconnect()), { once: true });
 
   // Launch every direct stream link in the same Rioma fullscreen surface.
   // This keeps catalog, genres and watch-together consistent with the home
