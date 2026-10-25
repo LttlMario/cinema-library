@@ -6,7 +6,9 @@
   var error = document.getElementById('app-error');
   var retry = document.getElementById('retry');
   var loaded = false;
+  var appReady = false;
   var errorTimer = 0;
+  var readyTimer = 0;
   var backHandledByWeb = false;
   var backRequestId = 0;
   var BACK_HANDSHAKE_TIMEOUT = 1200;
@@ -60,9 +62,11 @@
 
   function retryLoad() {
     loaded = false;
+    appReady = false;
     backRequestId += 1;
     backHandledByWeb = false;
     window.clearTimeout(errorTimer);
+    window.clearTimeout(readyTimer);
     loading.hidden = false;
     error.hidden = true;
     var nextFrame = frame.cloneNode(false);
@@ -85,18 +89,28 @@
     loaded = true;
     window.clearTimeout(errorTimer);
     errorTimer = 0;
+    window.clearTimeout(readyTimer);
     backHandledByWeb = false;
-    loading.hidden = true;
+    // The iframe load event only means the document arrived. Keep the
+    // loading layer until the live page confirms that its first TV rows are
+    // painted, with a short fallback for older cached builds.
+    loading.hidden = appReady;
     error.hidden = true;
     frame.setAttribute('tabindex', '0');
     try { frame.focus(); frame.contentWindow.focus(); } catch (_) {}
+    readyTimer = window.setTimeout(function () {
+      readyTimer = 0;
+      if (loaded && !appReady) loading.hidden = true;
+    }, 4000);
   }
   function handleFrameError() {
     loaded = false;
+    appReady = false;
     backRequestId += 1;
     backHandledByWeb = false;
     window.clearTimeout(errorTimer);
     errorTimer = 0;
+    window.clearTimeout(readyTimer);
     loading.hidden = true;
     error.hidden = false;
     try { retry.focus(); } catch (_) {}
@@ -109,6 +123,7 @@
   function cleanupWrapperRuntime() {
     window.clearTimeout(errorTimer);
     errorTimer = 0;
+    window.clearTimeout(readyTimer);
     backRequestId += 1;
     backHandledByWeb = false;
   }
@@ -118,6 +133,11 @@
     // Ignore acknowledgements from unrelated frames or browser extensions.
     // Only the live page inside our wrapper may claim that Back was handled.
     if (event.source !== frame.contentWindow || event.origin !== LIVE_ORIGIN) return;
+    if (event.data && event.data.type === 'cinema:app-ready') {
+      appReady = true;
+      loading.hidden = true;
+      return;
+    }
     if (event.data && ['cinema:player-closed', 'cinema:back-handled'].includes(event.data.type)) backHandledByWeb = true;
   });
   document.addEventListener('focus', function (event) {
