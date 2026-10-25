@@ -100,6 +100,12 @@
     frame.addEventListener('load', handleFrameLoad);
     frame.addEventListener('error', handleFrameError);
   }
+  function cleanupWrapperRuntime() {
+    window.clearTimeout(errorTimer);
+    errorTimer = 0;
+    backRequestId += 1;
+    backHandledByWeb = false;
+  }
   bindFrame(frame);
   retry.addEventListener('click', retryLoad);
   window.addEventListener('message', function (event) {
@@ -150,5 +156,6 @@
     }
   }, true);
   errorTimer = window.setTimeout(showError, 15000);
+  window.addEventListener('pagehide', cleanupWrapperRuntime);
 }());
 
