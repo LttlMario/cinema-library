@@ -119,6 +119,7 @@ expect(homeNavFix.includes('function setSearchA11yState') && homeNavFix.includes
 expect(siteShell.includes('aria-expanded="false"') && siteShell.includes("setAttribute('aria-expanded', 'true')") && homeNavFix.includes("setAttribute('aria-expanded', 'false')"), 'search toggle exposes and updates its expanded state');
 expect(siteShell.includes("target.searchParams.set('tv', '1')"), 'Search navigation preserves TV mode');
 expect(read('genres.html').includes("if(tvMode)target.searchParams.set('tv','1')"), 'Genres favorites navigation preserves TV mode');
+expect(homeNavFix.includes("const tvMode = new URLSearchParams(location.search).get('tv') === '1'") && homeNavFix.includes("if (tvMode) target.searchParams.set('tv', '1')"), 'Home remote navigation preserves TV mode');
 expect(index.includes('<div class="search-wrap" id="search-wrap">') && !index.includes('<div class="search-wrap open" id="search-wrap">'), 'TV starts with the sidebar Search button visible, not the floating field');
 expect(index.includes('<a class="nav-link active" href="index.html" data-nav="home" aria-current="page">Acasă</a>'), 'Home is a native focusable navigation control on the TV layout');
 expect(homeNavFix.includes("cinema:search-opened") && homeNavFix.includes("cinema:search-closed") && index.includes("key: 'search-input'"), 'Search keeps the TV focus state synchronized while opening and closing');
