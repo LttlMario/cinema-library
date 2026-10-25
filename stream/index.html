@@ -2285,6 +2285,7 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
   function activateCurrent() {
     if (!cur) return;
     if (cur === $('own-play')) { toggleOwnPlayback(); return; }
+    if (cur === $('own-next')) { openEpisodePicker(); return; }
     cur.click();
   }
 
