@@ -57,6 +57,7 @@ const catalog = read('catalog.html');
 expect(catalog.includes('async function fetchCatalogJson') && catalog.includes('429,500,502,503,504') && catalog.includes("setTimeout(()=>controller.abort(),10000)"), 'catalog retries transient TMDB failures and cancels slow requests');
 expect(catalog.includes('let staleData=null') && catalog.includes('date salvate local'), 'catalog falls back to expired local data when TMDB is unavailable');
 const genres = read('genres.html');
+expect(genres.includes('let staleCatalogs=null') && genres.includes('Genurile salvate local'), 'genres fall back to expired local data when TMDB is unavailable');
 expect(genres.includes('async function fetchGenreJson') && genres.includes('genreRequestId') && genres.includes('cinemalibrary_genres_v1'), 'genres reuse cancellable retry and bounded local cache logic');
 expect(!catalog.includes('assets/tv-pointer.js') && !genres.includes('assets/tv-pointer.js') && siteShell.includes('const moveFocus = (key)'), 'secondary TV pages use the shared natural D-pad navigator instead of the competing free pointer');
 expect(catalog.includes('preconnect" href="https://api.themoviedb.org') && catalog.includes('preconnect" href="https://image.tmdb.org') && genres.includes('preconnect" href="https://api.themoviedb.org'), 'secondary pages preconnect to TMDB and poster origins');

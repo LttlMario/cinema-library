@@ -56,11 +56,15 @@
     async function load(){
       const request=++genreRequestId;if(genreController)genreController.abort();genreController=new AbortController();const controller=genreController;const timeout=setTimeout(()=>controller.abort(),10000);
       try{
-        const cacheKey='cinemalibrary_genres_v1';let cached=null;try{cached=JSON.parse(localStorage.getItem(cacheKey)||'null')}catch{}
-        if(cached&&Date.now()-cached.time<24*60*60*1000){catalogs=cached.data;render();return}
+        const cacheKey='cinemalibrary_genres_v1';let cached=null;let staleCatalogs=null;try{cached=JSON.parse(localStorage.getItem(cacheKey)||'null')}catch{}
+        if(cached){if(Date.now()-cached.time<24*60*60*1000){catalogs=cached.data;render();return}staleCatalogs=cached.data}
         const [movies,shows]=await Promise.all(['movie','tv'].map(type=>fetchGenreJson(`https://api.themoviedb.org/3/genre/${type}/list?language=ro-RO`,{headers:{Authorization:`Bearer ${token}`,accept:'application/json'},signal:controller.signal}).then(response=>{if(!response.ok)throw new Error('genres');return response.json()})));
         if(request!==genreRequestId)return;catalogs={movie:movies.genres||[],tv:shows.genres||[]};try{localStorage.setItem(cacheKey,JSON.stringify({time:Date.now(),data:catalogs}))}catch{}render();
-      }catch(error){if(error.name!=='AbortError'&&request===genreRequestId)status.textContent='Genurile nu sunt disponibile momentan.'}finally{clearTimeout(timeout)}
+      }catch(error){
+        if(error.name==='AbortError'||request!==genreRequestId)return;
+        if(staleCatalogs){catalogs=staleCatalogs;render();status.textContent='Genurile salvate local sunt afișate momentan.';return}
+        status.textContent='Genurile nu sunt disponibile momentan.'
+      }finally{clearTimeout(timeout)}
     }
     function render(){const query=(searchInput?.value||'').trim().toLocaleLowerCase('ro-RO');const list=catalogs[current].filter(g=>g.name.toLocaleLowerCase('ro-RO').includes(query));status.textContent=`${list.length} genuri disponibile pentru ${current==='movie'?'filme':'seriale'}`;grid.innerHTML=list.map(g=>`<a class="genre-card" href="catalog.html?type=${current}&genre=${g.id}"><strong>${g.name}</strong><span aria-hidden="true">›</span></a>`).join('')||'<p class="empty">Nu am găsit niciun gen pentru căutarea ta.</p>'}
     document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>{current=tab.dataset.type;document.querySelectorAll('.tab').forEach(x=>{const active=x===tab;x.classList.toggle('active',active);x.setAttribute('aria-selected',String(active))});render()}));if(searchInput)searchInput.addEventListener('input',render);load();
