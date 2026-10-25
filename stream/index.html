@@ -2272,6 +2272,9 @@ $('player-error-retry').addEventListener('click', () => {
   hidePlayerError();
   loadPlayer();
 });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') persistCurrentPlayback();
+});
 window.addEventListener('pagehide', persistCurrentPlayback);
 window.addEventListener('beforeunload', persistCurrentPlayback);
 
