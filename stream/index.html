@@ -804,6 +804,7 @@ let providerReadyFallbackTimer = 0;
 let playerLoadGuardTimer = 0;
 let subtitleAutoStartTimer = 0;
 let subtitleAutoScheduledToken = 0;
+let providerErrorCount = 0;
 // A provider can emit a `play` event while its iframe is initializing.  Keep
 // that separate from an explicit user command so a fetch/restore race cannot
 // start playback before the viewer presses Play/OK.
@@ -1260,6 +1261,7 @@ function loadPlayer() {
   const serverId = state.server;
   const loadToken = ++playerLoadToken;
   providerReady = false;
+  providerErrorCount = 0;
   clearTimeout(playerLoadGuardTimer);
   playerLoadGuardTimer = 0;
   clearTimeout(providerReadyFallbackTimer);
@@ -1623,6 +1625,12 @@ window.addEventListener('message', event => {
     if (Number.isFinite(volume)) $('own-volume').value = volume;
     updateOwnControls();
   }
+  const providerStatus = String(payload.player_status || payload.status || '').toLowerCase();
+  const providerError = eventType.includes('error') || ['failed', 'fatal', 'network-error', 'source-error'].includes(providerStatus);
+  if (providerError) {
+    handleProviderError(payload);
+    return;
+  }
   const status = String(payload.player_status || payload.status || eventType).toLowerCase();
   const completed = ['completed', 'ended', 'finished', 'finish', 'cinesrc:ended', 'cinesrc:completed'].includes(status) || eventType === 'cinesrc:ended' || eventType === 'cinesrc:completed';
   const progress = Number(payload.player_progress ?? payload.currentTime);
@@ -1663,6 +1671,27 @@ function handlePlayerFailure(serverId) {
   setupPlayerActions();
   toast(`Sursa ${SERVERS.find(s => s.id === serverId)?.name || ''} nu a răspuns. Încerc ${next.name}…`);
   loadPlayer();
+}
+
+function handleProviderError(payload = {}) {
+  providerErrorCount += 1;
+  const detail = String(payload.message || payload.error || payload.reason || '').trim();
+  ownPaused = true;
+  playbackIntent = false;
+  stopSubtitleFallbackClock();
+  stopPlaybackHeartbeat();
+  stopWatchCheckTimer();
+  updateOwnControls(true);
+  showOwnControls();
+
+  // During the initial provider handshake an error normally means that this
+  // source cannot serve the title. Move to the next source instead of leaving
+  // the TV WebView on an empty, non-interactive loading surface.
+  if (!providerReady && providerErrorCount === 1) {
+    handlePlayerFailure(state.server);
+    return;
+  }
+  toast(detail ? `Redarea a întâmpinat o problemă: ${detail}. Apasă Play pentru a reîncerca.` : 'Redarea a întâmpinat o problemă. Apasă Play pentru a reîncerca.');
 }
 
 function updateTitleBar() {
@@ -2607,3 +2636,4 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
 <!-- End Cloudflare Web Analytics -->
 </body>
 </html>
+
