@@ -121,15 +121,22 @@
     const hero = document.createElement('section'); hero.className = 'shell-hero'; hero.setAttribute('aria-label', 'Titluri populare');
     hero.innerHTML = '<div class="shell-hero-copy"><small>Cinema Library</small><h1>Filme și seriale pentru tine</h1><p>Descoperă titluri populare și găsește rapid următoarea vizionare.</p></div>';
     document.body.insertBefore(hero, main);
-    ['7WsyChQLEftFiDOVTGkv3hFpyyt.jpg', '8cdWjvZQUExUUTzyp4t6EDMubfO.jpg', 'tmU7GeKVybMWFButWEGl2M4GeiP.jpg', 'q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg'].forEach((image, index) => { const slide = document.createElement('div'); slide.className = `shell-hero-slide${index === 0 ? ' active' : ''}`; slide.style.backgroundImage = `url('https://image.tmdb.org/t/p/w1280/${image}')`; hero.prepend(slide); });
+    const heroImages = ['7WsyChQLEftFiDOVTGkv3hFpyyt.jpg', '8cdWjvZQUExUUTzyp4t6EDMubfO.jpg', 'tmU7GeKVybMWFButWEGl2M4GeiP.jpg', 'q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg'];
+    heroImages.forEach((image, index) => { const slide = document.createElement('div'); slide.className = `shell-hero-slide${index === 0 ? ' active' : ''}`; slide.dataset.bg = `https://image.tmdb.org/t/p/w1280/${image}`; hero.prepend(slide); });
     let slideIndex = 0;
     let heroTimer = 0;
+    const loadHeroImage = (slide) => {
+      if (!slide || slide.style.backgroundImage || !slide.dataset.bg) return;
+      slide.style.backgroundImage = `url('${slide.dataset.bg}')`;
+    };
+    loadHeroImage(hero.querySelector('.shell-hero-slide.active'));
     const rotateHero = () => {
       if (document.hidden) return;
       const slides = hero.querySelectorAll('.shell-hero-slide');
       if (slides.length < 2) return;
       slides[slideIndex]?.classList.remove('active');
       slideIndex = (slideIndex + 1) % slides.length;
+      loadHeroImage(slides[slideIndex]);
       slides[slideIndex]?.classList.add('active');
     };
     const startHeroRotation = () => {
