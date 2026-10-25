@@ -49,11 +49,11 @@ html.keynav :is(#header, .cinema-shell-header) .kf {
   box-shadow: 0 4px 18px rgba(229,9,20,.28) !important;
 }
 
-html.tv-mode html.keynav main a:focus,
-html.tv-mode html.keynav main button:focus,
-html.tv-mode html.keynav main input:focus,
-html.tv-mode html.keynav main select:focus,
-html.tv-mode html.keynav main [tabindex="0"]:focus {
+html.tv-mode.keynav main a:focus,
+html.tv-mode.keynav main button:focus,
+html.tv-mode.keynav main input:focus,
+html.tv-mode.keynav main select:focus,
+html.tv-mode.keynav main [tabindex="0"]:focus {
   outline: 3px solid #e50914 !important;
   outline-offset: 3px !important;
   box-shadow: 0 0 0 5px rgba(229,9,20,.24) !important;
