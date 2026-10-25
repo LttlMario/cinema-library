@@ -818,6 +818,8 @@ let playerLoadGuardTimer = 0;
 let subtitleAutoStartTimer = 0;
 let subtitleAutoScheduledToken = 0;
 let providerErrorCount = 0;
+let lastOwnCommandKey = '';
+let lastOwnCommandAt = 0;
 // A provider can emit a `play` event while its iframe is initializing.  Keep
 // that separate from an explicit user command so a fetch/restore race cannot
 // start playback before the viewer presses Play/OK.
@@ -838,7 +840,16 @@ const OWN_QUALITY_KEY = 'cinemalibrary_player_quality_v1';
 const OWN_PICTURE_KEY = 'cinemalibrary_player_picture_v1';
 
 function ownCommand(command, args = []) {
+  const key = `${command}:${JSON.stringify(args)}`;
+  const now = performance.now();
+  // Samsung remotes can repeat an OK/Play key before the provider has
+  // reflected the previous state. Deduplicate only identical play/pause
+  // commands; seeking and other distinct commands remain fully responsive.
+  if ((command === 'play' || command === 'pause') && key === lastOwnCommandKey && now - lastOwnCommandAt < 180) return false;
+  lastOwnCommandKey = key;
+  lastOwnCommandAt = now;
   $('player')?.contentWindow?.postMessage({ type: 'cinesrc:command', command, args }, 'https://cinesrc.st');
+  return true;
 }
 function requestProviderPlay(loadToken = playerLoadToken) {
   if (loadToken !== playerLoadToken || !providerReady) return false;
