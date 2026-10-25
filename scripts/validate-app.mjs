@@ -86,6 +86,7 @@ expect(index.includes('#rows-container .row {') && index.includes('content-visib
 expect(index.includes('Personalization is secondary to the first paint') && index.includes('if (!isTvMode) loadPersonalizedRow();'), 'web personalization waits until core homepage content is loaded');
 expect(index.includes('data-bg="${backdrop(item.backdrop_path, \'w1280\')}"') && index.includes('function activateHeroBackground(index)'), 'hero loads only the active backdrop instead of fetching every slide at first paint');
 expect(index.includes("document.addEventListener('visibilitychange'") && index.includes('heroTimer = null'), 'hero timer pauses while the TV page is hidden');
+expect(index.includes('function cleanupHomeRuntime()') && index.includes('homeWorkController?.abort()') && index.includes('searchAbortController?.abort()'), 'home page aborts pending work and clears timers when unloaded');
 expect(index.includes('prefers-reduced-motion: reduce') && index.includes('scroll-behavior: auto'), 'reduced-motion preference disables expensive animations and smooth scrolling');
 expect(index.includes('loading="lazy" fetchpriority="low" decoding="async"'), 'below-fold posters keep low fetch priority on TV and web');
 expect(index.includes('const candidates = items.slice(0, isTvMode ? 6 : 32)') && index.includes('i += isTvMode ? 4 : 8'), 'TV limits digital-release enrichment work during the initial load');
