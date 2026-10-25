@@ -1232,14 +1232,24 @@ function resetHomeWork() {
 }
 function pumpTmdbQueue() {
   while (tmdbInFlight < TMDB_MAX_IN_FLIGHT && tmdbQueue.length) {
-    const job = tmdbQueue.shift();
+    const queued = tmdbQueue.shift();
+    if (queued.shouldCancel()) {
+      const error = new Error('TMDB request cancelled before it started');
+      error.name = 'AbortError';
+      queued.reject(error);
+      continue;
+    }
     tmdbInFlight++;
-    job().finally(() => { tmdbInFlight--; pumpTmdbQueue(); });
+    queued.run().finally(() => { tmdbInFlight--; pumpTmdbQueue(); });
   }
 }
-function queueTmdbRequest(job) {
+function queueTmdbRequest(job, shouldCancel = () => false) {
   return new Promise((resolve, reject) => {
-    tmdbQueue.push(() => job().then(resolve, reject));
+    tmdbQueue.push({
+      shouldCancel,
+      reject,
+      run: () => job().then(resolve, reject)
+    });
     pumpTmdbQueue();
   });
 }
@@ -1263,6 +1273,8 @@ function writeTmdbCache(cache) {
 const tmdb = async (path, options = {}) => {
   const silent = options?.silent === true;
   const homeGeneration = homeWorkGeneration;
+  const externalSignal = options?.signal;
+  const homeSignal = homeWorkController.signal;
   const localizedPath = `${path}${path.includes('?') ? '&' : '?'}language=ro-RO`;
   const cache = readTmdbCache();
   const cached = cache[localizedPath];
@@ -1271,8 +1283,6 @@ const tmdb = async (path, options = {}) => {
   if (pending) return pending;
   const request = queueTmdbRequest(async () => {
     const controller = new AbortController();
-    const externalSignal = options?.signal;
-    const homeSignal = homeWorkController.signal;
     const abortRequest = () => controller.abort();
     const abortHomeWork = () => controller.abort();
     if (externalSignal?.aborted) controller.abort();
@@ -1292,7 +1302,7 @@ const tmdb = async (path, options = {}) => {
       externalSignal?.removeEventListener('abort', abortRequest);
       homeSignal.removeEventListener('abort', abortHomeWork);
     }
-  });
+  }, () => externalSignal?.aborted || homeSignal.aborted);
   tmdbPending.set(localizedPath, request);
   try {
     return await request;
@@ -1441,7 +1451,7 @@ function playerUrl(item, season = 1, episode = 1) {
   const p = new URLSearchParams({ server: CINEMA_PLAYER_ID });
   p.set('tv', '1');
   if (new URLSearchParams(window.location.search).get('tv') === '1') p.set('player-tv', '1');
-  p.set('v', '20261025-stability12');
+  p.set('v', '20261025-stability13');
   const subtitlePreference = localStorage.getItem('cinemalibrary_subtitle_v1') || 'ro';
   p.set('sub', subtitlePreference === 'en' ? 'en' : 'ro');
   const type = mediaOf(item);
