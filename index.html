@@ -2663,7 +2663,6 @@ $('clear-filters').addEventListener('click', () => {
 (async function init() {
   renderLibraryRows();
   const isTvMode = document.documentElement.classList.contains('tv-mode');
-  if (!isTvMode) loadPersonalizedRow();
   // Start the hero, genre map, top-10 row and first content rows together.
   // The old sequence waited for three TMDB requests before even creating
   // skeletons, which made the TV WebView look frozen during first paint.
@@ -2672,6 +2671,9 @@ $('clear-filters').addEventListener('click', () => {
   const initialLoads = initialRows.map(cfg => loadRow(cfg));
   await Promise.allSettled([warmup, ...initialLoads]);
   populateAdvancedFilters();
+  // Personalization is secondary to the first paint. Starting it only after
+  // the core rows keeps the initial TMDB queue focused on visible content.
+  if (!isTvMode) loadPersonalizedRow();
   if (isTvMode) {
     const deferred = () => {
       loadPersonalizedRow();
