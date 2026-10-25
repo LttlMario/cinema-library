@@ -44,6 +44,7 @@ expect(stream.includes('subtitleRequestController') && stream.includes("subtitle
 expect(stream.includes('<link rel="preconnect" href="https://cinesrc.st" crossorigin>') && stream.includes('<link rel="preconnect" href="https://api.themoviedb.org">'), 'player preconnects to the video provider and TMDB before fetching starts');
 expect(stream.includes('<link rel="preconnect" href="https://cinema-library-subtitles-api.bmariomihail.chatgpt.site">'), 'player preconnects to the subtitle API before automatic subtitle fetching');
 expect(stream.includes('function scheduleAutomaticSubtitleLoad(loadToken)') && stream.includes('scheduleAutomaticSubtitleLoad(playerLoadToken)'), 'automatic subtitles wait for provider readiness instead of competing with initial media fetching');
+expect(stream.includes('let playerLoadGuardTimer = 0') && stream.includes('clearTimeout(playerLoadGuardTimer)'), 'stale player load timers are cancelled when switching sources or episodes');
 
 expect(index.includes('searchAbortController'), 'search requests are abortable');
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
