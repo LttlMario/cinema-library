@@ -822,6 +822,7 @@ const tmdb = async (path, options = {}) => {
 
 let state = null;          // { type, id, season, episode, server, subtitle, title }
 let tvData = null;         // /tv/{id} details
+let metadataAbortController = null;
 const seasonCache = {};    // cached season episode lists
 let loadedProgressKey = '';
 const LIBRARY_KEYS = { favorites: 'cinemalibrary_favorites', watchLater: 'cinemalibrary_watch_later', history: 'cinemalibrary_history', progress: 'cinemalibrary_progress' };
@@ -2045,9 +2046,12 @@ async function setupTv() {
   $('tv-panel').hidden = false;
   const seasonSel  = $('season-select');
   const episodeSel = $('episode-select');
+  metadataAbortController?.abort();
+  const metadataController = new AbortController();
+  metadataAbortController = metadataController;
 
   try {
-    tvData = await tmdb(`/tv/${state.id}`);
+    tvData = await tmdb(`/tv/${state.id}`, { signal: metadataController.signal });
     if (!tvData || (!tvData.name && !tvData.original_name)) throw new Error('not found');
     state.title = tvData.name || tvData.original_name;
     state.media = { ...tvData, media_type: 'tv' };
@@ -2062,9 +2066,11 @@ async function setupTv() {
     seasonSel.value = state.season;
     if (!seasonSel.value) { state.season = parseInt(seasonSel.options[0].value); seasonSel.value = state.season; }
   } catch {
+    if (metadataController.signal.aborted) return;
     showFatal();
     return;
   }
+  if (metadataAbortController === metadataController) metadataAbortController = null;
 
   await populateEpisodes(true);
   setupEpisodePicker();
@@ -2242,15 +2248,20 @@ async function goNextEpisode(isAutomatic = false) {
 
 /* ─── MOVIE TITLE ─── */
 async function setupMovie() {
+  metadataAbortController?.abort();
+  const metadataController = new AbortController();
+  metadataAbortController = metadataController;
   try {
-    const data = await tmdb(`/movie/${state.id}`);
+    const data = await tmdb(`/movie/${state.id}`, { signal: metadataController.signal });
     if (!data || (!data.title && !data.original_title)) throw new Error('not found');
     state.title = data.title || data.original_title;
     state.media = { ...data, media_type: 'movie' };
   } catch {
+    if (metadataController.signal.aborted) return;
     showFatal();
     return;
   }
+  if (metadataAbortController === metadataController) metadataAbortController = null;
   updateTitleBar();
   renderPlayerDetails();
   savePlaybackProgress();
@@ -2355,6 +2366,8 @@ document.addEventListener('visibilitychange', () => {
 });
 function cleanupPlayerRuntime() {
   playerLoadToken += 1;
+  metadataAbortController?.abort();
+  metadataAbortController = null;
   subtitleAutoToken += 1;
   subtitleAutoController?.abort();
   subtitleAutoController = null;
