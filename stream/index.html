@@ -784,6 +784,9 @@ let subtitleAutoToken = 0;
 let subtitleFallbackTimer = 0;
 let subtitleDisplayTimer = 0;
 let providerTimeSignals = 0;
+let playbackHeartbeatTimer = 0;
+let lastPlaybackSignalAt = 0;
+let playbackRecoveryUsed = false;
 let controlsPaintAt = 0;
 let controlsPaintTimer = 0;
 let resumePromptShown = false;
@@ -799,6 +802,34 @@ const OWN_PICTURE_KEY = 'cinemalibrary_player_picture_v1';
 
 function ownCommand(command, args = []) {
   $('player')?.contentWindow?.postMessage({ type: 'cinesrc:command', command, args }, 'https://cinesrc.st');
+}
+function stopPlaybackHeartbeat() {
+  if (playbackHeartbeatTimer) {
+    clearInterval(playbackHeartbeatTimer);
+    playbackHeartbeatTimer = 0;
+  }
+}
+function startPlaybackHeartbeat(loadToken) {
+  stopPlaybackHeartbeat();
+  lastPlaybackSignalAt = performance.now();
+  playbackHeartbeatTimer = window.setInterval(() => {
+    if (loadToken !== playerLoadToken || ownPaused || !providerReady) return;
+    const stalledFor = performance.now() - lastPlaybackSignalAt;
+    if (stalledFor < 14000) return;
+    lastPlaybackSignalAt = performance.now();
+    if (!playbackRecoveryUsed) {
+      playbackRecoveryUsed = true;
+      toast('Redarea pare blocată. Reiau conexiunea…');
+      // Repeating play recovers the provider in most TV WebViews while
+      // preserving the current position and avoiding a destructive iframe reload.
+      window.setTimeout(() => {
+        if (loadToken === playerLoadToken && providerReady && !ownPaused) ownCommand('play');
+      }, 350);
+    } else {
+      stopPlaybackHeartbeat();
+      toast('Conexiunea video s-a întrerupt. Apasă Play pentru a reîncerca.');
+    }
+  }, 4000);
 }
 function ownFormatTime(value) {
   const seconds = Math.max(0, Number(value) || 0);
@@ -833,8 +864,13 @@ function toggleOwnPlayback() {
   const shouldPause = !ownPaused;
   ownPaused = shouldPause;
   ownCommand(shouldPause ? 'pause' : 'play');
-  if (shouldPause) stopSubtitleFallbackClock();
-  else if (!providerTimeSignals) startSubtitleFallbackClock(playerLoadToken);
+  if (shouldPause) {
+    stopSubtitleFallbackClock();
+    stopPlaybackHeartbeat();
+  } else {
+    if (!providerTimeSignals) startSubtitleFallbackClock(playerLoadToken);
+    startPlaybackHeartbeat(playerLoadToken);
+  }
   updateOwnControls();
   updateSubtitleDisplay(ownCurrentTime);
   showOwnControls();
@@ -1203,6 +1239,9 @@ function loadPlayer() {
   stopWatchCheckTimer();
   $('watch-check-prompt').hidden = true;
   providerTimeSignals = 0;
+  playbackRecoveryUsed = false;
+  stopPlaybackHeartbeat();
+  lastPlaybackSignalAt = 0;
   stopSubtitleFallbackClock();
   ownMuted = false;
   ownCurrentTime = 0;
@@ -1407,12 +1446,14 @@ window.addEventListener('message', event => {
     }
     ownPaused = false;
     if (!providerTimeSignals) startSubtitleFallbackClock(playerLoadToken);
+    startPlaybackHeartbeat(playerLoadToken);
     armWatchCheckTimer();
     updateOwnControls();
     showOwnControls();
   } else if (eventType === 'cinesrc:pause' || eventType === 'pause') {
     ownPaused = true;
     stopSubtitleFallbackClock();
+    stopPlaybackHeartbeat();
     stopWatchCheckTimer();
     updateOwnControls();
     showOwnControls();
@@ -1423,6 +1464,7 @@ window.addEventListener('message', event => {
       $('player-loading')?.setAttribute('aria-hidden', 'true');
     }
     providerTimeSignals += 1;
+    lastPlaybackSignalAt = performance.now();
     stopSubtitleFallbackClock();
     ownCurrentTime = Number(payload.currentTime ?? payload.player_progress) || 0;
     ownDuration = Number(payload.duration ?? payload.player_duration ?? payload.duration_seconds) || ownDuration;
