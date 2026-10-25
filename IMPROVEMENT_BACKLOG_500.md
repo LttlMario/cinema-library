@@ -1,3 +1,4 @@
+
 # Backlog Cinema Library — 500 îmbunătățiri
 
 Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se verifică progresiv; nu reprezintă promisiunea că toate sunt deja implementate.
@@ -133,7 +134,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 115. [ ] adaugă feedback vizibil pentru utilizator pentru cache și service worker.
 116. [ ] păstrează focusul după acțiune pentru cache și service worker.
 117. [ ] testează apăsarea rapidă repetată pentru cache și service worker.
-118. [ ] previne blocarea UI în timpul fetchului pentru cache și service worker.
+118. [x] previne blocarea UI în timpul fetchului pentru cache și service worker.
 119. [ ] verifică anularea lucrului vechi pentru cache și service worker.
 120. [ ] adaugă acoperire în validator pentru cache și service worker.
 121. [ ] documentează comportamentul așteptat pentru cache și service worker.
@@ -217,7 +218,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 190. [ ] adaugă feedback vizibil pentru utilizator pentru progres și reluare.
 191. [ ] păstrează focusul după acțiune pentru progres și reluare.
 192. [ ] testează apăsarea rapidă repetată pentru progres și reluare.
-193. [ ] previne blocarea UI în timpul fetchului pentru progres și reluare.
+193. [x] previne blocarea UI în timpul fetchului pentru progres și reluare.
 194. [ ] verifică anularea lucrului vechi pentru progres și reluare.
 195. [ ] adaugă acoperire în validator pentru progres și reluare.
 196. [ ] documentează comportamentul așteptat pentru progres și reluare.
