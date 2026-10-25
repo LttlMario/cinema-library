@@ -55,6 +55,8 @@ expect(index.includes('async function fetchTmdbWithRetry') && stream.includes('a
 expect(index.includes('function waitForTmdbRetry') && index.includes('signal.removeEventListener') && index.includes("error.name = 'AbortError'"), 'TMDB retry delays cancel immediately with the owning page request');
 const catalog = read('catalog.html');
 expect(catalog.includes('async function fetchCatalogJson') && catalog.includes('429,500,502,503,504') && catalog.includes("setTimeout(()=>controller.abort(),10000)"), 'catalog retries transient TMDB failures and cancels slow requests');
+const genres = read('genres.html');
+expect(genres.includes('async function fetchGenreJson') && genres.includes('genreRequestId') && genres.includes('cinemalibrary_genres_v1'), 'genres reuse cancellable retry and bounded local cache logic');
 expect(stream.includes('let loadedProgressKey') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();\n    state.episode'), 'episode changes preserve progress under the old episode key');
 expect(stream.includes("document.visibilityState === 'hidden'") && stream.includes('persistCurrentPlayback();'), 'player saves progress when the TV page loses visibility');
 expect(stream.includes('stopSubtitleDisplayLoop();') && stream.includes('stopPlaybackHeartbeat();') && stream.includes('stopSubtitleFallbackClock();') && stream.includes('if (!ownPaused && providerReady)') && stream.includes('if (!providerTimeSignals) startSubtitleFallbackClock(playerLoadToken);'), 'player suspends local polling while the TV page is hidden and resumes every required clock during playback');
