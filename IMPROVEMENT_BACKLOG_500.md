@@ -167,7 +167,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 145. [ ] adaugă acoperire în validator pentru tmdb și datele catalogului.
 146. [ ] documentează comportamentul așteptat pentru tmdb și datele catalogului.
 147. [ ] verifică fallback-ul când datele lipsesc pentru tmdb și datele catalogului.
-148. [ ] verifică compatibilitatea cu browserul TV pentru tmdb și datele catalogului.
+148. [x] verifică compatibilitatea cu browserul TV pentru tmdb și datele catalogului.
 149. [ ] adaugă scenariu de regresie pentru tmdb și datele catalogului.
 150. [ ] marchează rezultatul în checklist pentru tmdb și datele catalogului.
 
