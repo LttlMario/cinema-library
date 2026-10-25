@@ -2727,6 +2727,9 @@ $('clear-filters').addEventListener('click', () => {
     ].filter(vis);
     if (header.length) secs.push({ key: 'header', items: header, axis: 'vertical' });
 
+    const suggestions = [...document.querySelectorAll('#search-suggestions .search-suggestion')].filter(vis);
+    if (suggestions.length) secs.push({ key: 'search-suggestions', axis: 'vertical', items: suggestions });
+
     if ($('search-results-section').classList.contains('visible')) {
       const tabs = [...document.querySelectorAll('.filter-tab'), $('genre-filter'), $('year-filter'), $('clear-filters')].filter(vis);
       if (tabs.length) secs.push({ key: 'tabs', items: tabs });
@@ -2772,6 +2775,11 @@ $('clear-filters').addEventListener('click', () => {
     if (si < 0) { focusInitial(); return; }
     const sec = secs[si];
     const ii = sec.items.indexOf(cur);
+
+    if (sec.key === 'search-suggestions' && dy < 0) {
+      const searchButton = $('search-toggle');
+      if (searchButton && vis(searchButton)) { setFocus(searchButton, false); return; }
+    }
 
     if (dx) {
       // The sidebar and the content are separate navigation zones.  Right
