@@ -357,14 +357,14 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 315. [ ] adaugă feedback vizibil pentru utilizator pentru catalog și filtre.
 316. [ ] păstrează focusul după acțiune pentru catalog și filtre.
 317. [ ] testează apăsarea rapidă repetată pentru catalog și filtre.
-318. [ ] previne blocarea UI în timpul fetchului pentru catalog și filtre.
-319. [ ] verifică anularea lucrului vechi pentru catalog și filtre.
-320. [ ] adaugă acoperire în validator pentru catalog și filtre.
+318. [x] previne blocarea UI în timpul fetchului pentru catalog și filtre.
+319. [x] verifică anularea lucrului vechi pentru catalog și filtre.
+320. [x] adaugă acoperire în validator pentru catalog și filtre.
 321. [ ] documentează comportamentul așteptat pentru catalog și filtre.
-322. [ ] verifică fallback-ul când datele lipsesc pentru catalog și filtre.
-323. [ ] verifică compatibilitatea cu browserul TV pentru catalog și filtre.
+322. [x] verifică fallback-ul când datele lipsesc pentru catalog și filtre.
+323. [x] verifică compatibilitatea cu browserul TV pentru catalog și filtre.
 324. [ ] adaugă scenariu de regresie pentru catalog și filtre.
-325. [ ] marchează rezultatul în checklist pentru catalog și filtre.
+325. [x] marchează rezultatul în checklist pentru catalog și filtre.
 
 ## Biblioteca personală
 
