@@ -2679,9 +2679,14 @@ $('clear-filters').addEventListener('click', () => {
     if ('requestIdleCallback' in window) requestIdleCallback(deferred, { timeout: 2500 });
     else setTimeout(deferred, 1200);
   }
-  // Load franchise rows after the core homepage starts rendering, so the
-  // curated chronology enriches the page without delaying the first paint.
-  if (!isTvMode) for (const cfg of FRANCHISE_ROWS) loadFranchiseRow(cfg);
+  // Load franchise rows progressively on Web too. Starting every universe at
+  // once creates a burst of TMDB requests and image/layout work just after the
+  // first paint, which can make the page feel frozen on weaker devices.
+  if (!isTvMode) {
+    FRANCHISE_ROWS.forEach((cfg, index) => {
+      window.setTimeout(() => loadFranchiseRow(cfg), Math.min(index * 350, 7000));
+    });
+  }
 
   // When TFlix was opened from a catalog popup, its Back/X action returns to
   // this URL. Rehydrate the same title popup instead of dropping the user on
