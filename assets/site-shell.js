@@ -191,7 +191,12 @@
   const search = document.getElementById('search');
   const searchWrap = document.getElementById('search-wrap');
   document.getElementById('search-toggle').onclick = () => { searchWrap.classList.add('search-open'); document.getElementById('search-toggle').setAttribute('aria-expanded', 'true'); search.focus(); };
-  search.onkeydown = (event) => { if (event.key === 'Enter' && search.value.trim()) location.href = appUrl(`index.html?search=${encodeURIComponent(search.value.trim())}`); };
+  search.onkeydown = (event) => {
+    if (event.key !== 'Enter' || !search.value.trim()) return;
+    const target = new URL(appUrl(`index.html?search=${encodeURIComponent(search.value.trim())}`));
+    if (tvMode) target.searchParams.set('tv', '1');
+    location.href = target.href;
+  };
   document.getElementById('search-clear').onclick = () => { search.value = ''; search.focus(); };
   document.querySelectorAll('[data-shell-menu]').forEach((button) => button.addEventListener('click', (event) => { event.stopPropagation(); const menu = document.getElementById(`shell-${button.dataset.shellMenu}`); document.querySelectorAll('.nav-submenu.open').forEach((item) => { if (item !== menu) item.classList.remove('open'); }); menu.classList.toggle('open'); }));
   document.addEventListener('click', () => document.querySelectorAll('.nav-submenu.open').forEach((item) => item.classList.remove('open')));
@@ -206,7 +211,12 @@
   if (shellSearch && shellSearchWrap && shellSearchToggle && !shellSearchToggle.dataset.bound) {
     shellSearchToggle.dataset.bound = '1';
     shellSearchToggle.onclick = () => { shellSearchWrap.classList.add('search-open'); shellSearchToggle.setAttribute('aria-expanded', 'true'); shellSearch.focus(); };
-    shellSearch.onkeydown = (event) => { if (event.key === 'Enter' && shellSearch.value.trim()) location.href = appUrl(`index.html?search=${encodeURIComponent(shellSearch.value.trim())}`); };
+    shellSearch.onkeydown = (event) => {
+      if (event.key !== 'Enter' || !shellSearch.value.trim()) return;
+      const target = new URL(appUrl(`index.html?search=${encodeURIComponent(shellSearch.value.trim())}`));
+      if (tvMode) target.searchParams.set('tv', '1');
+      location.href = target.href;
+    };
     document.getElementById('search-clear')?.addEventListener('click', () => { shellSearch.value = ''; shellSearch.focus(); });
   }
 
