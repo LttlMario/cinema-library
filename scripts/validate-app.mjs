@@ -55,5 +55,6 @@ expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back
 expect(tvConfig.includes('version="1.7.8"'), 'TV package version matches the wrapper source');
 expect(read('assets/site-shell.js').includes('let contentReturn = null'), 'secondary-page TV navigation remembers content return position');
 expect(read('assets/nav-parity.css').includes('html.tv-mode.keynav main'), 'secondary-page TV focus is visibly highlighted');
+expect(read('assets/home-nav-fix.js').includes("event.key === 'Escape'") && read('assets/home-nav-fix.js').includes('searchToggle.focus'), 'Search Escape restores focus to the sidebar button');
 
 console.log(`Cinema Library validation passed (${checks.length} checks).`);
