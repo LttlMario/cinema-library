@@ -820,6 +820,9 @@ let subtitleAutoScheduledToken = 0;
 let providerErrorCount = 0;
 let lastOwnCommandKey = '';
 let lastOwnCommandAt = 0;
+let playerLoadStartedAt = 0;
+let playerControlMetricRecorded = false;
+let playerFrameMetricRecorded = false;
 // A provider can emit a `play` event while its iframe is initializing.  Keep
 // that separate from an explicit user command so a fetch/restore race cannot
 // start playback before the viewer presses Play/OK.
@@ -850,6 +853,14 @@ function ownCommand(command, args = []) {
   lastOwnCommandAt = now;
   $('player')?.contentWindow?.postMessage({ type: 'cinesrc:command', command, args }, 'https://cinesrc.st');
   return true;
+}
+function markPlayerMilestone(name) {
+  if (!playerLoadStartedAt || !performance?.mark) return;
+  const key = `cinema-player-${name}-${playerLoadToken}`;
+  try {
+    performance.mark(key);
+    performance.measure(`cinema-player-${name}`, { start: 'cinema-player-load-start', end: key });
+  } catch {}
 }
 function requestProviderPlay(loadToken = playerLoadToken) {
   if (loadToken !== playerLoadToken || !providerReady) return false;
@@ -935,6 +946,10 @@ function toggleOwnPlayback() {
   showOwnControls();
 }
 function showOwnControls() {
+  if (!playerControlMetricRecorded && playerLoadStartedAt) {
+    playerControlMetricRecorded = true;
+    markPlayerMilestone('controls');
+  }
   const controls = $('custom-controls');
   const wrap = $('player-wrap');
   controls?.classList.remove('controls-idle');
@@ -1288,6 +1303,10 @@ function loadPlayer() {
   if (recommendationPanel) recommendationPanel.hidden = true;
   const serverId = state.server;
   const loadToken = ++playerLoadToken;
+  playerLoadStartedAt = performance.now();
+  playerControlMetricRecorded = false;
+  playerFrameMetricRecorded = false;
+  try { performance.mark('cinema-player-load-start'); } catch {}
   providerReady = false;
   providerErrorCount = 0;
   clearTimeout(playerLoadGuardTimer);
@@ -1629,6 +1648,10 @@ window.addEventListener('message', event => {
     stopSubtitleFallbackClock();
     ownCurrentTime = Number(payload.currentTime ?? payload.player_progress) || 0;
     ownDuration = Number(payload.duration ?? payload.player_duration ?? payload.duration_seconds) || ownDuration;
+    if (!playerFrameMetricRecorded && ownCurrentTime > 0) {
+      playerFrameMetricRecorded = true;
+      markPlayerMilestone('first-frame-signal');
+    }
     if (hasResumeAvailable() && !resumeDecision) {
       ownPaused = true;
       ownCommand('pause');
