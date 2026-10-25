@@ -38,8 +38,8 @@ expect(stream.includes('providerReadyFallbackTimer'), 'player controls have a no
 expect(index.includes('searchAbortController'), 'search requests are abortable');
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
-expect(index.includes('sw.js?v=20261025-v24'), 'page registers the current service-worker revision');
-expect(sw.includes('cinema-library-shell-v24'), 'service-worker cache revision matches the page');
+expect(index.includes('sw.js?v=20261025-v25'), 'page registers the current service-worker revision');
+expect(sw.includes('cinema-library-shell-v25'), 'service-worker cache revision matches the page');
 expect(sw.includes("url.searchParams.has('fresh')"), 'service-worker supports forced fresh document loads');
 expect(sw.includes("url.pathname !== '/stream/index.html'"), 'fresh player loads are not duplicated in the service-worker cache');
 
