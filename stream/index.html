@@ -1392,15 +1392,9 @@ window.addEventListener('message', event => {
     showOwnControls();
     if (waitingForResumeChoice) prepareResumeChoice();
     applyResumeDecision();
-    // Start only after the provider has finished its initial fetch. The
-    // iframe itself is loaded earlier, but autoplay is deliberately disabled
-    // in the URL so the Play control never changes to Pause during fetching.
-    if (!waitingForResumeChoice && !resumeDecision) {
-      const readyToken = playerLoadToken;
-      [0, 250, 800, 1600].forEach(delay => window.setTimeout(() => {
-        if (readyToken === playerLoadToken && ownPaused && providerReady) ownCommand('play');
-      }, delay));
-    }
+    // Do not start playback automatically. The provider is ready, but the
+    // viewer must explicitly press Play/OK before the first play command is
+    // sent. This also prevents a TV WebView from starting during fetching.
   } else if (eventType === 'cinesrc:play' || eventType === 'play') {
     if (!providerReady) return;
     if (hasResumeAvailable() && !resumeDecision) {
