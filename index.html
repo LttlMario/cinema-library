@@ -1206,6 +1206,8 @@ const TMDB_CACHE_STORE = document.documentElement.classList.contains('tv-mode') 
 const TMDB_MAX_IN_FLIGHT = 5;
 let tmdbInFlight = 0;
 const tmdbQueue = [];
+let tmdbCacheMemory = null;
+let tmdbCacheWriteTimer = 0;
 function pumpTmdbQueue() {
   while (tmdbInFlight < TMDB_MAX_IN_FLIGHT && tmdbQueue.length) {
     const job = tmdbQueue.shift();
@@ -1220,10 +1222,14 @@ function queueTmdbRequest(job) {
   });
 }
 function readTmdbCache() {
-  try { return JSON.parse(TMDB_CACHE_STORE.getItem(TMDB_CACHE_KEY) || '{}'); } catch { return {}; }
+  if (tmdbCacheMemory) return tmdbCacheMemory;
+  try { tmdbCacheMemory = JSON.parse(TMDB_CACHE_STORE.getItem(TMDB_CACHE_KEY) || '{}'); } catch { tmdbCacheMemory = {}; }
+  return tmdbCacheMemory;
 }
 function writeTmdbCache(cache) {
-  try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(cache)); } catch {}
+  tmdbCacheMemory = cache;
+  clearTimeout(tmdbCacheWriteTimer);
+  tmdbCacheWriteTimer = setTimeout(() => { try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(tmdbCacheMemory)); } catch {} }, 700);
 }
 const tmdb = async path => {
   const localizedPath = `${path}${path.includes('?') ? '&' : '?'}language=ro-RO`;
@@ -1683,6 +1689,7 @@ function renderLibraryRows() {
 }
 
 async function loadPersonalizedRow() {
+  if (document.documentElement.classList.contains('player-open')) return;
   document.querySelector('.personalized-row')?.remove();
   const history = libraryRead(LIBRARY_KEYS.history);
   if (!history.length) return;
@@ -1700,6 +1707,7 @@ async function loadPersonalizedRow() {
     return tmdb(`/discover/${type}?${query}`);
   });
   const results = await Promise.allSettled(requests);
+  if (document.documentElement.classList.contains('player-open')) return;
   const watched = new Set(history.map(libraryKey));
   const seen = new Set();
   const items = results.flatMap(result => result.status === 'fulfilled' ? (result.value.results || []) : [])
@@ -1731,6 +1739,7 @@ $('favorites-nav').addEventListener('click', () => {
 });
 
 async function loadRow(cfg) {
+  if (document.documentElement.classList.contains('player-open')) return;
   if (cfg.isDigitalRow) { await loadDigitalRow(cfg); return; }
 
   const scroller = buildRow(cfg);
@@ -1739,6 +1748,7 @@ async function loadRow(cfg) {
     // available for deeper browsing, so the home screen does not spend its
     // first paint fetching two pages for every row.
     const data = await tmdb(cfg.endpoint);
+    if (document.documentElement.classList.contains('player-open')) return;
     const items = (data.results || [])
       .filter(r => r.poster_path)
       .map(r => ({ ...r, media_type: cfg.media || r.media_type }))
@@ -1752,6 +1762,7 @@ async function loadRow(cfg) {
 }
 
 async function loadFranchiseRow(cfg) {
+  if (document.documentElement.classList.contains('player-open')) return;
   const scroller = buildRow({ ...cfg, anchor: null });
   const directItems = await Promise.allSettled((cfg.items || []).map(async ([media, id]) => {
     const data = await tmdb(`/${media}/${id}`);
@@ -1761,6 +1772,7 @@ async function loadFranchiseRow(cfg) {
     const data = await tmdb(`/collection/${id}`);
     return (data.parts || []).map(item => ({ ...item, media_type: 'movie' }));
   }));
+  if (document.documentElement.classList.contains('player-open')) return;
   const ordered = directItems.filter(result => result.status === 'fulfilled').map(result => result.value);
   const collectionOrdered = collectionItems.flatMap(result => result.status === 'fulfilled' ? result.value : [])
     .sort((a, b) => (a.release_date || '9999-12-31').localeCompare(b.release_date || '9999-12-31'));
@@ -1780,6 +1792,7 @@ async function loadFranchiseRow(cfg) {
 
 /* ─── RECENTLY ON DIGITAL ROW ─── */
 async function loadDigitalRow(cfg) {
+  if (document.documentElement.classList.contains('player-open')) return;
   // Use local date parts so we don't lose "today" due to UTC offset
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
@@ -1949,6 +1962,7 @@ function goToHero(i) {
 
 function startHeroTimer() {
   clearInterval(heroTimer);
+  if (document.documentElement.classList.contains('player-open')) return;
   heroTimer = setInterval(() => goToHero(heroIndex + 1), 8000);
 }
 
@@ -2182,6 +2196,8 @@ function closeRiomaOverlay() {
   }
   overlay.hidden = true;
   overlay.classList.remove('open');
+  document.documentElement.classList.remove('player-open');
+  startHeroTimer();
   if (frame) frame.src = 'about:blank';
   if (window.parent !== window) window.parent.postMessage({ type: 'cinema:player-closed' }, '*');
 }
@@ -2190,6 +2206,8 @@ function openRiomaOverlay(url) {
   const overlay = $('rioma-overlay');
   const frame = $('rioma-overlay-frame');
   if (!overlay || !frame) { window.location.href = url; return; }
+  document.documentElement.classList.add('player-open');
+  clearInterval(heroTimer);
   frame.src = url;
   frame.setAttribute('tabindex', '0');
   overlay.hidden = false;
