@@ -72,6 +72,7 @@ expect(stream.includes('function cleanupPlayerRuntime()') && stream.includes('su
 expect(stream.includes('remoteFocusMetricRecorded') && stream.includes("markPlayerMilestone('remote-focus')"), 'player measures time until the first TV remote focus');
 expect((index.match(/fonts\.googleapis\.com\/css2/g) || []).length === 1 && (stream.match(/fonts\.googleapis\.com\/css2/g) || []).length === 1, 'web and player combine Google Fonts into one request');
 expect(stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return; }"), 'TV remote Enter opens the episode picker directly');
+expect(stream.includes('filter(item => item !== nextButton || !completionItems.includes(item))'), 'TV focus does not duplicate the episode picker action');
 expect(stream.includes('subtitleAutoController') && stream.includes('signal: controller.signal'), 'automatic subtitle fetches are cancelled when the player load changes');
 expect(stream.includes("if (error.name === 'AbortError') return;"), 'cancelled subtitle fetches do not show stale errors');
 expect(stream.includes('const tmdbInFlight = new Map()') && stream.includes('tmdbInFlight.get(localizedPath)'), 'player TMDB requests are deduplicated while in flight');

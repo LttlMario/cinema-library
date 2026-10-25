@@ -2482,10 +2482,12 @@ window.addEventListener('beforeunload', () => {
     const playerBack = [$('player-back-action')].filter(vis);
     if (playerBack.length) secs.push({ key: 'back', items: playerBack });
     const playerTimeline = [$('own-timeline')].filter(vis);
-    const playerButtons = [$('own-restart'), $('own-play'), $('own-back10'), $('own-forward10'), $('own-quality'), $('own-picture'), $('own-next'), $('own-mute'), $('own-volume'), $('own-captions'), $('own-fullscreen')].filter(vis);
+    const completionItems = getCompletionFocusItems();
+    const nextButton = $('own-next');
+    const playerButtons = [$('own-restart'), $('own-play'), $('own-back10'), $('own-forward10'), $('own-quality'), $('own-picture'), nextButton, $('own-mute'), $('own-volume'), $('own-captions'), $('own-fullscreen')]
+      .filter(vis).filter(item => item !== nextButton || !completionItems.includes(item));
     if (playerTimeline.length) secs.push({ key: 'timeline', items: playerTimeline });
     if (playerButtons.length) secs.push({ key: 'player-buttons', items: playerButtons });
-    const completionItems = getCompletionFocusItems();
     if (completionItems.length) secs.push({ key: 'completion', items: completionItems });
     const resumeActions = [$('resume-continue'), $('resume-restart')].filter(vis);
     if (resumeActions.length) secs.push({ items: resumeActions, axis: 'vertical' });
