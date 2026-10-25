@@ -151,6 +151,12 @@
     html.tv-mode .card-action { width: 40px; height: 40px; font-size: 1.18rem; }
     html.tv-mode .grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.2rem 1.1rem; }
     html.tv-mode .filter-tab { min-height: 48px; }
+    /* Keep below-the-fold rows out of the TV WebView layout pass until they
+       are near the viewport. Focus navigation/scrolling still reveals them. */
+    html.tv-mode #rows-container .row {
+      content-visibility: auto;
+      contain-intrinsic-size: 280px;
+    }
 
     .logo {
       font-family: 'Bricolage Grotesque', sans-serif;
