@@ -173,8 +173,8 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 ## Subtitrări
 
 151. [ ] adaugă un test de pornire fără autoplay pentru subtitrări.
-152. [ ] verifică tratarea erorilor de rețea pentru subtitrări.
-153. [ ] adaugă timeout și mesaj de retry pentru subtitrări.
+152. [x] verifică tratarea erorilor de rețea pentru subtitrări.
+153. [x] adaugă timeout și mesaj de retry pentru subtitrări.
 154. [ ] previne comenzile duplicate pentru subtitrări.
 155. [ ] salvează starea înainte de schimbarea sursei pentru subtitrări.
 156. [ ] testează revenirea după pierderea conexiunii pentru subtitrări.
