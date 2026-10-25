@@ -2879,6 +2879,9 @@ $('clear-filters').addEventListener('click', () => {
       const target = dy < 0 ? $('search-toggle') : document.querySelector('#search-suggestions .search-suggestion');
       if (target && vis(target)) { setFocus(target, false); return; }
       if (dy < 0 && vis($('search-toggle'))) { setFocus($('search-toggle'), false); return; }
+      // Keep native text focus while suggestions are still loading instead
+      // of blurring into the document and losing the TV selection highlight.
+      if (dy > 0 && vis(searchInput)) { setFocus(searchInput, false); return; }
     }
 
     if (dx) {
