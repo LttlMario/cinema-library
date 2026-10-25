@@ -163,7 +163,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 141. [ ] păstrează focusul după acțiune pentru tmdb și datele catalogului.
 142. [ ] testează apăsarea rapidă repetată pentru tmdb și datele catalogului.
 143. [ ] previne blocarea UI în timpul fetchului pentru tmdb și datele catalogului.
-144. [ ] verifică anularea lucrului vechi pentru tmdb și datele catalogului.
+144. [x] verifică anularea lucrului vechi pentru tmdb și datele catalogului.
 145. [ ] adaugă acoperire în validator pentru tmdb și datele catalogului.
 146. [ ] documentează comportamentul așteptat pentru tmdb și datele catalogului.
 147. [ ] verifică fallback-ul când datele lipsesc pentru tmdb și datele catalogului.
