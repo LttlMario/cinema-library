@@ -2190,6 +2190,10 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
 
   function handleRemoteKey(key) {
     if (!key) return;
+    if (['MediaPlayPause', 'MediaPlay', 'MediaPause', 'MediaStop', 'MediaFastForward', 'MediaRewind'].includes(key)) {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+      return;
+    }
     document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
   }
 
@@ -2382,6 +2386,21 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
   document.addEventListener('keydown', e => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const k = e.key;
+    if (['MediaPlayPause', 'MediaPlay', 'MediaPause'].includes(k)) {
+      e.preventDefault();
+      toggleOwnPlayback();
+      return;
+    }
+    if (k === 'MediaFastForward' || k === 'MediaRewind') {
+      e.preventDefault();
+      seekOwn(k === 'MediaFastForward' ? 30 : -30);
+      return;
+    }
+    if (k === 'MediaStop') {
+      e.preventDefault();
+      if (!ownPaused) toggleOwnPlayback();
+      return;
+    }
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
     if (arrows[k]) {
       const now = performance.now();
