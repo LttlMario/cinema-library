@@ -82,6 +82,7 @@ expect(stream.includes('function scheduleAutomaticSubtitleLoad(loadToken)') && s
 expect(stream.includes('let playerLoadGuardTimer = 0') && stream.includes('clearTimeout(playerLoadGuardTimer)'), 'stale player load timers are cancelled when switching sources or episodes');
 
 expect(index.includes('searchAbortController'), 'search requests are abortable');
+expect(index.includes("const SEARCH_CACHE_KEY = 'cinemalibrary_search_cache_v1'") && index.includes('SEARCH_CACHE_STORE') && index.includes('slice(0, 12)'), 'search results use a bounded TV-friendly cache');
 expect(index.includes('const tmdb = async (path, options = {})') && index.includes('externalSignal?.addEventListener'), 'TMDB requests honor caller cancellation');
 expect(index.includes('pending.homeGeneration === homeGeneration') && index.includes('pending.signal.aborted') && index.includes('pending.promise'), 'TMDB deduplication does not reuse cancelled work from an older navigation');
 expect(index.includes('if (!silent) toast(message)'), 'optional TMDB requests stay silent on isolated failures');

@@ -2536,6 +2536,9 @@ window.addEventListener('popstate', () => {
 /* ─── SEARCH ─── */
 let searchTimer;
 let searchAbortController = null;
+const SEARCH_CACHE_KEY = 'cinemalibrary_search_cache_v1';
+const SEARCH_CACHE_TTL = document.documentElement.classList.contains('tv-mode') ? 15 * 60 * 1000 : 5 * 60 * 1000;
+const SEARCH_CACHE_STORE = document.documentElement.classList.contains('tv-mode') ? localStorage : sessionStorage;
 const searchWrap  = $('search-wrap');
 const searchInput = $('search');
 const clearBtn    = $('search-clear');
@@ -2635,9 +2638,18 @@ async function doSearch(q) {
 
   try {
     const pageCount = document.documentElement.classList.contains('tv-mode') ? 2 : 5;
-    const pages = await Promise.all(Array.from({ length: pageCount }, (_, i) =>
-      tmdb(`/search/multi?query=${encodeURIComponent(q)}&include_adult=false&page=${i + 1}`, { signal: abortController.signal })
-    ));
+    const cacheKey = `${q.trim().toLocaleLowerCase('ro-RO')}|${pageCount}`;
+    let cachedSearch = null;
+    try {
+      const cache = JSON.parse(SEARCH_CACHE_STORE.getItem(SEARCH_CACHE_KEY) || '{}');
+      const entry = cache[cacheKey];
+      if (entry && Date.now() - entry.time < SEARCH_CACHE_TTL && Array.isArray(entry.results)) cachedSearch = entry.results;
+    } catch {}
+    const pages = cachedSearch
+      ? [{ results: cachedSearch }]
+      : await Promise.all(Array.from({ length: pageCount }, (_, i) =>
+        tmdb(`/search/multi?query=${encodeURIComponent(q)}&include_adult=false&page=${i + 1}`, { signal: abortController.signal })
+      ));
     if (requestId !== searchRequestId) return;
     const all = pages.flatMap(page => page.results || []);
     const seen = new Set();
@@ -2648,6 +2660,15 @@ async function doSearch(q) {
       seen.add(key);
       return true;
     });
+    if (!cachedSearch) {
+      try {
+        const cache = JSON.parse(SEARCH_CACHE_STORE.getItem(SEARCH_CACHE_KEY) || '{}');
+        cache[cacheKey] = { time: Date.now(), results: searchResults };
+        const keys = Object.keys(cache).sort((a, b) => Number(cache[b]?.time || 0) - Number(cache[a]?.time || 0)).slice(0, 12);
+        const bounded = {}; keys.forEach(key => { bounded[key] = cache[key]; });
+        SEARCH_CACHE_STORE.setItem(SEARCH_CACHE_KEY, JSON.stringify(bounded));
+      } catch {}
+    }
     $('search-spinner').style.display = 'none';
     $('search-results-section').setAttribute('aria-busy', 'false');
     renderSearchResults();
