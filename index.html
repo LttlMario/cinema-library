@@ -2667,6 +2667,7 @@ $('clear-filters').addEventListener('click', () => {
   let lastCard = null;   // card that opened the modal (refocused on close)
   let openMenuParent = null;
   let contentReturn = null;
+  let lastNavAt = 0;
   const mem = new Map(); // section key -> last item index
 
   const vis = el => !!(el && el.getClientRects().length);
@@ -2841,6 +2842,11 @@ $('clear-filters').addEventListener('click', () => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const k = e.key;
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (arrows[k]) {
+      const now = performance.now();
+      if (now - lastNavAt < 70) { e.preventDefault(); return; }
+      lastNavAt = now;
+    }
 
     if (!active) {
       if (arrows[k]) {
