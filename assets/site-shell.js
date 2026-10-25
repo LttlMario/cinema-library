@@ -244,7 +244,9 @@
     observer.observe(menu, { attributes: true, attributeFilter: ['class'] });
     shellMenuObservers.push(observer);
   });
-  window.addEventListener('pagehide', () => shellMenuObservers.forEach(observer => observer.disconnect()), { once: true });
+  window.addEventListener('pagehide', (event) => {
+    if (!event.persisted) shellMenuObservers.forEach(observer => observer.disconnect());
+  }, { once: true });
 
   // Launch every direct stream link in the same Rioma fullscreen surface.
   // This keeps catalog, genres and watch-together consistent with the home
