@@ -2487,7 +2487,8 @@ async function doSearch(q) {
   document.querySelectorAll('.nav-link').forEach(l => l.classList.toggle('active', l.dataset.nav === 'home'));
 
   try {
-    const pages = await Promise.all(Array.from({ length: 5 }, (_, i) =>
+    const pageCount = document.documentElement.classList.contains('tv-mode') ? 2 : 5;
+    const pages = await Promise.all(Array.from({ length: pageCount }, (_, i) =>
       tmdb(`/search/multi?query=${encodeURIComponent(q)}&include_adult=false&page=${i + 1}`)
     ));
     if (requestId !== searchRequestId) return;
