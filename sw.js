@@ -1,4 +1,4 @@
-const CACHE = 'cinema-library-shell-v30-cache-safe-20261025';
+const CACHE = 'cinema-library-shell-v31-cache-safe-20261025';
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
@@ -11,6 +11,9 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))));
   self.clients.claim();
+});
+self.addEventListener('message', event => {
+  if (event.data?.type === 'cinema:skip-waiting') self.skipWaiting();
 });
 self.addEventListener('fetch', event => {
   const request = event.request;
@@ -62,3 +65,4 @@ self.addEventListener('fetch', event => {
     return response;
   }).catch(() => caches.match(request).then(response => response || caches.match('./404.html'))));
 });
+
