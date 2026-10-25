@@ -1223,13 +1223,18 @@ async function autoLoadRomanianSubtitle(loadToken) {
     subtitleResults = (searchPayload.data || []).flatMap(item => (item.attributes?.files || []).map(file => ({ id:file.file_id, language:item.attributes.language, release:item.attributes.release || 'Subtitrare', downloads:item.attributes.download_count || 0 })));
     selectedSubtitleFileId = subtitleResults[0]?.id || null;
     if (!selectedSubtitleFileId) { if (status) status.textContent = 'Nu am găsit automat subtitrare în română pentru acest titlu.'; return; }
+    // Never trust a stale/partial subtitle cache entry. If it cannot be
+    // parsed into cues, fetch fresh content instead of silently showing none.
+    if (cachedContent && !parseSubtitles(cachedContent).length) cachedContent = '';
     const content = cachedContent || await (async () => {
       const contentResponse = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`), controller);
       if (!contentResponse.ok) throw new Error('Subtitrarea nu a putut fi descărcată.');
       return contentResponse.text();
     })();
     if (token !== subtitleAutoToken || loadToken !== playerLoadToken) return;
-    subtitleCues = parseSubtitles(content); subtitleOffset = 0;
+    subtitleCues = parseSubtitles(content);
+    if (!subtitleCues.length) throw new Error('Fișierul de subtitrare nu conține replici valide. Apasă din nou pentru a reîncerca.');
+    subtitleOffset = 0;
     try { localStorage.setItem(cacheKey, content); } catch {}
     startSubtitleDisplayLoop();
     if (status) status.textContent = `Subtitrarea română a fost încărcată automat (${subtitleCues.length} replici).`;
