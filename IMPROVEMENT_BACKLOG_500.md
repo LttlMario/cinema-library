@@ -153,7 +153,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 132. [ ] limitează operațiile concurente pentru tmdb și datele catalogului.
 133. [ ] elimină listener-ele la închiderea componentei pentru tmdb și datele catalogului.
 134. [ ] verifică starea după schimbarea episodului pentru tmdb și datele catalogului.
-135. [ ] adaugă fallback pentru răspuns invalid pentru tmdb și datele catalogului.
+135. [x] adaugă fallback pentru răspuns invalid pentru tmdb și datele catalogului.
 136. [ ] măsoară timpul până la primul cadru pentru tmdb și datele catalogului.
 137. [ ] măsoară timpul până la primul control pentru tmdb și datele catalogului.
 138. [ ] verifică funcționarea pe ecran mic pentru tmdb și datele catalogului.
@@ -161,14 +161,14 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 140. [ ] adaugă feedback vizibil pentru utilizator pentru tmdb și datele catalogului.
 141. [ ] păstrează focusul după acțiune pentru tmdb și datele catalogului.
 142. [ ] testează apăsarea rapidă repetată pentru tmdb și datele catalogului.
-143. [ ] previne blocarea UI în timpul fetchului pentru tmdb și datele catalogului.
+143. [x] previne blocarea UI în timpul fetchului pentru tmdb și datele catalogului.
 144. [x] verifică anularea lucrului vechi pentru tmdb și datele catalogului.
-145. [ ] adaugă acoperire în validator pentru tmdb și datele catalogului.
+145. [x] adaugă acoperire în validator pentru tmdb și datele catalogului.
 146. [ ] documentează comportamentul așteptat pentru tmdb și datele catalogului.
-147. [ ] verifică fallback-ul când datele lipsesc pentru tmdb și datele catalogului.
+147. [x] verifică fallback-ul când datele lipsesc pentru tmdb și datele catalogului.
 148. [x] verifică compatibilitatea cu browserul TV pentru tmdb și datele catalogului.
 149. [ ] adaugă scenariu de regresie pentru tmdb și datele catalogului.
-150. [ ] marchează rezultatul în checklist pentru tmdb și datele catalogului.
+150. [x] marchează rezultatul în checklist pentru tmdb și datele catalogului.
 
 ## Subtitrări
 
