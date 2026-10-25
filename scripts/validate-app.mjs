@@ -49,6 +49,7 @@ expect(index.includes('searchAbortController'), 'search requests are abortable')
 expect(index.includes('TMDB_CACHE_MAX_ENTRIES'), 'TMDB cache is bounded to prevent TV storage stalls');
 expect(index.includes('cancelHomeWork()') && index.includes('resetHomeWork()'), 'homepage TMDB work is cancelled while the player opens');
 expect(index.includes('homeWorkGeneration') && index.includes('homeGeneration !== homeWorkGeneration'), 'intentional TMDB cancellations stay silent');
+expect(index.includes("TMDB_MAX_IN_FLIGHT = document.documentElement.classList.contains('tv-mode') ? 3 : 5"), 'TV limits concurrent TMDB requests to protect WebView responsiveness');
 expect(index.includes('FRANCHISE_ROWS.forEach((cfg, index)') && index.includes('index * 350'), 'web franchise rows are staggered to avoid a post-paint request burst');
 expect(index.includes('#rows-container .row {') && index.includes('content-visibility: auto'), 'web and TV rows defer below-the-fold layout work');
 expect(index.includes('Personalization is secondary to the first paint') && index.includes('if (!isTvMode) loadPersonalizedRow();'), 'web personalization waits until core homepage content is loaded');
