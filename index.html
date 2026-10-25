@@ -2812,17 +2812,20 @@ $('clear-filters').addEventListener('click', () => {
   // Start the hero, genre map, top-10 row and first content rows together.
   // The old sequence waited for three TMDB requests before even creating
   // skeletons, which made the TV WebView look frozen during first paint.
-  const warmup = Promise.allSettled([
-    loadGenres(),
-    loadHero(),
-    ...(isTvMode ? [] : [loadTop10()])
-  ]);
+  const heroLoad = loadHero();
+  const genreLoad = loadGenres();
+  const topLoad = isTvMode ? Promise.resolve() : loadTop10();
+  const warmup = Promise.allSettled([genreLoad, heroLoad, topLoad]);
   const initialRows = isTvMode ? CATEGORY_ROWS.slice(0, 3) : CATEGORY_ROWS;
   const initialLoads = initialRows.map(cfg => loadRow(cfg));
-  await Promise.allSettled([warmup, ...initialLoads]);
+  // The wrapper only needs the hero and the first visible row before it can
+  // hand focus to the remote. Let the remaining rows finish in the background
+  // instead of making the TV look blocked during the first paint.
+  await Promise.allSettled([heroLoad, initialLoads[0]]);
   if (window.parent !== window) {
     window.parent.postMessage({ type: 'cinema:app-ready' }, '*');
   }
+  await Promise.allSettled([warmup, ...initialLoads]);
   populateAdvancedFilters();
   // Personalization is secondary to the first paint. Starting it only after
   // the core rows keeps the initial TMDB queue focused on visible content.
