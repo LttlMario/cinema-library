@@ -2250,7 +2250,7 @@ function showFatal() {
     <div class="fatal">
       <h2>Titlul nu a fost găsit</h2>
       <p>Filmul sau serialul nu există ori nu a putut fi încărcat.</p>
-      <a href="../">Înapoi la Cinema Library</a>
+      <a href="${esc(HOME_URL.href)}">Înapoi la Cinema Library</a>
     </div>`;
   document.title = 'Cinema Library';
 }
@@ -2392,7 +2392,7 @@ window.addEventListener('beforeunload', () => {
       <div class="fatal">
         <h2>Nimic de redat</h2>
         <p>Linkul nu conține informațiile necesare pentru acest titlu.</p>
-        <a href="../">Înapoi la Cinema Library</a>
+        <a href="${esc(HOME_URL.href)}">Înapoi la Cinema Library</a>
       </div>`;
     document.title = 'Cinema Library';
     return;
