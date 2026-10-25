@@ -1441,7 +1441,7 @@ function playerUrl(item, season = 1, episode = 1) {
   const p = new URLSearchParams({ server: CINEMA_PLAYER_ID });
   p.set('tv', '1');
   if (new URLSearchParams(window.location.search).get('tv') === '1') p.set('player-tv', '1');
-  p.set('v', '20261025-stability10');
+  p.set('v', '20261025-stability11');
   const subtitlePreference = localStorage.getItem('cinemalibrary_subtitle_v1') || 'ro';
   p.set('sub', subtitlePreference === 'en' ? 'en' : 'ro');
   const type = mediaOf(item);
@@ -1973,7 +1973,7 @@ async function loadHero() {
       const slide = document.createElement('div');
       slide.className = 'hero-slide' + (i === 0 ? ' active' : '');
       slide.innerHTML = `
-       <div class="hero-bg" style="background-image:url('${backdrop(item.backdrop_path, 'w1280')}')"></div>
+       <div class="hero-bg" data-bg="${backdrop(item.backdrop_path, 'w1280')}"></div>
         <div class="hero-content">
           <div class="hero-badge"><span class="bolt">●</span> #${i + 1} În tendințe azi</div>
           <h1 class="hero-title">${esc(title)}</h1>
@@ -2005,8 +2005,20 @@ async function loadHero() {
     });
     hero.appendChild(dots);
 
+    activateHeroBackground(0);
     startHeroTimer();
   } catch (e) { console.warn('Hero load failed', e); }
+}
+
+function activateHeroBackground(index) {
+  const slide = document.querySelectorAll('.hero-slide')[index];
+  const bg = slide?.querySelector('.hero-bg');
+  if (!bg || bg.dataset.loaded === 'true') return bg;
+  const url = bg.dataset.bg;
+  if (!url) return bg;
+  bg.style.backgroundImage = `url("${url.replace(/"/g, '\\"')}")`;
+  bg.dataset.loaded = 'true';
+  return bg;
 }
 
 function goToHero(i) {
@@ -2018,7 +2030,7 @@ function goToHero(i) {
   heroIndex = (i + heroSlides.length) % heroSlides.length;
   slides[heroIndex]?.classList.add('active');
   dots[heroIndex]?.classList.add('active');
-  const bg = slides[heroIndex]?.querySelector('.hero-bg');
+  const bg = activateHeroBackground(heroIndex);
   if (bg) {
     bg.style.animation = 'none';
     requestAnimationFrame(() => requestAnimationFrame(() => { bg.style.animation = ''; }));
