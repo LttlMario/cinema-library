@@ -2399,6 +2399,21 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
     cur.click();
   }
 
+  // Native selects in Samsung WebViews may consume Escape/Back before the
+  // document listener sees it. CC is a modal focus trap: only its X button
+  // may close it, so guard these keys at the window capture phase as well.
+  window.addEventListener('keydown', e => {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    const panel = $('subtitle-panel');
+    if (!panel || panel.hidden) return;
+    if (!['Escape', 'Backspace', 'BrowserBack', 'GoBack', 'Back', 'XF86Back'].includes(e.key)
+      && e.keyCode !== 10009 && e.keyCode !== 461) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const target = document.activeElement?.closest?.('#subtitle-panel') ? document.activeElement : $('subtitle-language');
+    if (target && vis(target)) setFocus(target, false);
+  }, true);
+
   // Some Samsung WebViews deliver arrow keys to a focused range input without
   // bubbling them reliably to the document navigator. Handle the timeline at
   // the window capture phase so the TV remote still reaches the player controls.
