@@ -61,8 +61,8 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 ## Wrapperul Samsung TV
 
 51. [ ] adaugă un test de pornire fără autoplay pentru wrapperul samsung tv.
-52. [ ] verifică tratarea erorilor de rețea pentru wrapperul samsung tv.
-53. [ ] adaugă timeout și mesaj de retry pentru wrapperul samsung tv.
+52. [x] verifică tratarea erorilor de rețea pentru wrapperul samsung tv.
+53. [x] adaugă timeout și mesaj de retry pentru wrapperul samsung tv.
 54. [ ] previne comenzile duplicate pentru wrapperul samsung tv.
 55. [ ] salvează starea înainte de schimbarea sursei pentru wrapperul samsung tv.
 56. [ ] testează revenirea după pierderea conexiunii pentru wrapperul samsung tv.
@@ -73,16 +73,16 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 61. [ ] măsoară timpul până la primul cadru pentru wrapperul samsung tv.
 62. [ ] măsoară timpul până la primul control pentru wrapperul samsung tv.
 63. [ ] verifică funcționarea pe ecran mic pentru wrapperul samsung tv.
-64. [ ] verifică funcționarea pe WebView TV pentru wrapperul samsung tv.
-65. [ ] adaugă feedback vizibil pentru utilizator pentru wrapperul samsung tv.
+64. [x] verifică funcționarea pe WebView TV pentru wrapperul samsung tv.
+65. [x] adaugă feedback vizibil pentru utilizator pentru wrapperul samsung tv.
 66. [ ] păstrează focusul după acțiune pentru wrapperul samsung tv.
 67. [ ] testează apăsarea rapidă repetată pentru wrapperul samsung tv.
 68. [ ] previne blocarea UI în timpul fetchului pentru wrapperul samsung tv.
 69. [ ] verifică anularea lucrului vechi pentru wrapperul samsung tv.
-70. [ ] adaugă acoperire în validator pentru wrapperul samsung tv.
+70. [x] adaugă acoperire în validator pentru wrapperul samsung tv.
 71. [ ] documentează comportamentul așteptat pentru wrapperul samsung tv.
 72. [ ] verifică fallback-ul când datele lipsesc pentru wrapperul samsung tv.
-73. [ ] verifică compatibilitatea cu browserul TV pentru wrapperul samsung tv.
+73. [x] verifică compatibilitatea cu browserul TV pentru wrapperul samsung tv.
 74. [ ] adaugă scenariu de regresie pentru wrapperul samsung tv.
 75. [ ] marchează rezultatul în checklist pentru wrapperul samsung tv.
 
