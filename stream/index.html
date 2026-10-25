@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -675,7 +676,7 @@ themeToggle.addEventListener('click', () => {
 });
 updateThemeButton();
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('../sw.js?v=20261025-v31').then(registration => {
+  navigator.serviceWorker.register('../sw.js?v=20261025-v32').then(registration => {
     registration.update().catch(() => {});
     if (registration.waiting) registration.waiting.postMessage({ type: 'cinema:skip-waiting' });
   }).catch(() => {});
