@@ -52,7 +52,7 @@ Backlog-ul este împărțit pe 20 de zone. Elementele se implementează și se v
 42. [x] testează apăsarea rapidă repetată pentru navigarea cu telecomanda.
 43. [ ] previne blocarea UI în timpul fetchului pentru navigarea cu telecomanda.
 44. [ ] verifică anularea lucrului vechi pentru navigarea cu telecomanda.
-45. [ ] adaugă acoperire în validator pentru navigarea cu telecomanda.
+45. [x] adaugă acoperire în validator pentru navigarea cu telecomanda.
 46. [ ] documentează comportamentul așteptat pentru navigarea cu telecomanda.
 47. [ ] verifică fallback-ul când datele lipsesc pentru navigarea cu telecomanda.
 48. [ ] verifică compatibilitatea cu browserul TV pentru navigarea cu telecomanda.
