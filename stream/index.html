@@ -724,6 +724,7 @@ const tvUserAgent = '';
 const isTvClient = document.body.classList.contains('tv-mode') || new URLSearchParams(location.search).get('player-tv') === '1';
 const TMDB_CACHE_TTL = isTvClient ? 30 * 60 * 1000 : 5 * 60 * 1000;
 const TMDB_CACHE_STORE = isTvClient ? localStorage : sessionStorage;
+const TMDB_CACHE_MAX_ENTRIES = isTvClient ? 60 : 120;
 let tmdbCacheMemory = null;
 let tmdbCacheWriteTimer = 0;
 const tmdbInFlight = new Map();
@@ -733,6 +734,13 @@ function readTmdbCache() {
   return tmdbCacheMemory;
 }
 function writeTmdbCache(cache) {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const entries = Object.entries(cache)
+    .filter(([, value]) => value && Number(value.time) >= cutoff)
+    .sort((a, b) => Number(b[1].time) - Number(a[1].time))
+    .slice(0, TMDB_CACHE_MAX_ENTRIES);
+  Object.keys(cache).forEach(key => delete cache[key]);
+  entries.forEach(([key, value]) => { cache[key] = value; });
   tmdbCacheMemory = cache;
   clearTimeout(tmdbCacheWriteTimer);
   tmdbCacheWriteTimer = setTimeout(() => { try { TMDB_CACHE_STORE.setItem(TMDB_CACHE_KEY, JSON.stringify(tmdbCacheMemory)); } catch {} }, 700);
