@@ -2711,7 +2711,7 @@ window.addEventListener('beforeunload', () => {
   }, true);
 
   document.addEventListener('keydown', e => {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const k = e.key;
     if (['MediaPlayPause', 'MediaPlay', 'MediaPause'].includes(k)) {
       e.preventDefault();
