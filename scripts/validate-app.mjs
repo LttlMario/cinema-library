@@ -45,6 +45,6 @@ expect(tvMain.includes('BACK_HANDSHAKE_TIMEOUT = 700'), 'TV Back uses the guarde
 expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back acknowledgements only from the live page');
 expect(tvConfig.includes('version="1.7.8"'), 'TV package version matches the wrapper source');
 expect(read('assets/site-shell.js').includes('let contentReturn = null'), 'secondary-page TV navigation remembers content return position');
-expect(read('assets/nav-parity.css').includes('html.tv-mode html.keynav main'), 'secondary-page TV focus is visibly highlighted');
+expect(read('assets/nav-parity.css').includes('html.tv-mode.keynav main'), 'secondary-page TV focus is visibly highlighted');
 
 console.log(`Cinema Library validation passed (${checks.length} checks).`);
