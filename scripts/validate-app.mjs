@@ -109,13 +109,14 @@ expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseR
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
 expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
-expect(index.includes('sw.js?v=20261025-v34') && stream.includes('sw.js?v=20261025-v34'), 'catalog and player register the current service-worker revision');
-expect(sw.includes('cinema-library-shell-v34-cache-safe-20261025') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
+expect(index.includes('sw.js?v=20261025-v35') && stream.includes('sw.js?v=20261025-v35'), 'catalog and player register the current service-worker revision');
+expect(sw.includes('cinema-library-shell-v35-cache-safe-20261025') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
 expect(index.includes('registration.update()') && stream.includes('registration.update()') && sw.includes("cinema:skip-waiting"), 'TV and web check for a newer service-worker version at startup');
 expect(sw.includes("url.searchParams.has('fresh')"), 'service-worker supports forced fresh document loads');
 expect(sw.includes("if (url.pathname === '/stream/index.html')") && sw.includes('Never cache those dynamic query variants'), 'service-worker never caches dynamic player query variants');
 expect(sw.includes('const cacheKey = new Request(`${url.origin}${url.pathname}`);') && sw.includes('cache.put(cacheKey, response.clone())'), 'service-worker stores shell query variants under one canonical cache key');
-expect(sw.includes('SHELL.map(asset => cache.add(asset).catch(() => null))'), 'service-worker installation tolerates a failed secondary shell asset');
+expect(sw.includes('SHELL.map(asset => {') && sw.includes(".catch(() => null)"), 'service-worker installation tolerates a failed secondary shell asset');
+expect(sw.includes('const SHELL_ASSET_TIMEOUT = 8000') && sw.includes('controller.abort()') && sw.includes("fetch(asset, { cache: 'no-cache', signal: controller.signal })"), 'service-worker bounds each shell asset request during installation');
 expect(sw.includes('isStaticAsset') && sw.includes('request.destination'), 'service-worker does not cache arbitrary dynamic same-origin requests');
 expect((sw.match(/cache\.put\([^\n]+\)\)\.catch\(\(\) => \{\}\)/g) || []).length >= 3, 'service-worker ignores cache quota failures without breaking the page');
 
