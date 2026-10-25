@@ -476,6 +476,8 @@
     html.keynav .server-card.kf { border-color: var(--accent); background: var(--card-h); }
     html.keynav .back-btn.kf { outline-offset: 1px; border-radius: 50%; }
     html.keynav .player-wrap.kf { outline: 3px solid var(--accent); outline-offset: 3px; }
+    html.keynav .custom-controls .kf,
+    html.keynav .player-back-action.kf { outline: 3px solid var(--accent-h); outline-offset: 3px; background: var(--accent); color: #fff; }
 
     /* ─── RESPONSIVE ─── */
     @media (max-width: 1200px) {
@@ -1905,6 +1907,10 @@ window.addEventListener('beforeunload', persistCurrentPlayback);
     if (cur) cur.classList.remove('kf');
     cur = el;
     el.classList.add('kf');
+    if (el.closest('.custom-controls') || el === $('player-back-action')) {
+      showOwnControls();
+      $('player-wrap')?.classList.remove('controls-idle');
+    }
     if (el.tagName === 'SELECT' || el.tagName === 'BUTTON' || el.tagName === 'INPUT') el.focus({ preventScroll: true });
     if (scroll) el.scrollIntoView({ behavior: document.body.classList.contains('tv-mode') ? 'auto' : 'smooth', block: 'center', inline: 'nearest' });
   }
