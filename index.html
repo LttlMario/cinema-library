@@ -1280,7 +1280,7 @@ const tmdb = async (path, options = {}) => {
   const cached = cache[localizedPath];
   if (cached && Date.now() - cached.time < TMDB_CACHE_TTL) return cached.data;
   const pending = tmdbPending.get(localizedPath);
-  if (pending) return pending;
+  if (pending && pending.homeGeneration === homeGeneration && !pending.signal.aborted) return pending.promise;
   const request = queueTmdbRequest(async () => {
     const controller = new AbortController();
     const abortRequest = () => controller.abort();
@@ -1303,7 +1303,7 @@ const tmdb = async (path, options = {}) => {
       homeSignal.removeEventListener('abort', abortHomeWork);
     }
   }, () => externalSignal?.aborted || homeSignal.aborted);
-  tmdbPending.set(localizedPath, request);
+  tmdbPending.set(localizedPath, { promise: request, signal: homeSignal, homeGeneration });
   try {
     return await request;
   } catch (error) {
@@ -1313,7 +1313,7 @@ const tmdb = async (path, options = {}) => {
     if (!silent) toast(message);
     throw new Error(message);
   } finally {
-    if (tmdbPending.get(localizedPath) === request) tmdbPending.delete(localizedPath);
+    if (tmdbPending.get(localizedPath)?.promise === request) tmdbPending.delete(localizedPath);
   }
 };
 const poster   = (p, size = 'w342') => p ? `${IMG_BASE}${size}${p}` : null;
@@ -1451,7 +1451,7 @@ function playerUrl(item, season = 1, episode = 1) {
   const p = new URLSearchParams({ server: CINEMA_PLAYER_ID });
   p.set('tv', '1');
   if (new URLSearchParams(window.location.search).get('tv') === '1') p.set('player-tv', '1');
-  p.set('v', '20261025-stability13');
+  p.set('v', '20261025-stability14');
   const subtitlePreference = localStorage.getItem('cinemalibrary_subtitle_v1') || 'ro';
   p.set('sub', subtitlePreference === 'en' ? 'en' : 'ro');
   const type = mediaOf(item);
