@@ -2726,22 +2726,30 @@ async function showGenreResults(type, genreId, genreName) {
     const endpoint = `/discover/${type}?with_genres=${encodeURIComponent(genreId)}&sort_by=popularity.desc&include_adult=false`;
     // TMDB returns only 20 results per page. Load several pages so a genre
     // selection is useful beyond the first screen of popular titles.
-    const pages = await Promise.all(
-      Array.from({ length: document.documentElement.classList.contains('tv-mode') ? 2 : 5 }, (_, i) =>
-        tmdb(`${endpoint}&page=${i + 1}`, { signal: abortController.signal })
-      )
+    const pageCount = document.documentElement.classList.contains('tv-mode') ? 2 : 5;
+    const pagePromises = Array.from({ length: pageCount }, (_, i) =>
+      tmdb(`${endpoint}&page=${i + 1}`, { signal: abortController.signal })
     );
+    const mergePages = pages => {
+      const seen = new Set();
+      searchResults = pages.flatMap(data => data.results || [])
+        .filter(item => {
+          if (!item.poster_path || seen.has(item.id)) return false;
+          seen.add(item.id);
+          return true;
+        })
+        .map(item => ({ ...item, media_type: type }));
+      $('search-spinner').style.display = 'none';
+      renderSearchResults();
+    };
+    // Paint the first page as soon as it arrives. The remaining pages are
+    // already in flight and will enrich the same result grid afterwards.
+    const firstPage = await pagePromises[0];
     if (requestId !== genreRequestId || abortController.signal.aborted) return;
-    const seen = new Set();
-    searchResults = pages.flatMap(data => data.results || [])
-      .filter(item => {
-        if (!item.poster_path || seen.has(item.id)) return false;
-        seen.add(item.id);
-        return true;
-      })
-      .map(item => ({ ...item, media_type: type }));
-    $('search-spinner').style.display = 'none';
-    renderSearchResults();
+    mergePages([firstPage]);
+    const pages = await Promise.all(pagePromises.slice(1));
+    if (requestId !== genreRequestId || abortController.signal.aborted) return;
+    mergePages([firstPage, ...pages]);
     if (searchAbortController === abortController) searchAbortController = null;
   } catch {
     if (abortController.signal.aborted || requestId !== genreRequestId) return;
