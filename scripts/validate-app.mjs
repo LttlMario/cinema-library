@@ -132,6 +132,7 @@ expect(stream.includes('button.setAttribute(\'title\', open ? \'Ascunde volumul\
 expect(stream.includes('Native selects in Samsung WebViews may consume Escape/Back') && stream.includes("if (!panel || panel.hidden) return;"), 'CC keeps Escape and Back inside the subtitle focus trap');
 expect(stream.includes('Move TV focus immediately') && stream.indexOf("document.dispatchEvent(new Event('rioma:focus-episode-picker'))") < stream.indexOf('if (!seasonCache'), 'episode picker focuses its season selector before the season fetch completes');
 expect(tvMain.includes('errorTimer') && tvMain.includes('clearTimeout(errorTimer)'), 'TV retry clears stale load-error timers');
+expect(tvMain.includes('var nextFrame = frame.cloneNode(false)') && tvMain.includes('function bindFrame(nextFrame)') && tvMain.includes('nextFrame.src'), 'TV retry replaces the iframe so stale load events cannot unlock a newer request');
 expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://cinesrc.st') && tvIndex.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'TV wrapper preconnects to image, video and subtitle origins');
 expect(tvConfig.includes('version="1.7.9"'), 'TV package version matches the wrapper source');
 expect(tvMain.includes('if (event.target === retry) return') && tvMain.includes('if (!loaded && code !== BACK_KEY'), 'TV wrapper keeps retry controls native and does not forward keys before load');
