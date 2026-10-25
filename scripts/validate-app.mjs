@@ -112,7 +112,7 @@ expect(index.includes('sw.js?v=20261025-v31') && stream.includes('sw.js?v=202610
 expect(sw.includes('cinema-library-shell-v31-cache-safe-20261025') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
 expect(index.includes('registration.update()') && stream.includes('registration.update()') && sw.includes("cinema:skip-waiting"), 'TV and web check for a newer service-worker version at startup');
 expect(sw.includes("url.searchParams.has('fresh')"), 'service-worker supports forced fresh document loads');
-expect(sw.includes("url.pathname !== '/stream/index.html'"), 'fresh player loads are not duplicated in the service-worker cache');
+expect(sw.includes("if (url.pathname === '/stream/index.html')") && sw.includes('Never cache those dynamic query variants'), 'service-worker never caches dynamic player query variants');
 expect(sw.includes('isStaticAsset') && sw.includes('request.destination'), 'service-worker does not cache arbitrary dynamic same-origin requests');
 expect((sw.match(/cache\.put\([^\n]+\)\)\.catch\(\(\) => \{\}\)/g) || []).length >= 3, 'service-worker ignores cache quota failures without breaking the page');
 
