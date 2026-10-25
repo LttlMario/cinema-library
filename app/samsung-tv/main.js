@@ -105,7 +105,7 @@
   window.addEventListener('message', function (event) {
     // Ignore acknowledgements from unrelated frames or browser extensions.
     // Only the live page inside our wrapper may claim that Back was handled.
-    if (event.source !== frame.contentWindow) return;
+    if (event.source !== frame.contentWindow || event.origin !== LIVE_ORIGIN) return;
     if (event.data && ['cinema:player-closed', 'cinema:back-handled'].includes(event.data.type)) backHandledByWeb = true;
   });
   document.addEventListener('focus', function (event) {
