@@ -2126,13 +2126,18 @@ document.addEventListener('visibilitychange', () => {
 /* ─── GENRES ─── */
 async function loadGenres() {
   try {
-    const results = await Promise.allSettled([tmdb('/genre/movie/list'), tmdb('/genre/tv/list')]);
-    const m = results[0].status === 'fulfilled' ? results[0].value : { genres: [] };
-    const t = results[1].status === 'fulfilled' ? results[1].value : { genres: [] };
-    genreCatalog.movie = m.genres || [];
-    genreCatalog.tv = t.genres || [];
-    [...(m.genres || []), ...(t.genres || [])].forEach(g => { genreMap[g.id] = g.name; });
-    buildGenreMenu();
+    genreCatalog.movie = [];
+    genreCatalog.tv = [];
+    const applyGenreResult = (type, promise) => promise.then(data => {
+      genreCatalog[type] = data.genres || [];
+      genreCatalog[type].forEach(g => { genreMap[g.id] = g.name; });
+      // Paint whichever catalog responds first; the second one enriches it.
+      buildGenreMenu();
+    }).catch(() => {});
+    await Promise.all([
+      applyGenreResult('movie', tmdb('/genre/movie/list')),
+      applyGenreResult('tv', tmdb('/genre/tv/list'))
+    ]);
   } catch {}
 }
 
