@@ -122,7 +122,7 @@
     hero.innerHTML = '<div class="shell-hero-copy"><small>Cinema Library</small><h1>Filme și seriale pentru tine</h1><p>Descoperă titluri populare și găsește rapid următoarea vizionare.</p></div>';
     document.body.insertBefore(hero, main);
     const heroImages = ['7WsyChQLEftFiDOVTGkv3hFpyyt.jpg', '8cdWjvZQUExUUTzyp4t6EDMubfO.jpg', 'tmU7GeKVybMWFButWEGl2M4GeiP.jpg', 'q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg'];
-    heroImages.forEach((image, index) => { const slide = document.createElement('div'); slide.className = `shell-hero-slide${index === 0 ? ' active' : ''}`; slide.dataset.bg = `https://image.tmdb.org/t/p/w1280/${image}`; hero.prepend(slide); });
+    heroImages.forEach((image, index) => { const slide = document.createElement('div'); slide.className = `shell-hero-slide${index === 0 ? ' active' : ''}`; slide.dataset.bg = `https://image.tmdb.org/t/p/w1280/${image}`; hero.append(slide); });
     let slideIndex = 0;
     let heroTimer = 0;
     const loadHeroImage = (slide) => {
