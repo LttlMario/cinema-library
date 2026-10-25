@@ -63,6 +63,7 @@ expect(homeNavFix.includes("cinema:search-opened") && homeNavFix.includes("cinem
 expect(index.includes('Keep the open Search flow self-contained') && index.includes('if (searchOpen)'), 'Open Search remains the active TV focus zone while results render');
 expect(index.includes('Keep native text focus while suggestions are still loading'), 'Search keeps focus while suggestions are loading');
 expect(index.includes("ae === searchInput") && index.includes("searchInput.focus({ preventScroll: true })"), 'Search arrow keys have a direct native focus fallback');
+expect(index.includes('document.activeElement === searchInput') && index.includes("setFocus(searchInput, false)"), 'First TV arrow after opening Search preserves the native field focus');
 expect(homeNavFix.includes("location.hash === '#favorites'") && homeNavFix.includes("favorites.setAttribute('aria-current'"), 'watchlist remains the active red destination on the favorites hash');
 expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseRowInternal'), 'franchise row requests are deduplicated while a row is loading');
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
