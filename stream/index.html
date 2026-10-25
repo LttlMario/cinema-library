@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 36541)
-Total output lines: 2845
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -905,7 +902,530 @@ function stopPlaybackHeartbeat() {
 function startPlaybackHeartbeat(loadToken) {
   stopPlaybackHeartbeat();
   lastPlaybackSignalAt = performance.now();
-  playbackHeartbeatTimer = window.setIn…6541 tokens truncated…= window.setTimeout(() => {
+  playbackHeartbeatTimer = window.setInterval(() => {
+    if (loadToken !== playerLoadToken || ownPaused || !providerReady) return;
+    const stalledFor = performance.now() - lastPlaybackSignalAt;
+    if (stalledFor < 14000) return;
+    lastPlaybackSignalAt = performance.now();
+    if (!playbackRecoveryUsed) {
+      playbackRecoveryUsed = true;
+      toast('Redarea pare blocată. Reiau conexiunea…');
+      // Repeating play recovers the provider in most TV WebViews while
+      // preserving the current position and avoiding a destructive iframe reload.
+      window.setTimeout(() => {
+        if (loadToken === playerLoadToken && providerReady && !ownPaused) requestProviderPlay(loadToken);
+      }, 350);
+    } else {
+      stopPlaybackHeartbeat();
+      toast('Conexiunea video s-a întrerupt. Apasă Play pentru a reîncerca.');
+    }
+  }, 4000);
+}
+function ownFormatTime(value) {
+  const seconds = Math.max(0, Number(value) || 0);
+  return `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
+}
+function updateOwnControls(force = false) {
+  const now = performance.now();
+  if (!force && now - controlsPaintAt < 120) {
+    if (!controlsPaintTimer) controlsPaintTimer = window.setTimeout(() => { controlsPaintTimer = 0; updateOwnControls(true); }, 120);
+    return;
+  }
+  controlsPaintAt = now;
+  const play = $('own-play');
+  const mute = $('own-mute');
+  const timeline = $('own-timeline');
+  const time = $('own-time');
+  if (!play || !mute || !timeline || !time) return;
+  play.textContent = ownPaused ? '▶' : '❚❚';
+  play.setAttribute('aria-label', ownPaused ? 'Redare' : 'Pauză');
+  play.disabled = !providerReady;
+  mute.textContent = ownMuted ? '🔇' : '🔊';
+  timeline.value = ownDuration ? Math.min(100, (ownCurrentTime / ownDuration) * 100) : 0;
+  time.textContent = `${ownFormatTime(ownCurrentTime)} / ${ownFormatTime(ownDuration)}`;
+}
+function seekOwn(seconds) {
+  const next = Math.max(0, Math.min(ownDuration || Infinity, ownCurrentTime + seconds));
+  ownCommand('seek', [next]);
+  showOwnControls();
+}
+function toggleOwnPlayback() {
+  if (!providerReady) return;
+  const shouldPause = !ownPaused;
+  ownPaused = shouldPause;
+  if (shouldPause) {
+    playbackIntent = false;
+    ownCommand('pause');
+  } else {
+    requestProviderPlay(playerLoadToken);
+  }
+  if (shouldPause) {
+    stopSubtitleFallbackClock();
+    stopPlaybackHeartbeat();
+  } else {
+    if (!providerTimeSignals) startSubtitleFallbackClock(playerLoadToken);
+    startPlaybackHeartbeat(playerLoadToken);
+  }
+  updateOwnControls();
+  updateSubtitleDisplay(ownCurrentTime);
+  showOwnControls();
+}
+function showOwnControls() {
+  if (!playerControlMetricRecorded && playerLoadStartedAt) {
+    playerControlMetricRecorded = true;
+    markPlayerMilestone('controls');
+  }
+  const controls = $('custom-controls');
+  const wrap = $('player-wrap');
+  controls?.classList.remove('controls-idle');
+  controls?.classList.remove('tv-hidden');
+  $('player-back-action')?.classList.remove('tv-hidden');
+  $('player-fullscreen')?.classList.remove('tv-hidden');
+  wrap?.classList.remove('controls-idle');
+  clearTimeout(window.__cinemaOwnControlsTimer);
+  window.__cinemaOwnControlsTimer = setTimeout(() => {
+    if (!ownPaused) {
+      controls?.classList.add('controls-idle');
+      $('player-fullscreen')?.classList.add('tv-hidden');
+    }
+  }, 2000);
+}
+function hidePlayerError() {
+  const panel = $('player-error');
+  if (panel) panel.hidden = true;
+}
+function showPlayerError(message) {
+  const panel = $('player-error');
+  const text = $('player-error-text');
+  if (!panel) return;
+  if (text) text.textContent = message || 'Redarea a întâmpinat o problemă.';
+  panel.hidden = false;
+  document.dispatchEvent(new Event('rioma:focus-player-error'));
+}
+function hideOwnControls() {
+  clearTimeout(window.__cinemaOwnControlsTimer);
+  $('custom-controls')?.classList.add('tv-hidden');
+  $('custom-controls')?.classList.add('controls-idle');
+  $('player-back-action')?.classList.add('tv-hidden');
+  $('player-fullscreen')?.classList.add('tv-hidden');
+}
+function applyOwnPicture(value) {
+  const profiles = {
+    standard: 'none', cinema: 'brightness(1.04) contrast(1.12) saturate(1.08)',
+    bright: 'brightness(1.16) contrast(1.04) saturate(1.02)', contrast: 'brightness(1.02) contrast(1.2) saturate(1.05)',
+    vivid: 'brightness(1.05) contrast(1.08) saturate(1.22)', natural: 'brightness(1.03) contrast(1.03) saturate(.96)',
+    night: 'brightness(.82) contrast(1.08) saturate(.88) sepia(.08)'
+  };
+  const profile = profiles[value] ? value : 'standard';
+  const player = $('player');
+  const wrap = $('player-wrap');
+  // Tizen's WebView can render a filtered cross-origin iframe as a black
+  // surface. Keep the TV player clean; desktop still gets the full effect.
+  const isTizenPlayback = document.body.classList.contains('tv-mode');
+  if (isTizenPlayback) {
+    player.style.filter = 'none';
+    wrap.style.filter = 'none';
+    const overlay = $('picture-overlay');
+    if (overlay) overlay.className = `picture-overlay ${profile === 'standard' ? '' : profile}`;
+  } else if (document.body.classList.contains('embedded')) {
+    player.style.filter = 'none';
+    wrap.style.filter = profiles[profile];
+    $('picture-overlay')?.classList.remove('cinema','bright','contrast','vivid','natural','night');
+  } else {
+    player.style.filter = profiles[profile];
+    wrap.style.filter = 'none';
+    $('picture-overlay')?.classList.remove('cinema','bright','contrast','vivid','natural','night');
+  }
+  $('own-picture').value = profile;
+  localStorage.setItem(OWN_PICTURE_KEY, profile);
+}
+function parseSubtitles(text) {
+  const clean = String(text || '').replace(/^\uFEFF/, '').replace(/\r/g, '');
+  return clean.split(/\n{2,}/).map(block => {
+    const lines = block.trim().split('\n');
+    const index = lines.findIndex(line => line.includes('-->'));
+    if (index < 0) return null;
+    const [start, end] = lines[index].split('-->').map(part => part.trim().split(/\s+/)[0]);
+    const time = value => { const parts = value.replace(',', '.').split(':').map(Number); return parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1]; };
+    return { start: time(start), end: time(end), text: lines.slice(index + 1).join('\n').replace(/<[^>]+>/g, '') };
+  }).filter(item => item && Number.isFinite(item.start) && Number.isFinite(item.end) && item.text)
+    .sort((a, b) => a.start - b.start);
+}
+function updateSubtitleSettings() {
+  const text = $('subtitle-text');
+  const bg = Number($('subtitle-bg')?.value || 78), size = Number($('subtitle-size')?.value || 22), color = $('subtitle-color')?.value || '#fff';
+  if (text) { text.style.backgroundColor = `rgba(0,0,0,${bg / 100})`; text.style.fontSize = `${size}px`; text.style.color = color; }
+  if ($('subtitle-bg-value')) $('subtitle-bg-value').textContent = `${bg}%`;
+  if ($('subtitle-size-value')) $('subtitle-size-value').textContent = `${size}px`;
+  try { localStorage.setItem('cinemalibrary_subtitle_settings', JSON.stringify({ bg, size, color })); } catch {}
+  updateSubtitleDisplay();
+}
+function updateSubtitleDisplay(currentTime = ownCurrentTime) {
+  const layer = $('subtitle-layer'), text = $('subtitle-text');
+  if (!layer || !text) return;
+  if (ownPaused) { subtitleRenderedTime = -1; text.textContent = ''; layer.hidden = true; return; }
+  const time = Number(currentTime) || 0;
+  // Providers may send timeupdate much faster than the subtitle cadence.
+  // Avoid repeating the same textContent/layout work on every message while
+  // keeping a fresh render at least every 80ms for accurate cue changes.
+  if (subtitleRenderedTime >= 0 && Math.abs(time - subtitleRenderedTime) < 0.08) return;
+  subtitleRenderedTime = time;
+  const adjusted = time + subtitleOffset;
+  if (adjusted < subtitleLastTime) subtitleCursor = 0;
+  subtitleLastTime = adjusted;
+  while (subtitleCursor < subtitleCues.length && subtitleCues[subtitleCursor].end < adjusted) subtitleCursor++;
+  const candidate = subtitleCues[subtitleCursor];
+  const cue = candidate && adjusted >= candidate.start && adjusted <= candidate.end ? candidate : null;
+  text.textContent = cue?.text || '';
+  layer.hidden = !cue;
+}
+function stopWatchCheckTimer() {
+  if (watchCheckTimer) { clearTimeout(watchCheckTimer); watchCheckTimer = 0; }
+}
+function armWatchCheckTimer() {
+  stopWatchCheckTimer();
+  if (ownPaused || watchCheckShown) return;
+  watchCheckTimer = window.setTimeout(() => {
+    if (!ownPaused && !watchCheckShown) {
+      watchCheckShown = true;
+      playbackIntent = false;
+      ownCommand('pause');
+      $('watch-check-prompt').hidden = false;
+      showOwnControls();
+      document.dispatchEvent(new CustomEvent('rioma:focus-watch-check'));
+    }
+  }, WATCH_CHECK_IDLE_MS);
+}
+function registerWatchActivity() {
+  if (!watchCheckShown && !ownPaused) armWatchCheckTimer();
+}
+function closeWatchCheck(continueWatching) {
+  watchCheckShown = false;
+  $('watch-check-prompt').hidden = true;
+  if (continueWatching) {
+    ownPaused = false;
+    requestProviderPlay(playerLoadToken);
+    showOwnControls();
+  } else {
+    stopWatchCheckTimer();
+    returnToPopupFromPlayer();
+  }
+}
+function setupWatchCheck() {
+  $('watch-check-continue')?.addEventListener('click', () => closeWatchCheck(true));
+  $('watch-check-stop')?.addEventListener('click', () => closeWatchCheck(false));
+  ['pointermove', 'mousemove', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(eventName =>
+    document.addEventListener(eventName, registerWatchActivity, { passive: eventName !== 'keydown' })
+  );
+}
+function stopSubtitleDisplayLoop() {
+  if (subtitleDisplayTimer) { clearInterval(subtitleDisplayTimer); subtitleDisplayTimer = 0; }
+}
+function startSubtitleDisplayLoop() {
+  stopSubtitleDisplayLoop();
+  subtitleCursor = 0;
+  subtitleLastTime = -1;
+  subtitleRenderedTime = -1;
+  updateSubtitleDisplay(ownCurrentTime);
+  subtitleDisplayTimer = window.setInterval(() => updateSubtitleDisplay(ownCurrentTime), 220);
+}
+function stopSubtitleFallbackClock() {
+  if (subtitleFallbackTimer) { clearInterval(subtitleFallbackTimer); subtitleFallbackTimer = 0; }
+}
+function startSubtitleFallbackClock(loadToken) {
+  stopSubtitleFallbackClock();
+  const startedAt = performance.now();
+  const startTime = ownCurrentTime;
+  subtitleFallbackTimer = window.setInterval(() => {
+    if (loadToken !== playerLoadToken || providerTimeSignals > 0) { stopSubtitleFallbackClock(); return; }
+    ownCurrentTime = startTime + (performance.now() - startedAt) / 1000;
+    updateOwnControls();
+    updateSubtitleDisplay(ownCurrentTime);
+  }, 250);
+}
+function clearOwnSubtitles() {
+  subtitleAutoToken += 1;
+  subtitleAutoController?.abort();
+  subtitleAutoController = null;
+  subtitleRequestController?.abort();
+  subtitleRequestController = null;
+  subtitleCues = [];
+  subtitleOffset = 0;
+  subtitleRenderedTime = -1;
+  stopSubtitleDisplayLoop();
+  $('subtitle-layer').hidden = true;
+  if ($('subtitle-status')) $('subtitle-status').textContent = 'Subtitrarea a fost oprită.';
+}
+function toggleSubtitlePanel() {
+  const panel = $('subtitle-panel');
+  if (!panel) return;
+  panel.hidden = !panel.hidden;
+  showOwnControls();
+  if (!panel.hidden) window.setTimeout(() => document.dispatchEvent(new CustomEvent('rioma:focus-subtitles')), 0);
+}
+async function fetchSubtitle(url, controller) {
+  let timedOut = false;
+  const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 12000);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (error) {
+    if (timedOut) {
+      const timeoutError = new Error('Serverul de subtitrări nu a răspuns la timp. Apasă din nou pentru a reîncerca.');
+      timeoutError.name = 'SubtitleTimeoutError';
+      throw timeoutError;
+    }
+    throw error;
+  } finally { window.clearTimeout(timeout); }
+}
+function setupSubtitlePanel() {
+  $('subtitle-close')?.addEventListener('click', () => {
+    const panel = $('subtitle-panel');
+    if (!panel) return;
+    panel.hidden = true;
+    showOwnControls();
+    document.dispatchEvent(new Event('rioma:subtitle-closed'));
+  });
+  $('subtitle-search')?.addEventListener('click', async () => {
+    const status = $('subtitle-status'); if (!state) return;
+    // A manual search takes ownership of the subtitle request slot. Abort the
+    // automatic Romanian lookup so the TV WebView does not fetch both paths.
+    subtitleAutoToken += 1;
+    subtitleAutoController?.abort();
+    subtitleAutoController = null;
+    subtitleRequestController?.abort();
+    const controller = new AbortController();
+    subtitleRequestController = controller;
+    status.textContent = 'Se caută subtitrări online…';
+    try {
+      const params = new URLSearchParams({ tmdb_id: state.id, type: state.type, season: String(state.season || 1), episode: String(state.episode || 1), languages: $('subtitle-language').value });
+      const response = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/search?${params}`), controller); const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Căutarea online nu este disponibilă pe acest server.');
+      subtitleResults = (payload.data || []).flatMap(item => (item.attributes?.files || []).map(file => ({ id:file.file_id, language:item.attributes.language, release:item.attributes.release || 'Subtitrare', downloads:item.attributes.download_count || 0 })));
+      $('subtitle-results').innerHTML = subtitleResults.map((item, i) => `<option value="${i}">${esc(item.language.toUpperCase())} · ${esc(item.release)} · ${item.downloads} descărcări</option>`).join('');
+      $('subtitle-results').hidden = !subtitleResults.length; $('subtitle-load').hidden = !subtitleResults.length; selectedSubtitleFileId = subtitleResults[0]?.id || null;
+      status.textContent = subtitleResults.length ? `${subtitleResults.length} rezultate găsite.` : 'Nu am găsit subtitrări.';
+    } catch (error) { if (error.name !== 'AbortError') status.textContent = error.message || 'Căutarea online a eșuat.'; }
+    finally { if (subtitleRequestController === controller) subtitleRequestController = null; }
+  });
+  $('subtitle-results')?.addEventListener('change', event => { selectedSubtitleFileId = subtitleResults[Number(event.target.value)]?.id || null; });
+  $('subtitle-load')?.addEventListener('click', async () => {
+    if (!selectedSubtitleFileId) return; const status = $('subtitle-status'); status.textContent = 'Se descarcă subtitrarea…';
+    subtitleAutoToken += 1;
+    subtitleAutoController?.abort();
+    subtitleAutoController = null;
+    subtitleRequestController?.abort();
+    const controller = new AbortController();
+    subtitleRequestController = controller;
+    try { const response = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`), controller); if (!response.ok) throw new Error('Descărcarea subtitrării a eșuat.'); subtitleCues = parseSubtitles(await response.text()); subtitleOffset = 0; status.textContent = `Subtitrarea a fost încărcată (${subtitleCues.length} replici).`; startSubtitleDisplayLoop(); }
+    catch (error) { if (error.name !== 'AbortError') status.textContent = error.message || 'Subtitrarea nu a putut fi încărcată.'; }
+    finally { if (subtitleRequestController === controller) subtitleRequestController = null; }
+  });
+  $('subtitle-file')?.addEventListener('change', async event => { const file = event.target.files?.[0]; if (!file) return; subtitleCues = parseSubtitles(await file.text()); subtitleOffset = 0; $('subtitle-status').textContent = `${file.name} a fost încărcat.`; startSubtitleDisplayLoop(); });
+  $('subtitle-clear')?.addEventListener('click', clearOwnSubtitles);
+  $('subtitle-minus')?.addEventListener('click', () => { subtitleOffset -= .5; updateSubtitleDisplay(); });
+  $('subtitle-plus')?.addEventListener('click', () => { subtitleOffset += .5; updateSubtitleDisplay(); });
+  ['subtitle-bg','subtitle-size','subtitle-color'].forEach(id => { $(id)?.addEventListener('input', updateSubtitleSettings); $(id)?.addEventListener('change', updateSubtitleSettings); });
+  try { const saved = JSON.parse(localStorage.getItem('cinemalibrary_subtitle_settings') || 'null'); if (saved) { $('subtitle-bg').value = saved.bg ?? 78; $('subtitle-size').value = saved.size ?? 22; $('subtitle-color').value = saved.color ?? '#ffffff'; } } catch {}
+  updateSubtitleSettings();
+}
+async function autoLoadRomanianSubtitle(loadToken) {
+  if (!state || state.subtitle === 'en') return;
+  const token = ++subtitleAutoToken;
+  subtitleAutoController?.abort();
+  const controller = new AbortController();
+  subtitleAutoController = controller;
+  const cacheKey = `cinemalibrary_subtitle_${state.type}_${state.id}_${state.season || 1}_${state.episode || 1}_ro`;
+  let cachedContent = '';
+  try { cachedContent = localStorage.getItem(cacheKey) || ''; } catch {}
+  try {
+    const status = $('subtitle-status');
+    if (status) status.textContent = 'Se caută automat subtitrarea în română…';
+    const params = new URLSearchParams({ tmdb_id: state.id, type: state.type, season: String(state.season || 1), episode: String(state.episode || 1), languages: 'ro' });
+    const searchResponse = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/search?${params}`), controller);
+    const searchText = await searchResponse.text();
+    let searchPayload = {};
+    try { searchPayload = JSON.parse(searchText); } catch { throw new Error('Româna este solicitată automat de sursa Rioma. Căutarea suplimentară online necesită un backend securizat.'); }
+    if (!searchResponse.ok) throw new Error(searchPayload.error || 'Căutarea online nu este disponibilă.');
+    subtitleResults = (searchPayload.data || []).flatMap(item => (item.attributes?.files || []).map(file => ({ id:file.file_id, language:item.attributes.language, release:item.attributes.release || 'Subtitrare', downloads:item.attributes.download_count || 0 })));
+    selectedSubtitleFileId = subtitleResults[0]?.id || null;
+    if (!selectedSubtitleFileId) { if (status) status.textContent = 'Nu am găsit automat subtitrare în română pentru acest titlu.'; return; }
+    // Never trust a stale/partial subtitle cache entry. If it cannot be
+    // parsed into cues, fetch fresh content instead of silently showing none.
+    if (cachedContent && !parseSubtitles(cachedContent).length) cachedContent = '';
+    const content = cachedContent || await (async () => {
+      const contentResponse = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`), controller);
+      if (!contentResponse.ok) throw new Error('Subtitrarea nu a putut fi descărcată.');
+      return contentResponse.text();
+    })();
+    if (token !== subtitleAutoToken || loadToken !== playerLoadToken) return;
+    subtitleCues = parseSubtitles(content);
+    if (!subtitleCues.length) throw new Error('Fișierul de subtitrare nu conține replici valide. Apasă din nou pentru a reîncerca.');
+    subtitleOffset = 0;
+    try { localStorage.setItem(cacheKey, content); } catch {}
+    startSubtitleDisplayLoop();
+    if (status) status.textContent = `Subtitrarea română a fost încărcată automat (${subtitleCues.length} replici).`;
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    if (token === subtitleAutoToken && loadToken === playerLoadToken && $('subtitle-status')) $('subtitle-status').textContent = error.message || 'Româna este solicitată automat de sursa Rioma.';
+  } finally {
+    if (subtitleAutoController === controller) subtitleAutoController = null;
+  }
+}
+function toggleVolumeControl() {
+  const controls = $('custom-controls');
+  const button = $('own-mute');
+  if (!controls || !button) return;
+  const open = controls.classList.toggle('volume-open');
+  button.setAttribute('aria-expanded', String(open));
+  button.setAttribute('title', open ? 'Ascunde volumul' : 'Arată volumul');
+  showOwnControls();
+  document.dispatchEvent(new CustomEvent(open ? 'rioma:volume-opened' : 'rioma:volume-closed'));
+}
+function setupOwnControls() {
+  $('own-play').addEventListener('click', toggleOwnPlayback);
+  $('own-restart').addEventListener('click', () => ownCommand('seek', [0]));
+  $('own-back10').addEventListener('click', () => seekOwn(-10));
+  $('own-forward10').addEventListener('click', () => seekOwn(10));
+  $('own-mute').addEventListener('click', toggleVolumeControl);
+  $('own-volume').addEventListener('input', event => ownCommand('setVolume', [Number(event.target.value)]));
+  $('own-timeline').addEventListener('input', event => {
+    if (ownDuration) ownCommand('seek', [(Number(event.target.value) / 100) * ownDuration]);
+  });
+  $('own-quality').addEventListener('change', event => {
+    const quality = event.target.value;
+    localStorage.setItem(OWN_QUALITY_KEY, quality);
+    ownCommand('setQuality', [quality]);
+    toast(quality === 'auto' ? 'Claritatea este setată pe Auto.' : `S-a solicitat claritatea ${quality}, dacă este disponibilă.`);
+  });
+  $('own-picture').addEventListener('change', event => applyOwnPicture(event.target.value));
+  $('own-captions').addEventListener('click', () => {
+    toggleSubtitlePanel();
+  });
+  $('own-fullscreen').addEventListener('click', togglePlayerFullscreen);
+  try {
+    const quality = localStorage.getItem(OWN_QUALITY_KEY);
+    if (quality) $('own-quality').value = quality;
+    const picture = localStorage.getItem(OWN_PICTURE_KEY);
+    applyOwnPicture(picture || 'standard');
+  } catch { applyOwnPicture('standard'); }
+  updateOwnControls();
+}
+
+/* ─── PARAMS ─── */
+function readParams() {
+  const p = new URLSearchParams(location.search);
+  const type = p.get('type');
+  const id = p.get('id');
+  if (!id || (type !== 'movie' && type !== 'tv')) return null;
+
+  let server = parseInt(p.get('server'), 10);
+  if (!server || !serverUrlResolvers[server]) {
+    const saved = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+    server = (saved && serverUrlResolvers[saved]) ? saved : 3;
+  }
+
+  const out = { type, id, server: 3 };
+  out.subtitle = ['ro', 'en', 'auto'].includes(p.get('sub'))
+    ? p.get('sub')
+    : (localStorage.getItem(SUBTITLE_KEY) || 'ro');
+  try {
+    const progress = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]');
+    const key = `${type}-${id}`;
+    const saved = progress.find(x => `${x.media_type || (x.title ? 'movie' : 'tv')}-${x.id}` === key);
+    out.resumeAt = Number(saved?.progressSeconds) || 0;
+  } catch { out.resumeAt = 0; }
+  if (type === 'tv') {
+    out.season  = parseInt(p.get('s'), 10) || 1;
+    out.episode = parseInt(p.get('e'), 10) || 1;
+  }
+  return out;
+}
+
+function syncUrl() {
+  const p = new URLSearchParams();
+  p.set('type', state.type);
+  p.set('id', state.id);
+  if (state.type === 'tv') { p.set('s', state.season); p.set('e', state.episode); }
+  p.set('server', state.server);
+  p.set('sub', state.subtitle);
+  history.replaceState(null, '', `${location.pathname}?${p.toString()}`);
+}
+
+/* ─── PLAYER ─── */
+function loadPlayer() {
+  const nextProgressKey = progressIdentity();
+  // Preserve the current position only while the loaded title/episode is
+  // unchanged. Episode changes save the old key before mutating state.
+  if (loadedProgressKey && loadedProgressKey === nextProgressKey) persistCurrentPlayback();
+  loadedProgressKey = nextProgressKey;
+  attemptedServers.add(state.server);
+  subtitleAutoToken += 1;
+  subtitleAutoController?.abort();
+  subtitleAutoController = null;
+  subtitleRequestController?.abort();
+  subtitleRequestController = null;
+  stopSubtitleDisplayLoop();
+  subtitleCues = [];
+  $('subtitle-layer').hidden = true;
+  autoNextEpisodeToken += 1;
+  endRecommendationsShownForToken = 0;
+  const inlineNext = $('next-episode-action');
+  if (inlineNext) inlineNext.hidden = true;
+  const recommendationPanel = $('end-recommendations');
+  if (recommendationPanel) recommendationPanel.hidden = true;
+  const serverId = state.server;
+  const loadToken = ++playerLoadToken;
+  playerLoadStartedAt = performance.now();
+  playerControlMetricRecorded = false;
+  playerFrameMetricRecorded = false;
+  try { performance.mark('cinema-player-load-start'); } catch {}
+  providerReady = false;
+  providerErrorCount = 0;
+  clearTimeout(playerLoadGuardTimer);
+  playerLoadGuardTimer = 0;
+  clearTimeout(providerReadyFallbackTimer);
+  providerReadyFallbackTimer = 0;
+  clearTimeout(subtitleAutoStartTimer);
+  subtitleAutoStartTimer = 0;
+  subtitleAutoScheduledToken = 0;
+  resumePlayerReady = false;
+  resumeDecisionAppliedToken = 0;
+  const src = serverUrlResolvers[state.server](state);
+  const loader = $('player-loading');
+  hidePlayerError();
+  loader.classList.remove('hide');
+  loader.removeAttribute('aria-hidden');
+
+  // Recreate the iframe on every load so the Permissions Policy
+  // (allow="fullscreen; ...") is re-applied for the new origin.
+  // Navigating an existing iframe via contentWindow.location drops the
+  // fullscreen delegation for cross-origin servers, which is why fullscreen
+  // only worked for the first source before.
+  const old = $('player');
+  const frame = document.createElement('iframe');
+  frame.id = 'player';
+  frame.allowFullscreen = true;
+  frame.loading = 'eager';
+  frame.setAttribute('fetchpriority', 'high');
+  // Use "*" so the fullscreen permission cascades to nested cross-origin
+  // The Cinema Player may load the media layer inside a nested iframe.
+  frame.setAttribute('allow', 'autoplay *; encrypted-media *; picture-in-picture *; fullscreen *; web-share *');
+  frame.referrerPolicy = 'origin';
+  let settled = false;
+  const fail = () => {
+    if (settled || loadToken !== playerLoadToken) return;
+    settled = true;
+    handlePlayerFailure(serverId);
+  };
+  frame.onload = () => {
+    if (loadToken !== playerLoadToken) return;
+    settled = true;
+    updateServerStatus(serverId, 'online');
+    // Some WebViews receive the provider's ready postMessage late. Show the
+    // shell controls after a short grace period, but do not mark the media
+    // ready: Play must remain disabled until the provider confirms ready.
+    clearTimeout(providerReadyFallbackTimer);
+    providerReadyFallbackTimer = window.setTimeout(() => {
       if (loadToken !== playerLoadToken || providerReady) return;
       updateOwnControls(true);
       showOwnControls();
