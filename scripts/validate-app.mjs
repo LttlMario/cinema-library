@@ -122,7 +122,7 @@ expect((sw.match(/cache\.put\([^\n]+\)\)\.catch\(\(\) => \{\}\)/g) || []).length
 
 expect(tvIndex.includes('tvapp=1.7.9') && !tvIndex.includes('tvapp=1.7.9&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
 expect(tvMain.includes('tvapp=1.7.9&fresh=1'), 'TV retry path requests a fresh live document');
-expect(tvMain.includes('BACK_HANDSHAKE_TIMEOUT = 700'), 'TV Back uses the guarded handshake timeout');
+expect(tvMain.includes('BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV Back uses the guarded handshake timeout');
 expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back acknowledgements only from the live page');
 expect(tvMain.includes("event.target !== document.body && event.target !== frame"), 'TV wrapper does not steal focus from its own controls');
 expect(tvMain.includes('MEDIA_KEYS') && tvMain.includes('registerMediaKeys') && tvMain.includes('MediaPlayPause'), 'TV wrapper forwards registered media keys to the player');
@@ -139,6 +139,7 @@ expect(tvMain.includes('errorTimer') && tvMain.includes('clearTimeout(errorTimer
 expect(tvMain.includes('var nextFrame = frame.cloneNode(false)') && tvMain.includes('function bindFrame(nextFrame)') && tvMain.includes('nextFrame.src'), 'TV retry replaces the iframe so stale load events cannot unlock a newer request');
 expect(tvMain.includes('function handleFrameError()') && tvMain.includes("frame.addEventListener('error', handleFrameError)") && tvMain.includes("var LIVE_ORIGIN = 'https://cinema.panel-pro.ro'") && tvMain.includes('event.origin !== LIVE_ORIGIN'), 'TV wrapper exposes iframe errors and restricts remote messages to the live origin');
 expect(tvMain.includes('function cleanupWrapperRuntime()') && tvMain.includes("window.addEventListener('pagehide', cleanupWrapperRuntime)") && tvMain.includes('backRequestId += 1'), 'TV wrapper cancels delayed work when the application is unloaded');
+expect(tvMain.includes('var BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV wrapper allows fullscreen exit and popup acknowledgement to complete before fallback');
 expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://cinesrc.st') && tvIndex.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'TV wrapper preconnects to image, video and subtitle origins');
 expect(tvConfig.includes('version="1.7.9"'), 'TV package version matches the wrapper source');
 expect(tvMain.includes('if (event.target === retry) return') && tvMain.includes('if (!loaded && code !== BACK_KEY'), 'TV wrapper keeps retry controls native and does not forward keys before load');
