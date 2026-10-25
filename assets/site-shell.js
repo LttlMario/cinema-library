@@ -122,7 +122,30 @@
     hero.innerHTML = '<div class="shell-hero-copy"><small>Cinema Library</small><h1>Filme și seriale pentru tine</h1><p>Descoperă titluri populare și găsește rapid următoarea vizionare.</p></div>';
     document.body.insertBefore(hero, main);
     ['7WsyChQLEftFiDOVTGkv3hFpyyt.jpg', '8cdWjvZQUExUUTzyp4t6EDMubfO.jpg', 'tmU7GeKVybMWFButWEGl2M4GeiP.jpg', 'q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg'].forEach((image, index) => { const slide = document.createElement('div'); slide.className = `shell-hero-slide${index === 0 ? ' active' : ''}`; slide.style.backgroundImage = `url('https://image.tmdb.org/t/p/w1280/${image}')`; hero.prepend(slide); });
-    let slideIndex = 0; setInterval(() => { const slides = hero.querySelectorAll('.shell-hero-slide'); slides[slideIndex]?.classList.remove('active'); slideIndex = (slideIndex + 1) % slides.length; slides[slideIndex]?.classList.add('active'); }, 8000);
+    let slideIndex = 0;
+    let heroTimer = 0;
+    const rotateHero = () => {
+      if (document.hidden) return;
+      const slides = hero.querySelectorAll('.shell-hero-slide');
+      if (slides.length < 2) return;
+      slides[slideIndex]?.classList.remove('active');
+      slideIndex = (slideIndex + 1) % slides.length;
+      slides[slideIndex]?.classList.add('active');
+    };
+    const startHeroRotation = () => {
+      if (heroTimer || document.hidden) return;
+      heroTimer = window.setInterval(rotateHero, 8000);
+    };
+    const stopHeroRotation = () => {
+      if (!heroTimer) return;
+      window.clearInterval(heroTimer);
+      heroTimer = 0;
+    };
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopHeroRotation();
+      else startHeroRotation();
+    });
+    startHeroRotation();
   }
   const footerMarkup = `<div class="footer-main"><div class="footer-links"><div><h3>Linkuri</h3><a href="catalog.html?type=movie">Filme</a><a href="catalog.html?type=tv">Seriale</a><a href="watch-together.html">Vezi împreună</a><a href="catalog.html?mode=top">Top IMDB</a></div><div><h3>Genuri</h3><a href="genres.html">Toate genurile</a><a href="catalog.html?type=movie&genre=28">Filme de acțiune</a><a href="catalog.html?type=movie&genre=27">Filme horror</a><a href="catalog.html?type=movie&genre=878">Filme SF</a><a href="catalog.html?type=movie&genre=53">Filme thriller</a></div><div><h3>Informații</h3><a href="contact.html">Contact</a><a href="terms.html">Termeni și condiții</a><a href="sitemap.html">Hartă site</a><a href="privacy.html">Confidențialitate</a></div></div><div class="footer-about"><h3>Despre noi</h3><p>Cinema Library este un catalog pentru filme și seriale, cu linkuri către servicii media terțe.</p><p>Nu stocăm fișiere video pe serverele noastre; disponibilitatea și subtitrările pot varia în funcție de sursă.</p><div class="footer-features"><span>♛ Calitate înaltă</span><span>▶ Gratuit, mereu</span><span>ϟ Încărcare rapidă</span><span>▣ Subtitrări multiple</span></div><div class="footer-downloads"><h3>Descarcă aplicația</h3><div class="download-grid"><a class="download-card" href="download.html?platform=desktop"><span class="download-icon">▣</span><span><strong>Desktop</strong><small>Windows · .exe</small></span><span class="download-arrow">↓</span></a><a class="download-card" href="download.html?platform=android"><span class="download-icon">▣</span><span><strong>Android</strong><small>APK · vezi releases</small></span><span class="download-arrow">↓</span></a><a class="download-card download-card-disabled" href="download.html?platform=ios"><span class="download-icon">●</span><span><strong>iOS</strong><small>Disponibil în curând</small></span></a></div></div></div></div><div class="footer-bottom"><span class="footer-copy">© 2026 Cinema Library</span><div class="footer-bottom-links"><a href="sitemap.html">Hartă site</a><a href="contact.html">Contact</a><a href="terms.html">Termeni și condiții</a><a href="privacy.html">Confidențialitate</a></div></div>`;
   const normalizeLinks = (root = document) => root.querySelectorAll('a[href]').forEach((link) => {
@@ -230,3 +253,4 @@
     openRiomaFromLink(url.href);
   });
 })();
+
