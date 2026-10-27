@@ -195,6 +195,7 @@ expect(tvMain.includes('var BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV wrapper allows 
 expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://cinesrc.st') && tvIndex.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'TV wrapper preconnects to image, video and subtitle origins');
 expect(tvConfig.includes('version="1.7.11"'), 'TV package version matches the wrapper source');
 expect(tvMain.includes('function forwardKey(key)') && tvMain.includes('frame.contentWindow.focus()'), 'TV wrapper restores iframe focus before forwarding remote keys');
+expect(tvMain.includes('event.stopPropagation();') && tvMain.includes('forwardKey(key);'), 'TV wrapper consumes forwarded remote events exactly once');
 expect(tvMain.includes('if (event.target === retry) return') && tvMain.includes('if (!loaded && code !== BACK_KEY'), 'TV wrapper keeps retry controls native and does not forward keys before load');
 expect(read('assets/site-shell.js').includes('let contentReturn = null'), 'secondary-page TV navigation remembers content return position');
 expect(siteShell.includes('current.matches(\'[data-shell-menu]\')') && siteShell.includes('requestAnimationFrame') && siteShell.includes('current.closest(\'.nav-submenu.open\')'), 'secondary-page TV menus move focus into options and back to the parent');
