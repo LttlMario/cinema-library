@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 40755)
-Total output lines: 3153
+Warning: truncated output (original token count: 40830)
+Total output lines: 3162
 
 <!DOCTYPE html>
 <html lang="en">
@@ -1306,12 +1306,7 @@ function setupSubtitlePanel() {
       const response = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/search?${params}`), controller); const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Căutarea online nu este disponibilă pe acest server.');
       subtitleResults = (payload.data || []).flatMap(item => (item.attributes?.files || []).map(file => ({ id:file.file_id, language:item.attributes.language, release:item.attributes.release || 'Subtitrare', downloads:item.attributes.download_count || 0 })));
-      $('subtitle-results').innerHTML = subtitleResults.map((item, i) => `<option value="${i}">${esc(item.language.toUpperCase())} · ${esc(item.release)} · ${it…755 tokens truncated…itleAutoController?.abort();
-  const controller = new AbortController();
-  subtitleAutoController = controller;
-  const cacheKey = `cinemalibrary_subtitle_${state.type}_${state.id}_${state.season || 1}_${state.episode || 1}_ro`;
-  let cachedContent = '';
-  try { cachedContent = localStorage.getItem(cacheKey) || ''; } catch {}
+      $('subtitle-results').innerHTML = subtitleResults.map((item, i) => `<option value="${i}">${esc(item.language.toUpperCase())} · ${esc(item.release)} · ${it…830 tokens truncated…acheKey) || ''; } catch {}
   try {
     const status = $('subtitle-status');
     if (status) status.textContent = 'Se caută automat subtitrarea în română…';
@@ -1573,6 +1568,15 @@ function loadPlayer() {
     old.replaceWith(frame);
   } else {
     $('player-wrap')?.appendChild(frame);
+  }
+  if (isExternalProvider()) {
+    // Show the virtual TV cursor immediately for external providers, even
+    // before the first remote key arrives, so the focused player is obvious.
+    tvCursorX = 50;
+    tvCursorY = 50;
+    frame.tabIndex = 0;
+    renderTvCursor();
+    setFocus(frame, false);
   }
   ownPaused = true;
   playbackIntent = false;
