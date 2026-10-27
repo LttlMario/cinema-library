@@ -75,7 +75,7 @@
     nextFrame.removeAttribute('src');
     frame.replaceWith(nextFrame);
     bindFrame(nextFrame);
-    nextFrame.src = 'https://cinema.panel-pro.ro/index.html?tv=1&tvapp=1.7.15&web=restored&fresh=1&retry=' + Date.now();
+    nextFrame.src = 'https://cinema.panel-pro.ro/index.html?tv=1&tvapp=1.7.14&fresh=1&retry=' + Date.now();
     errorTimer = window.setTimeout(showError, 15000);
   }
 
@@ -133,7 +133,7 @@
     try {
       frame.focus();
       frame.contentWindow.focus();
-      frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: key }, LIVE_ORIGIN);
+      frame.contentWindow.postMessage({ type: 'rioma:remote-key', key: key }, LIVE_ORIGIN);
     } catch (_) {}
   }
   function cleanupWrapperRuntime() {

@@ -133,7 +133,7 @@
     try {
       frame.focus();
       frame.contentWindow.focus();
-      frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: key }, LIVE_ORIGIN);
+      frame.contentWindow.postMessage({ type: 'rioma:remote-key', key: key }, LIVE_ORIGIN);
     } catch (_) {}
   }
   function cleanupWrapperRuntime() {
