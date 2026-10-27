@@ -990,8 +990,8 @@
   </div>
 </header>
 
-<script src="assets/site-shell.js?v=20261027-shell17"></script>
-<script src="assets/home-nav-fix.js?v=20261025-22"></script>
+<script src="assets/site-shell.js?v=20261027-shell18"></script>
+<script src="assets/home-nav-fix.js?v=20261027-23"></script>
 <link rel="stylesheet" href="assets/nav-parity.css?v=20261025-focus21">
 <style id="tflix-final-nav-parity">
   #header .nav-link,#header .library-nav-btn,#header .search-toggle{background:transparent!important;border:0!important;border-radius:14px!important;box-shadow:none!important;color:#a1a1aa!important}
@@ -1137,7 +1137,7 @@ themeToggle?.addEventListener('click', () => {
 });
 updateThemeButton();
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js?v=20261027-v39').then(registration => {
+  navigator.serviceWorker.register('./sw.js?v=20261027-v40').then(registration => {
     registration.update().catch(() => {});
     if (registration.waiting) registration.waiting.postMessage({ type: 'cinema:skip-waiting' });
   }).catch(() => {});
@@ -2907,6 +2907,15 @@ $('clear-filters').addEventListener('click', () => {
   let lastNavAt = 0;
   const mem = new Map(); // section key -> last item index
 
+  // Samsung browsers do not all expose the same KeyboardEvent.key value.
+  // Normalize the numeric remote codes before any navigation decision so one
+  // press has identical behavior in the desktop browser and TV wrapper.
+  const normalizeRemoteKey = event => {
+    const raw = String(event?.key || '');
+    if (['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'Enter', 'Escape', 'Backspace', 'BrowserBack', 'GoBack', 'Back', 'XF86Back'].includes(raw)) return raw;
+    return ({ 13: 'Enter', 27: 'Escape', 8: 'Backspace', 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 461: 'BrowserBack', 10009: 'Back' })[raw] || ({ 13: 'Enter', 27: 'Escape', 8: 'Backspace', 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 461: 'BrowserBack', 10009: 'Back' })[String(event?.keyCode || event?.which || '')] || raw;
+  };
+
   const vis = el => {
     if (!el || !el.getClientRects().length || el.hidden || el.disabled) return false;
     if (el.getAttribute('aria-hidden') === 'true') return false;
@@ -3154,7 +3163,7 @@ $('clear-filters').addEventListener('click', () => {
   // navigation appear to work only for the first sidebar item.
   document.addEventListener('keydown', e => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-    const k = e.key;
+    const k = normalizeRemoteKey(e);
     const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
     if (arrows[k]) {
       const now = performance.now();
