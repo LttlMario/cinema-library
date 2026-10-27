@@ -27,7 +27,13 @@
         const items = focusables();
         if (!items.length) return;
         const current = document.activeElement;
-        if (!items.includes(current)) { items[0].focus(); return; }
+        if (!items.includes(current)) {
+          focusElement(items[0]);
+          // The first remote arrow should also move from the initial focus;
+          // otherwise secondary TV pages require an extra, invisible press.
+          if (key !== 'Enter') { window.requestAnimationFrame(() => moveFocus(key)); }
+          return;
+        }
         if (key === 'Enter') {
           current.click();
           if (current.matches('[data-shell-menu]')) {
