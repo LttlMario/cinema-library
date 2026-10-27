@@ -73,7 +73,7 @@
     nextFrame.removeAttribute('src');
     frame.replaceWith(nextFrame);
     bindFrame(nextFrame);
-    nextFrame.src = 'https://cinema.panel-pro.ro/index.html?tv=1&tvapp=1.7.10&fresh=1&retry=' + Date.now();
+    nextFrame.src = 'https://cinema.panel-pro.ro/index.html?tv=1&tvapp=1.7.11&fresh=1&retry=' + Date.now();
     errorTimer = window.setTimeout(showError, 15000);
   }
 
@@ -120,6 +120,13 @@
     frame.addEventListener('load', handleFrameLoad);
     frame.addEventListener('error', handleFrameError);
   }
+  function forwardKey(key) {
+    try {
+      frame.focus();
+      frame.contentWindow.focus();
+      frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: key }, LIVE_ORIGIN);
+    } catch (_) {}
+  }
   function cleanupWrapperRuntime() {
     window.clearTimeout(errorTimer);
     errorTimer = 0;
@@ -160,7 +167,7 @@
       backHandledByWeb = false;
       // Let the live page/player handle Back first. The player uses this to
       // activate its own fullscreen Back button and return to the popup.
-      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: 'Back' }, LIVE_ORIGIN); } catch (_) {}
+      forwardKey('Back');
       window.setTimeout(function () {
         if (requestId !== backRequestId || backHandledByWeb) return;
         try {
@@ -172,12 +179,12 @@
       event.preventDefault();
       exitApplication();
     } else if (MEDIA_KEYS[code]) {
-      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: MEDIA_KEYS[code] }, LIVE_ORIGIN); } catch (_) {}
+      forwardKey(MEDIA_KEYS[code]);
       event.preventDefault();
     } else if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
       // If Samsung keeps focus on the outer document, forward the remote
       // command into the live web page inside the iframe.
-      try { frame.contentWindow.postMessage({ type: 'cinema:remote-key', key: key }, LIVE_ORIGIN); } catch (_) {}
+      forwardKey(key);
       event.preventDefault();
     }
   }, true);
