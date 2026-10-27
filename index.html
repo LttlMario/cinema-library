@@ -1084,6 +1084,7 @@
           <option value="3">Cinesrc — playerul Cinema Library</option>
           <option value="4">VidSrc — player extern</option>
           <option value="5">ScreenScape — player extern</option>
+          <option value="6">2Embed — player extern</option>
         </select>
       </div>
       <div class="modal-actions">
@@ -1547,6 +1548,22 @@ function screenscapeUrl(item, season = 1, episode = 1) {
     params.set('e', String(episode));
   }
   return `https://nxsha.screenscape.me/embed?${params.toString()}`;
+}
+
+function selectedProviderUrl(item, season = 1, episode = 1, provider = 3) {
+  const type = mediaOf(item) === 'movie' ? 'movie' : 'tv';
+  if (Number(provider) === 4) {
+    return type === 'movie'
+      ? `https://vidsrc.cc/v2/embed/movie/${item.id}?poster=true&autoPlay=false`
+      : `https://vidsrc.cc/v2/embed/tv/${item.id}/${season}/${episode}?poster=true&autoPlay=false`;
+  }
+  if (Number(provider) === 5) return screenscapeUrl(item, season, episode);
+  if (Number(provider) === 6) {
+    return type === 'movie'
+      ? `https://www.2embed.cc/embed/${item.id}`
+      : `https://www.2embed.cc/embedtv/${item.id}&s=${season}&e=${episode}`;
+  }
+  return null;
 }
 
 /* ─── DIGITAL RELEASE FETCH (shared) ─── */
@@ -2235,7 +2252,7 @@ async function openModal(item) {
   currentModalItem = { ...item, media_type: type };
   rememberTitle(currentModalItem);
   const preferredProvider = Number(localStorage.getItem(MODAL_PROVIDER_KEY) || 3);
-  if ($('modal-provider')) $('modal-provider').value = [3, 4, 5].includes(preferredProvider) ? String(preferredProvider) : '3';
+  if ($('modal-provider')) $('modal-provider').value = [3, 4, 5, 6].includes(preferredProvider) ? String(preferredProvider) : '3';
   resetModalTrailer();
 
   const bg = backdrop(item.backdrop_path) || poster(item.poster_path, 'w780');
@@ -2462,13 +2479,13 @@ document.addEventListener('keydown', event => {
 
 document.getElementById('modal-provider')?.addEventListener('change', event => {
   const value = Number(event.target.value);
-  if ([3, 4, 5].includes(value)) localStorage.setItem(MODAL_PROVIDER_KEY, String(value));
+  if ([3, 4, 5, 6].includes(value)) localStorage.setItem(MODAL_PROVIDER_KEY, String(value));
 });
 
 $('modal-watch-btn').addEventListener('click', () => {
   if (!currentModalItem) return;
   const selectedProvider = Number($('modal-provider')?.value || 3);
-  if ([3, 4, 5].includes(selectedProvider)) localStorage.setItem(MODAL_PROVIDER_KEY, String(selectedProvider));
+  if ([3, 4, 5, 6].includes(selectedProvider)) localStorage.setItem(MODAL_PROVIDER_KEY, String(selectedProvider));
   const openServerPicker = openServerPickerNext;
   openServerPickerNext = false;
   const s = parseInt($('season-select')?.value  || 1);
@@ -2514,11 +2531,12 @@ $('modal-watch-btn').addEventListener('click', () => {
     window.parent.postMessage({ type: 'open-in-tv-browser', url: tflix.href }, '*');
     return;
   }
-  // Stop and unload the delayed YouTube trailer before opening the selected player.
-  // Every provider is routed through the same embedded player page so Back,
-  // fullscreen and TV focus handling remain consistent.
+  // Open the selected provider directly. Cinesrc keeps the Cinema Library
+  // player shell; external providers receive the popup selection without our
+  // custom controls being layered over their iframe.
+  const externalUrl = selectedProviderUrl(currentModalItem, s, e, selectedProvider);
   closeModal(true);
-  openRiomaOverlay(destination.href);
+  openRiomaOverlay(externalUrl || destination.href);
 });
 
 // Secondary playback route: keep the existing Cinema Library player available
