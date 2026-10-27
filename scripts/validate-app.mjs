@@ -46,6 +46,7 @@ expect(index.includes('el.hidden || el.disabled') && index.includes("style.visib
 expect(stream.includes('function loadPlayer() {\n  const nextProgressKey = progressIdentity();') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();'), 'player saves progress before replacing an unchanged source');
 expect(stream.includes("old.src = 'about:blank'") && stream.includes('old.replaceWith(frame)'), 'player tears down the previous provider iframe before switching source');
 expect(stream.includes("document.dispatchEvent(new Event('rioma:player-reloaded'))") && stream.includes("document.addEventListener('rioma:player-reloaded'"), 'player re-anchors active TV focus after switching source');
+expect(stream.includes('body:not(.tv-mode) .custom-controls') && stream.includes('body:not(.tv-mode) #own-timeline'), 'player controls stay inside narrow web viewports without shrinking TV controls');
 expect(stream.includes('const TMDB_CACHE_MAX_ENTRIES = isTvClient ? 60 : 120') && stream.includes('slice(0, TMDB_CACHE_MAX_ENTRIES)'), 'player TMDB cache is bounded for TV and web');
 expect(stream.includes('function flushTmdbCache()') && stream.includes('flushTmdbCache();'), 'player TMDB cache flushes before page exit');
 expect(stream.includes('lastOwnCommandKey') && stream.includes('now - lastOwnCommandAt < 180'), 'rapid duplicate Play/Pause commands are ignored');
@@ -140,8 +141,8 @@ expect(index.includes("window.parent.postMessage({ type: 'cinema:app-ready' }, '
 expect(index.includes('const heroLoad = loadHero()') && index.includes('await Promise.allSettled([heroLoad, initialLoads[0]])'), 'TV readiness waits only for the hero and first visible row');
 expect(stream.includes('const tmdb = async (path, options = {})') && stream.includes('options.signal.addEventListener') && stream.includes('signal: controller.signal'), 'Player TMDB requests can be cancelled when the title changes');
 expect(stream.includes('let metadataAbortController = null') && stream.includes('metadataAbortController?.abort()') && stream.includes('tmdb(`/tv/${state.id}`, { signal: metadataController.signal })') && stream.includes('tmdb(`/movie/${state.id}`, { signal: metadataController.signal })'), 'Player metadata fetches stop when the player closes');
-expect(index.includes('site-shell.js?v=20261027-shell17') && index.includes('home-nav-fix.js?v=20261025-22') && read('catalog.html').includes('site-shell.js?v=20261027-shell17') && read('genres.html').includes('site-shell.js?v=20261027-shell17'), 'TV navigation assets use a fresh cache-busting version');
-expect(sw.includes('cinema-library-shell-v39-cache-first-20261027') && index.includes('sw.js?v=20261027-v39') && stream.includes('sw.js?v=20261027-v39'), 'Service worker shell cache is bumped for immediate updates');
+expect(index.includes('site-shell.js?v=20261027-shell18') && index.includes('home-nav-fix.js?v=20261027-23') && read('catalog.html').includes('site-shell.js?v=20261027-shell18') && read('genres.html').includes('site-shell.js?v=20261027-shell18'), 'TV navigation assets use a fresh cache-busting version');
+expect(sw.includes('cinema-library-shell-v40-cache-first-20261027') && index.includes('sw.js?v=20261027-v40') && stream.includes('sw.js?v=20261027-v40'), 'Service worker shell cache is bumped for immediate updates');
 expect(index.includes('<div class="search-wrap" id="search-wrap">') && !index.includes('<div class="search-wrap open" id="search-wrap">'), 'TV starts with the sidebar Search button visible, not the floating field');
 expect(index.includes('<a class="nav-link active" href="index.html" data-nav="home" aria-current="page">Acasă</a>'), 'Home is a native focusable navigation control on the TV layout');
 expect(homeNavFix.includes("cinema:search-opened") && homeNavFix.includes("cinema:search-closed") && index.includes("key: 'search-input'"), 'Search keeps the TV focus state synchronized while opening and closing');
@@ -154,8 +155,8 @@ expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseR
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
 expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
-expect(index.includes('sw.js?v=20261027-v39') && stream.includes('sw.js?v=20261027-v39'), 'catalog and player register the current service-worker revision');
-expect(sw.includes('cinema-library-shell-v39-cache-first-20261027') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
+expect(index.includes('sw.js?v=20261027-v40') && stream.includes('sw.js?v=20261027-v40'), 'catalog and player register the current service-worker revision');
+expect(sw.includes('cinema-library-shell-v40-cache-first-20261027') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
 expect(sw.includes('const refresh = fetch(request, { cache: \'no-store\' })') && sw.includes('return cached || refresh'), 'service-worker serves cached static assets before background refresh');
 expect(sw.includes('The cached shell is returned immediately') && sw.includes('const refresh = fetch(request, { cache: \'no-store\' })'), 'service-worker refreshes cached HTML from the network instead of the browser HTTP cache');
 expect(sw.includes('event.waitUntil(refresh.then(() => undefined, () => undefined))'), 'service-worker keeps background asset refresh alive');
@@ -186,6 +187,7 @@ expect(stream.includes("['MediaPlayPause', 'MediaPlay', 'MediaPause']") && strea
 expect(stream.includes("k === 'MediaTrackNext'") && stream.includes("k === 'MediaTrackPrevious'"), 'player handles next and previous media keys');
 expect(stream.includes('Some Samsung WebViews deliver arrow keys') && stream.includes("e.target !== $('own-timeline')"), 'player handles native timeline arrow keys before WebView consumption');
 expect(stream.includes("document.addEventListener('keydown', e => {\n    if (e.defaultPrevented || e.altKey"), 'player general key handler ignores commands already consumed by a higher-priority control');
+expect(index.includes('const normalizeRemoteKey = event =>') && stream.includes('const normalizeRemoteKey = event =>') && siteShell.includes('const normalizeRemoteKey = (event)'), 'web and TV navigation normalize Samsung numeric remote key codes');
 expect(stream.includes('function returnToPopupFromPlayer()') && stream.includes('exitFullscreen'), 'player Back exits fullscreen before returning to the popup');
 expect(stream.includes('let previous = []') && stream.includes('Array.isArray(parsed) ? parsed : []'), 'player progress survives malformed local storage data');
 expect(index.includes("event.data?.type === 'rioma:close'") && index.includes('overlay.requestFullscreen'), 'home overlay closes through the player handshake and requests fullscreen');
