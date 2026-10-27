@@ -169,8 +169,8 @@ expect(sw.includes('const SHELL_ASSET_TIMEOUT = 8000') && sw.includes('controlle
 expect(sw.includes('isStaticAsset') && sw.includes('request.destination'), 'service-worker does not cache arbitrary dynamic same-origin requests');
 expect((sw.match(/cache\.put\([^\n]+\)\)\.catch\(\(\) => \{\}\)/g) || []).length >= 3, 'service-worker ignores cache quota failures without breaking the page');
 
-expect(tvIndex.includes('tvapp=1.7.10') && !tvIndex.includes('tvapp=1.7.10&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
-expect(tvMain.includes('tvapp=1.7.10&fresh=1'), 'TV retry path requests a fresh live document');
+expect(tvIndex.includes('tvapp=1.7.11') && !tvIndex.includes('tvapp=1.7.11&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
+expect(tvMain.includes('tvapp=1.7.11&fresh=1'), 'TV retry path requests a fresh live document');
 expect(tvMain.includes('BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV Back uses the guarded handshake timeout');
 expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back acknowledgements only from the live page');
 expect(tvMain.includes("event.target !== document.body && event.target !== frame"), 'TV wrapper does not steal focus from its own controls');
@@ -193,7 +193,8 @@ expect(tvMain.includes('function handleFrameError()') && tvMain.includes("frame.
 expect(tvMain.includes('function cleanupWrapperRuntime()') && tvMain.includes("window.addEventListener('pagehide', cleanupWrapperRuntime)") && tvMain.includes('backRequestId += 1'), 'TV wrapper cancels delayed work when the application is unloaded');
 expect(tvMain.includes('var BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV wrapper allows fullscreen exit and popup acknowledgement to complete before fallback');
 expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://cinesrc.st') && tvIndex.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'TV wrapper preconnects to image, video and subtitle origins');
-expect(tvConfig.includes('version="1.7.10"'), 'TV package version matches the wrapper source');
+expect(tvConfig.includes('version="1.7.11"'), 'TV package version matches the wrapper source');
+expect(tvMain.includes('function forwardKey(key)') && tvMain.includes('frame.contentWindow.focus()'), 'TV wrapper restores iframe focus before forwarding remote keys');
 expect(tvMain.includes('if (event.target === retry) return') && tvMain.includes('if (!loaded && code !== BACK_KEY'), 'TV wrapper keeps retry controls native and does not forward keys before load');
 expect(read('assets/site-shell.js').includes('let contentReturn = null'), 'secondary-page TV navigation remembers content return position');
 expect(siteShell.includes('current.matches(\'[data-shell-menu]\')') && siteShell.includes('requestAnimationFrame') && siteShell.includes('current.closest(\'.nav-submenu.open\')'), 'secondary-page TV menus move focus into options and back to the parent');
