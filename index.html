@@ -3185,7 +3185,11 @@ $('clear-filters').addEventListener('click', () => {
           e.preventDefault();
           return;
         }
-        if (cur && vis(cur)) setFocus(cur); else focusInitial();
+        if (cur && vis(cur)) setFocus(cur, false); else focusInitial();
+        // Do not consume the first directional press just to initialise the
+        // navigator. Apply the requested direction immediately so a TV user
+        // can start moving with one press from the initial Home focus.
+        if (cur) move(arrows[k][0], arrows[k][1]);
         e.preventDefault();
       }
       return;
