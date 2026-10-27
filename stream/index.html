@@ -1840,7 +1840,8 @@ function normalizePlayerPayload(message) {
 }
 
 window.addEventListener('message', event => {
-  const allowedOrigin = event.origin === 'https://cinesrc.st' || event.origin.endsWith('.cinesrc.st');
+  const allowedOrigin = event.origin === 'https://cinesrc.st' || event.origin.endsWith('.cinesrc.st')
+    || event.origin === 'https://vipstreammovies.com' || event.origin === 'https://nextgencloudfabric.com';
   if (!allowedOrigin) return;
   // Only the active Cinesrc iframe may drive player state.  The page can also
   // contain a trailer or recommendation iframe; accepting their generic
@@ -1969,7 +1970,7 @@ window.addEventListener('message', event => {
   const nearEnd = remaining !== null && remaining <= 60 && remaining >= 0;
   const recommendationNearEnd = remaining !== null && remaining <= 30 && remaining >= 0;
   const percentageEnd = !Number.isFinite(duration) && progress >= 99;
-  const shouldAutoNext = state?.server === 3 && state.type === 'tv' && completed && autoNextEpisodeToken === playerLoadToken;
+  const shouldAutoNext = state?.type === 'tv' && completed && autoNextEpisodeToken === playerLoadToken;
   if (state?.server === 3 && (completed || nearEnd || percentageEnd)) revealInlineNextEpisode();
   if (recommendationNearEnd || completed) showEndRecommendations();
   if (Number.isFinite(progress) && state?.server === 3) {

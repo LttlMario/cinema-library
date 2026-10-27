@@ -741,6 +741,7 @@
     .official-link { grid-column: 1 / -1; justify-self: start; font-size: 0.78rem; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
     .official-link:hover { color: var(--text); }
     .modal-watch-btn { flex:1 1 180px; width:auto; padding: 0.95rem; font-size: 1.02rem; }
+    .modal-next-episode-btn { flex:1 1 180px; width:auto; padding: 0.95rem; font-size: 1.02rem; }
     .modal-local-watch-btn { padding: 0.95rem 1rem; white-space: nowrap; }
     .modal-server-btn { padding: 0.95rem 1rem; white-space: nowrap; }
     .modal-provider-wrap { display:flex; align-items:center; gap:.55rem; flex:1 1 100%; }
@@ -1093,6 +1094,7 @@
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           Redă
         </button>
+        <button class="btn modal-next-episode-btn" id="modal-next-episode-btn" type="button" hidden>▶ Următorul episod</button>
         <button class="btn modal-local-watch-btn" id="modal-local-watch-btn" type="button" title="Folosește playerul Cinema Library">Playerul nostru</button>
         <button class="btn modal-server-btn" id="modal-server-btn" type="button" title="Alege manual serverul Cinesrc">▣ Server</button>
         <button class="btn modal-favorite-btn" id="modal-favorite-btn" type="button" aria-pressed="false">♡ Favorite</button>
@@ -1224,6 +1226,8 @@ let searchResults = [];
 let searchRequestId = 0;
 let genreRequestId = 0;
 let currentModalItem = null;
+let lastPlaybackSelection = null;
+let reopenPopupAfterPlayer = false;
 let openServerPickerNext = false;
 const MODAL_PROVIDER_KEY = 'cinemalibrary_provider_v1';
 let modalTrailerTimer = null;
@@ -2291,6 +2295,7 @@ async function openModal(item) {
     drEl.style.display = 'none';
     await loadTvSeasons(item.id, savedProgress);
   }
+  updateModalNextEpisodeButton();
 
   $('modal-backdrop').classList.add('open');
   scheduleModalTrailer(currentModalItem);
@@ -2410,6 +2415,18 @@ async function updateEpisodes(tvId) {
   }
 }
 
+function updateModalNextEpisodeButton() {
+  const button = $('modal-next-episode-btn');
+  const select = $('episode-select');
+  if (!button || !select || mediaOf(currentModalItem) !== 'tv') {
+    if (button) button.hidden = true;
+    return;
+  }
+  const next = select.options[select.selectedIndex + 1];
+  button.hidden = !next;
+  if (next) button.textContent = `▶ Următorul episod · ${next.textContent}`;
+}
+
 function closeRiomaOverlay() {
   $('rioma-overlay-cursor')?.classList.remove('visible');
   const overlay = $('rioma-overlay');
@@ -2425,6 +2442,23 @@ function closeRiomaOverlay() {
   resetHomeWork();
   startHeroTimer();
   if (frame) frame.src = 'about:blank';
+  if (reopenPopupAfterPlayer && lastPlaybackSelection?.item) {
+    const restore = lastPlaybackSelection;
+    reopenPopupAfterPlayer = false;
+    window.setTimeout(async () => {
+      try {
+        await openModal(restore.item);
+        if (restore.item.media_type === 'tv') {
+          if ($('season-select')) $('season-select').value = String(restore.season);
+          await updateEpisodes(restore.item.id);
+          if ($('episode-select')) $('episode-select').value = String(restore.episode);
+          updateModalNextEpisodeButton();
+          const next = $('modal-next-episode-btn');
+          if (next && !next.hidden) next.focus();
+        }
+      } catch (error) { console.warn('Could not restore the title popup:', error); }
+    }, 0);
+  }
   if (window.parent !== window) window.parent.postMessage({ type: 'cinema:player-closed' }, '*');
 }
 
@@ -2519,6 +2553,17 @@ document.getElementById('modal-provider')?.addEventListener('change', event => {
   if ([3, 4, 5, 6, 7].includes(value)) localStorage.setItem(MODAL_PROVIDER_KEY, String(value));
 });
 
+$('season-select')?.addEventListener('change', () => window.setTimeout(updateModalNextEpisodeButton, 0));
+$('episode-select')?.addEventListener('change', updateModalNextEpisodeButton);
+$('modal-next-episode-btn')?.addEventListener('click', () => {
+  const select = $('episode-select');
+  const next = select?.options[select.selectedIndex + 1];
+  if (!next) return;
+  select.value = next.value;
+  updateModalNextEpisodeButton();
+  $('modal-watch-btn')?.click();
+});
+
 $('modal-watch-btn').addEventListener('click', () => {
   if (!currentModalItem) return;
   const selectedProvider = Number($('modal-provider')?.value || 3);
@@ -2551,6 +2596,8 @@ $('modal-watch-btn').addEventListener('click', () => {
   const destination = new URL(playerUrl(currentModalItem, s, e, selectedProvider), document.baseURI);
   destination.searchParams.set('embedded', '1');
   if (openServerPicker) destination.searchParams.set('server-picker', '1');
+  lastPlaybackSelection = { item: { ...currentModalItem }, season: s, episode: e, provider: selectedProvider };
+  reopenPopupAfterPlayer = true;
   if (new URLSearchParams(window.location.search).get('app') === 'tv') {
     // On Samsung TV the catalog stays in the app, while playback is handed
     // to the real TFlix browser player. The return URL lets its Back/X action
