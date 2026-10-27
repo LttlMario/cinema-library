@@ -4,11 +4,12 @@
     document.documentElement.classList.add('tv-mode');
     if (!window.__cinemaTvRemoteBridge) {
       window.__cinemaTvRemoteBridge = true;
-      const keyCodes = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Enter: 13 };
+      const keyCodes = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Enter: 13, Escape: 27, Backspace: 8, BrowserBack: 461, Back: 10009 };
       const normalizeRemoteKey = (event) => {
         const raw = String(event?.key || '');
         if (keyCodes[raw]) return raw;
-        return ({ 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 13: 'Enter' })[raw] || ({ 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 13: 'Enter' })[String(event?.keyCode || event?.which || '')] || raw;
+        const numeric = { 8: 'Backspace', 13: 'Enter', 27: 'Escape', 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 461: 'BrowserBack', 10009: 'Back' };
+        return numeric[raw] || numeric[String(event?.keyCode || event?.which || '')] || raw;
       };
       const visible = (el) => {
         if (!el || !el.getClientRects().length) return false;
@@ -106,6 +107,27 @@
       });
       document.addEventListener('keydown', (event) => {
         const key = normalizeRemoteKey(event);
+        if (['Escape', 'Backspace', 'BrowserBack', 'Back'].includes(key)) {
+          const openMenu = document.querySelector('.nav-submenu.open');
+          const searchWrap = document.querySelector('#search-wrap.search-open, #search-wrap.open');
+          if (openMenu || searchWrap) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (openMenu) {
+              openMenu.classList.remove('open');
+              document.querySelector(`[data-menu="${openMenu.id}"]`)?.focus({ preventScroll: true });
+            } else if (searchWrap) {
+              searchWrap.classList.remove('search-open', 'open');
+              const input = document.querySelector('#search');
+              const clear = document.querySelector('#search-clear');
+              if (input) { input.value = ''; input.blur(); input.tabIndex = -1; input.setAttribute('aria-hidden', 'true'); }
+              if (clear) { clear.classList.remove('visible'); clear.tabIndex = -1; clear.setAttribute('aria-hidden', 'true'); }
+              document.querySelector('#search-toggle')?.setAttribute('aria-expanded', 'false');
+              document.querySelector('#search-toggle')?.focus({ preventScroll: true });
+            }
+          }
+          return;
+        }
         if (!keyCodes[key] || document.querySelector('#rows-container')) return;
         event.preventDefault();
         moveFocus(key);
