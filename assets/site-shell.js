@@ -145,6 +145,7 @@
   const catalogType = query.get('type');
   const active = page === 'catalog.html' && catalogType === 'movie' ? 'movies'
     : page === 'catalog.html' && catalogType === 'tv' ? 'series'
+    : page === 'live.html' ? 'live'
     : isHome && location.hash === '#favorites' ? 'favorites'
     : isHome ? 'home' : '';
   const menus = {
@@ -152,10 +153,10 @@
     series: [['Toate serialele', 'catalog.html?type=tv'], ['Seriale recente', 'catalog.html?type=tv&sort=latest'], ['Cele mai apreciate', 'catalog.html?type=tv&sort=top']],
     top: [['Top filme', 'catalog.html?mode=top&type=movie'], ['Top seriale', 'catalog.html?mode=top&type=tv']]
   };
-  const nav = [['Home', 'index.html', 'home'], ['Movies', '', 'movies'], ['TV Shows', '', 'series']];
+  const nav = [['Home', 'index.html', 'home'], ['Movies', '', 'movies'], ['TV Shows', '', 'series'], ['Live', 'live.html', 'live']];
   document.documentElement.classList.add('cinema-shell-page');
   document.body.classList.add('cinema-shell-page');
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = appUrl('assets/site-shell.css?v=20261025-stability13'); document.head.append(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = appUrl('assets/site-shell.css?v=20261027-live1'); document.head.append(css);
   const parityCss = document.createElement('link'); parityCss.rel = 'stylesheet'; parityCss.href = appUrl('assets/nav-parity.css?v=20261025-focus21'); document.head.append(parityCss);
   const main = document.querySelector('body>main');
   document.querySelectorAll('body>header,body>.top,body>footer').forEach((node) => node.remove());
