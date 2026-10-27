@@ -982,7 +982,15 @@ class NetflixIPTVPlayer {
             const hls = new Hls({
                 enableWorker: true,
                 lowLatencyMode: false,
-                backBufferLength: 90
+                backBufferLength: 90,
+                // Do not downscale just because the player is rendered inside
+                // a TV WebView. Let HLS use the best variant the connection
+                // can sustain, then adapt down only when bandwidth requires it.
+                capLevelToPlayerSize: false,
+                startLevel: -1,
+                abrEwmaDefaultEstimate: 8000000,
+                abrBandWidthFactor: 0.95,
+                abrBandWidthUpFactor: 0.7
             });
             
             hls.loadSource(playbackUrl);
