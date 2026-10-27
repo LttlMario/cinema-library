@@ -723,7 +723,7 @@ const ENHANCER_PRESETS = {
 const SERVERS = [
   { id: 3, name: 'Rioma', note: 'Playerul unic Cinema Library.' },
 ];
-let cinesrcServerPickerOpen = false;
+let cinesrcServerPickerOpen = new URLSearchParams(location.search).get('server-picker') === '1';
 
 /* Single source used by Rioma. */
 const serverUrlResolvers = {
@@ -1431,6 +1431,8 @@ function syncUrl() {
 
 /* ─── PLAYER ─── */
 function loadPlayer() {
+  $('player-hit-area')?.classList.toggle('server-picker-open', cinesrcServerPickerOpen);
+  $('own-server')?.setAttribute('aria-expanded', String(cinesrcServerPickerOpen));
   const nextProgressKey = progressIdentity();
   // Preserve the current position only while the loaded title/episode is
   // unchanged. Episode changes save the old key before mutating state.
