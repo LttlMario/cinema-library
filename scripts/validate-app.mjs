@@ -45,6 +45,7 @@ expect(stream.includes('Provider controls and episode/recommendation rows may be
 expect(index.includes('el.hidden || el.disabled') && index.includes("style.visibility !== 'hidden'") && stream.includes('el.hidden || el.disabled'), 'TV focus skips hidden, invisible, and disabled controls');
 expect(stream.includes('function loadPlayer() {\n  const nextProgressKey = progressIdentity();') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();'), 'player saves progress before replacing an unchanged source');
 expect(stream.includes("old.src = 'about:blank'") && stream.includes('old.replaceWith(frame)'), 'player tears down the previous provider iframe before switching source');
+expect(stream.includes("document.dispatchEvent(new Event('rioma:player-reloaded'))") && stream.includes("document.addEventListener('rioma:player-reloaded'"), 'player re-anchors active TV focus after switching source');
 expect(stream.includes('const TMDB_CACHE_MAX_ENTRIES = isTvClient ? 60 : 120') && stream.includes('slice(0, TMDB_CACHE_MAX_ENTRIES)'), 'player TMDB cache is bounded for TV and web');
 expect(stream.includes('function flushTmdbCache()') && stream.includes('flushTmdbCache();'), 'player TMDB cache flushes before page exit');
 expect(stream.includes('lastOwnCommandKey') && stream.includes('now - lastOwnCommandAt < 180'), 'rapid duplicate Play/Pause commands are ignored');
