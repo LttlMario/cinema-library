@@ -2834,7 +2834,10 @@ window.addEventListener('beforeunload', () => {
       if (arrows[k]) {
         active = true;
         document.documentElement.classList.add('keynav');
-        if (cur && vis(cur)) setFocus(cur); else focusInitial();
+        if (cur && vis(cur)) setFocus(cur, false); else focusInitial();
+        // Apply the first arrow immediately instead of requiring an extra
+        // press just to wake the TV navigator.
+        if (cur) move(arrows[k][0], arrows[k][1]);
         e.preventDefault();
       } else if (k === 'Enter') {
         active = true;
