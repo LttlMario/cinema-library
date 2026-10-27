@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 40336)
-Total output lines: 3121
+Warning: truncated output (original token count: 40755)
+Total output lines: 3153
 
 <!DOCTYPE html>
 <html lang="en">
@@ -220,6 +220,8 @@ Total output lines: 3121
     #player { pointer-events:none; }
     .player-wrap.external-provider #player { pointer-events:auto; }
     .player-wrap.external-provider #player:focus-visible { outline:4px solid var(--accent-h); outline-offset:-4px; }
+    .tv-player-cursor { position:absolute; z-index:20; width:26px; height:26px; margin:-13px 0 0 -13px; border:3px solid #fff; border-radius:50%; background:rgba(229,9,20,.82); box-shadow:0 0 0 3px rgba(229,9,20,.45),0 2px 12px #000; pointer-events:none; display:none; }
+    .tv-player-cursor.visible { display:block; }
     .player-wrap.external-provider .custom-controls,
     .player-wrap.external-provider .player-hit-area { display:none !important; }
     .player-source-controls { position:absolute; top:.85rem; right:.85rem; z-index:14; display:flex; align-items:center; gap:.45rem; padding:.35rem; border:1px solid rgba(255,255,255,.2); border-radius:9px; background:rgba(10,10,14,.9); box-shadow:0 4px 16px rgba(0,0,0,.4); }
@@ -561,6 +563,7 @@ Total output lines: 3121
         <div class="player-loading" id="player-loading" role="status" aria-live="polite" aria-label="Se încarcă playerul"><div class="spinner" aria-hidden="true"></div></div>
         <div class="player-error" id="player-error" role="alert" hidden><p id="player-error-text">Redarea a întâmpinat o problemă.</p><button id="player-error-retry" type="button">Reîncearcă</button></div>
         <iframe id="player" title="Player video Cinema Library" allowfullscreen allow="autoplay *; encrypted-media *; picture-in-picture *; fullscreen *; web-share *"></iframe>
+        <div class="tv-player-cursor" id="tv-player-cursor" aria-hidden="true"></div>
         <div class="picture-overlay" id="picture-overlay" aria-hidden="true"></div>
         <button class="player-back-action" id="player-back-action" type="button" title="Înapoi la popup" aria-label="Înapoi la popup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg><span>Înapoi</span></button>
         <div class="player-source-controls" id="player-source-controls" aria-label="Surse video">
@@ -857,7 +860,877 @@ const tmdb = async (path, options = {}) => {
     const controller = new AbortController();
     const relayAbort = () => controller.abort();
     if (options.signal) {
-      if…10336 tokens truncated…ode()) return;
+      if (options.signal.aborted) {
+        const error = new Error('TMDB request cancelled');
+        error.name = 'AbortError';
+        throw error;
+      }
+      options.signal.addEventListener('abort', relayAbort, { once: true });
+    }
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const r = await fetchTmdbWithRetry(`${API_BASE}${localizedPath}`, { headers: HEADERS, signal: controller.signal });
+      if (!r.ok) throw new Error(`TMDB request failed (${r.status})`);
+      const data = await r.json();
+      cache[localizedPath] = { time: Date.now(), data };
+      writeTmdbCache(cache);
+      return data;
+    } catch (error) {
+      if (cached) return cached.data;
+      const message = error.name === 'AbortError' ? 'TMDB nu a răspuns la timp.' : 'Catalogul TMDB nu este disponibil momentan.';
+      toast(message);
+      throw new Error(message);
+    } finally {
+      clearTimeout(timeout);
+      options.signal?.removeEventListener('abort', relayAbort);
+    }
+  })();
+  tmdbInFlight.set(localizedPath, request);
+  try {
+    return await request;
+  } finally {
+    if (tmdbInFlight.get(localizedPath) === request) tmdbInFlight.delete(localizedPath);
+  }
+};
+
+let state = null;          // { type, id, season, episode, server, subtitle, title }
+let tvData = null;         // /tv/{id} details
+let metadataAbortController = null;
+const seasonCache = {};    // cached season episode lists
+let loadedProgressKey = '';
+const LIBRARY_KEYS = { favorites: 'cinemalibrary_favorites', watchLater: 'cinemalibrary_watch_later', history: 'cinemalibrary_history', progress: 'cinemalibrary_progress' };
+const readLibrary = key => { try { const value = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(value) ? value : []; } catch { return []; } };
+const writeLibrary = (key, value) => { try { localStorage.setItem(key, JSON.stringify((Array.isArray(value) ? value : []).slice(0, 30))); return true; } catch { toast('Biblioteca locală nu poate fi salvată în acest browser.'); return false; } };
+const libraryId = item => `${item.media_type || (item.title ? 'movie' : 'tv')}-${item.id}`;
+function progressIdentity(value = state) {
+  if (!value) return '';
+  return `${value.type}-${value.id}-${value.season || 1}-${value.episode || 1}`;
+}
+const attemptedServers = new Set();
+const PROGRESS_KEY = 'cinemalibrary_progress';
+let playerLoadToken = 0;
+let autoNextEpisodeToken = 0;
+let ownPaused = true;
+let ownMuted = false;
+let ownCurrentTime = 0;
+let ownDuration = 0;
+let providerReady = false;
+let subtitleCues = [];
+let subtitleOffset = 0;
+let subtitleCursor = 0;
+let subtitleLastTime = -1;
+let subtitleRenderedTime = -1;
+let subtitleResults = [];
+let selectedSubtitleFileId = null;
+let subtitleAutoToken = 0;
+let subtitleAutoController = null;
+let subtitleRequestController = null;
+let subtitleFallbackTimer = 0;
+let subtitleDisplayTimer = 0;
+let providerTimeSignals = 0;
+let playbackHeartbeatTimer = 0;
+let playbackRecoveryTimer = 0;
+let lastPlaybackSignalAt = 0;
+let playbackRecoveryUsed = false;
+let providerReadyFallbackTimer = 0;
+let playerLoadGuardTimer = 0;
+let subtitleAutoStartTimer = 0;
+let subtitleAutoScheduledToken = 0;
+let providerErrorCount = 0;
+let lastOwnCommandKey = '';
+let lastOwnCommandAt = 0;
+let playerLoadStartedAt = 0;
+let playerControlMetricRecorded = false;
+let playerFrameMetricRecorded = false;
+let remoteFocusMetricRecorded = false;
+// A provider can emit a `play` event while its iframe is initializing.  Keep
+// that separate from an explicit user command so a fetch/restore race cannot
+// start playback before the viewer presses Play/OK.
+let playbackIntent = false;
+let progressSaveTimer = 0;
+let lastProgressSaveAt = 0;
+let controlsPaintAt = 0;
+let controlsPaintTimer = 0;
+let resumePromptShown = false;
+let resumeDecision = null;
+let resumePlayerReady = false;
+let resumeDecisionAppliedToken = 0;
+let watchCheckTimer = 0;
+let watchActivityController = null;
+let watchCheckShown = false;
+const WATCH_CHECK_IDLE_MS = 2 * 60 * 60 * 1000;
+let endRecommendationsShownForToken = 0;
+let recommendationAbortController = null;
+const OWN_QUALITY_KEY = 'cinemalibrary_player_quality_v1';
+const OWN_PICTURE_KEY = 'cinemalibrary_player_picture_v1';
+
+function ownCommand(command, args = []) {
+  if (isExternalProvider()) return false;
+  const key = `${command}:${JSON.stringify(args)}`;
+  const now = performance.now();
+  // Samsung remotes can repeat an OK/Play key before the provider has
+  // reflected the previous state. Deduplicate only identical play/pause
+  // commands; seeking and other distinct commands remain fully responsive.
+  if ((command === 'play' || command === 'pause') && key === lastOwnCommandKey && now - lastOwnCommandAt < 180) return false;
+  lastOwnCommandKey = key;
+  lastOwnCommandAt = now;
+  $('player')?.contentWindow?.postMessage({ type: 'cinesrc:command', command, args }, 'https://cinesrc.st');
+  return true;
+}
+function markPlayerMilestone(name) {
+  if (!playerLoadStartedAt || !performance?.mark) return;
+  const key = `cinema-player-${name}-${playerLoadToken}`;
+  try {
+    performance.mark(key);
+    performance.measure(`cinema-player-${name}`, { start: 'cinema-player-load-start', end: key });
+  } catch {}
+}
+function requestProviderPlay(loadToken = playerLoadToken) {
+  if (loadToken !== playerLoadToken || !providerReady) return false;
+  playbackIntent = true;
+  ownCommand('play');
+  return true;
+}
+function stopPlaybackHeartbeat() {
+  if (playbackHeartbeatTimer) {
+    clearInterval(playbackHeartbeatTimer);
+    playbackHeartbeatTimer = 0;
+  }
+  if (playbackRecoveryTimer) {
+    clearTimeout(playbackRecoveryTimer);
+    playbackRecoveryTimer = 0;
+  }
+}
+function startPlaybackHeartbeat(loadToken) {
+  stopPlaybackHeartbeat();
+  lastPlaybackSignalAt = performance.now();
+  playbackHeartbeatTimer = window.setInterval(() => {
+    if (loadToken !== playerLoadToken || ownPaused || !providerReady) return;
+    const stalledFor = performance.now() - lastPlaybackSignalAt;
+    if (stalledFor < 14000) return;
+    lastPlaybackSignalAt = performance.now();
+    if (!playbackRecoveryUsed) {
+      playbackRecoveryUsed = true;
+      toast('Redarea pare blocată. Reiau conexiunea…');
+      // Repeating play recovers the provider in most TV WebViews while
+      // preserving the current position and avoiding a destructive iframe reload.
+      playbackRecoveryTimer = window.setTimeout(() => {
+        playbackRecoveryTimer = 0;
+        if (loadToken === playerLoadToken && providerReady && !ownPaused) requestProviderPlay(loadToken);
+      }, 350);
+    } else {
+      stopPlaybackHeartbeat();
+      toast('Conexiunea video s-a întrerupt. Apasă Play pentru a reîncerca.');
+    }
+  }, 4000);
+}
+function ownFormatTime(value) {
+  const seconds = Math.max(0, Number(value) || 0);
+  return `${Math.floor(seconds / 60)}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
+}
+function updateOwnControls(force = false) {
+  const now = performance.now();
+  if (!force && now - controlsPaintAt < 120) {
+    if (!controlsPaintTimer) controlsPaintTimer = window.setTimeout(() => { controlsPaintTimer = 0; updateOwnControls(true); }, 120);
+    return;
+  }
+  controlsPaintAt = now;
+  const play = $('own-play');
+  const mute = $('own-mute');
+  const timeline = $('own-timeline');
+  const time = $('own-time');
+  if (!play || !mute || !timeline || !time) return;
+  play.textContent = ownPaused ? '▶' : '❚❚';
+  play.setAttribute('aria-label', ownPaused ? 'Redare' : 'Pauză');
+  play.disabled = !providerReady;
+  mute.textContent = ownMuted ? '🔇' : '🔊';
+  timeline.value = ownDuration ? Math.min(100, (ownCurrentTime / ownDuration) * 100) : 0;
+  time.textContent = `${ownFormatTime(ownCurrentTime)} / ${ownFormatTime(ownDuration)}`;
+}
+function seekOwn(seconds) {
+  const next = Math.max(0, Math.min(ownDuration || Infinity, ownCurrentTime + seconds));
+  ownCommand('seek', [next]);
+  showOwnControls();
+}
+function toggleOwnPlayback() {
+  if (!providerReady) return;
+  const shouldPause = !ownPaused;
+  ownPaused = shouldPause;
+  if (shouldPause) {
+    playbackIntent = false;
+    ownCommand('pause');
+  } else {
+    requestProviderPlay(playerLoadToken);
+  }
+  if (shouldPause) {
+    stopSubtitleFallbackClock();
+    stopPlaybackHeartbeat();
+  } else {
+    if (!providerTimeSignals) startSubtitleFallbackClock(playerLoadToken);
+    startPlaybackHeartbeat(playerLoadToken);
+  }
+  updateOwnControls();
+  updateSubtitleDisplay(ownCurrentTime);
+  showOwnControls();
+}
+function showOwnControls() {
+  if (!playerControlMetricRecorded && playerLoadStartedAt) {
+    playerControlMetricRecorded = true;
+    markPlayerMilestone('controls');
+  }
+  const controls = $('custom-controls');
+  const wrap = $('player-wrap');
+  controls?.classList.remove('controls-idle');
+  controls?.classList.remove('tv-hidden');
+  $('player-back-action')?.classList.remove('tv-hidden');
+  $('player-fullscreen')?.classList.remove('tv-hidden');
+  wrap?.classList.remove('controls-idle');
+  clearTimeout(window.__cinemaOwnControlsTimer);
+  window.__cinemaOwnControlsTimer = setTimeout(() => {
+    if (!ownPaused && !document.documentElement.classList.contains('keynav')) {
+      controls?.classList.add('controls-idle');
+      $('player-fullscreen')?.classList.add('tv-hidden');
+    }
+  }, 2000);
+}
+function hidePlayerError() {
+  const panel = $('player-error');
+  if (panel) panel.hidden = true;
+}
+function showPlayerError(message) {
+  const panel = $('player-error');
+  const text = $('player-error-text');
+  if (!panel) return;
+  if (text) text.textContent = message || 'Redarea a întâmpinat o problemă.';
+  panel.hidden = false;
+  document.dispatchEvent(new Event('rioma:focus-player-error'));
+}
+function hideOwnControls() {
+  clearTimeout(window.__cinemaOwnControlsTimer);
+  $('custom-controls')?.classList.add('tv-hidden');
+  $('custom-controls')?.classList.add('controls-idle');
+  $('player-back-action')?.classList.add('tv-hidden');
+  $('player-fullscreen')?.classList.add('tv-hidden');
+}
+function applyOwnPicture(value) {
+  const profiles = {
+    standard: 'none', cinema: 'brightness(1.04) contrast(1.12) saturate(1.08)',
+    bright: 'brightness(1.16) contrast(1.04) saturate(1.02)', contrast: 'brightness(1.02) contrast(1.2) saturate(1.05)',
+    vivid: 'brightness(1.05) contrast(1.08) saturate(1.22)', natural: 'brightness(1.03) contrast(1.03) saturate(.96)',
+    night: 'brightness(.82) contrast(1.08) saturate(.88) sepia(.08)'
+  };
+  const profile = profiles[value] ? value : 'standard';
+  const player = $('player');
+  const wrap = $('player-wrap');
+  // Tizen's WebView can render a filtered cross-origin iframe as a black
+  // surface. Keep the TV player clean; desktop still gets the full effect.
+  const isTizenPlayback = document.body.classList.contains('tv-mode');
+  if (isTizenPlayback) {
+    player.style.filter = 'none';
+    wrap.style.filter = 'none';
+    const overlay = $('picture-overlay');
+    if (overlay) overlay.className = `picture-overlay ${profile === 'standard' ? '' : profile}`;
+  } else if (document.body.classList.contains('embedded')) {
+    player.style.filter = 'none';
+    wrap.style.filter = profiles[profile];
+    $('picture-overlay')?.classList.remove('cinema','bright','contrast','vivid','natural','night');
+  } else {
+    player.style.filter = profiles[profile];
+    wrap.style.filter = 'none';
+    $('picture-overlay')?.classList.remove('cinema','bright','contrast','vivid','natural','night');
+  }
+  $('own-picture').value = profile;
+  localStorage.setItem(OWN_PICTURE_KEY, profile);
+}
+function parseSubtitles(text) {
+  const clean = String(text || '').replace(/^\uFEFF/, '').replace(/\r/g, '');
+  return clean.split(/\n{2,}/).map(block => {
+    const lines = block.trim().split('\n');
+    const index = lines.findIndex(line => line.includes('-->'));
+    if (index < 0) return null;
+    const [start, end] = lines[index].split('-->').map(part => part.trim().split(/\s+/)[0]);
+    const time = value => { const parts = value.replace(',', '.').split(':').map(Number); return parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1]; };
+    return { start: time(start), end: time(end), text: lines.slice(index + 1).join('\n').replace(/<[^>]+>/g, '') };
+  }).filter(item => item && Number.isFinite(item.start) && Number.isFinite(item.end) && item.text)
+    .sort((a, b) => a.start - b.start);
+}
+function updateSubtitleSettings() {
+  const text = $('subtitle-text');
+  const bg = Number($('subtitle-bg')?.value || 78), size = Number($('subtitle-size')?.value || 22), color = $('subtitle-color')?.value || '#fff';
+  if (text) { text.style.backgroundColor = `rgba(0,0,0,${bg / 100})`; text.style.fontSize = `${size}px`; text.style.color = color; }
+  if ($('subtitle-bg-value')) $('subtitle-bg-value').textContent = `${bg}%`;
+  if ($('subtitle-size-value')) $('subtitle-size-value').textContent = `${size}px`;
+  try { localStorage.setItem('cinemalibrary_subtitle_settings', JSON.stringify({ bg, size, color })); } catch {}
+  updateSubtitleDisplay();
+}
+function updateSubtitleDisplay(currentTime = ownCurrentTime) {
+  const layer = $('subtitle-layer'), text = $('subtitle-text');
+  if (!layer || !text) return;
+  if (ownPaused) { subtitleRenderedTime = -1; text.textContent = ''; layer.hidden = true; return; }
+  const time = Number(currentTime) || 0;
+  // Providers may send timeupdate much faster than the subtitle cadence.
+  // Avoid repeating the same textContent/layout work on every message while
+  // keeping a fresh render at least every 80ms for accurate cue changes.
+  if (subtitleRenderedTime >= 0 && Math.abs(time - subtitleRenderedTime) < 0.08) return;
+  subtitleRenderedTime = time;
+  const adjusted = time + subtitleOffset;
+  if (adjusted < subtitleLastTime) subtitleCursor = 0;
+  subtitleLastTime = adjusted;
+  while (subtitleCursor < subtitleCues.length && subtitleCues[subtitleCursor].end < adjusted) subtitleCursor++;
+  const candidate = subtitleCues[subtitleCursor];
+  const cue = candidate && adjusted >= candidate.start && adjusted <= candidate.end ? candidate : null;
+  text.textContent = cue?.text || '';
+  layer.hidden = !cue;
+}
+function stopWatchCheckTimer() {
+  if (watchCheckTimer) { clearTimeout(watchCheckTimer); watchCheckTimer = 0; }
+}
+function armWatchCheckTimer() {
+  stopWatchCheckTimer();
+  if (ownPaused || watchCheckShown) return;
+  watchCheckTimer = window.setTimeout(() => {
+    if (!ownPaused && !watchCheckShown) {
+      watchCheckShown = true;
+      playbackIntent = false;
+      ownCommand('pause');
+      $('watch-check-prompt').hidden = false;
+      showOwnControls();
+      document.dispatchEvent(new CustomEvent('rioma:focus-watch-check'));
+    }
+  }, WATCH_CHECK_IDLE_MS);
+}
+function registerWatchActivity() {
+  if (!watchCheckShown && !ownPaused) armWatchCheckTimer();
+}
+function closeWatchCheck(continueWatching) {
+  watchCheckShown = false;
+  $('watch-check-prompt').hidden = true;
+  if (continueWatching) {
+    ownPaused = false;
+    requestProviderPlay(playerLoadToken);
+    showOwnControls();
+  } else {
+    stopWatchCheckTimer();
+    returnToPopupFromPlayer();
+  }
+}
+function setupWatchCheck() {
+  watchActivityController?.abort();
+  watchActivityController = new AbortController();
+  $('watch-check-continue')?.addEventListener('click', () => closeWatchCheck(true));
+  $('watch-check-stop')?.addEventListener('click', () => closeWatchCheck(false));
+  ['pointermove', 'mousemove', 'mousedown', 'touchstart', 'keydown', 'click'].forEach(eventName =>
+    document.addEventListener(eventName, registerWatchActivity, { passive: eventName !== 'keydown', signal: watchActivityController.signal })
+  );
+}
+function stopSubtitleDisplayLoop() {
+  if (subtitleDisplayTimer) { clearInterval(subtitleDisplayTimer); subtitleDisplayTimer = 0; }
+}
+function startSubtitleDisplayLoop() {
+  stopSubtitleDisplayLoop();
+  subtitleCursor = 0;
+  subtitleLastTime = -1;
+  subtitleRenderedTime = -1;
+  updateSubtitleDisplay(ownCurrentTime);
+  subtitleDisplayTimer = window.setInterval(() => updateSubtitleDisplay(ownCurrentTime), 220);
+}
+function stopSubtitleFallbackClock() {
+  if (subtitleFallbackTimer) { clearInterval(subtitleFallbackTimer); subtitleFallbackTimer = 0; }
+}
+function startSubtitleFallbackClock(loadToken) {
+  stopSubtitleFallbackClock();
+  const startedAt = performance.now();
+  const startTime = ownCurrentTime;
+  subtitleFallbackTimer = window.setInterval(() => {
+    if (loadToken !== playerLoadToken || providerTimeSignals > 0) { stopSubtitleFallbackClock(); return; }
+    ownCurrentTime = startTime + (performance.now() - startedAt) / 1000;
+    updateOwnControls();
+    updateSubtitleDisplay(ownCurrentTime);
+  }, 250);
+}
+function clearOwnSubtitles() {
+  subtitleAutoToken += 1;
+  subtitleAutoController?.abort();
+  subtitleAutoController = null;
+  subtitleRequestController?.abort();
+  subtitleRequestController = null;
+  subtitleCues = [];
+  subtitleOffset = 0;
+  subtitleRenderedTime = -1;
+  stopSubtitleDisplayLoop();
+  $('subtitle-layer').hidden = true;
+  if ($('subtitle-status')) $('subtitle-status').textContent = 'Subtitrarea a fost oprită.';
+}
+function toggleSubtitlePanel() {
+  const panel = $('subtitle-panel');
+  if (!panel) return;
+  panel.hidden = !panel.hidden;
+  showOwnControls();
+  if (!panel.hidden) window.setTimeout(() => document.dispatchEvent(new CustomEvent('rioma:focus-subtitles')), 0);
+}
+async function fetchSubtitle(url, controller) {
+  let timedOut = false;
+  const timeout = window.setTimeout(() => { timedOut = true; controller.abort(); }, 12000);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } catch (error) {
+    if (timedOut) {
+      const timeoutError = new Error('Serverul de subtitrări nu a răspuns la timp. Apasă din nou pentru a reîncerca.');
+      timeoutError.name = 'SubtitleTimeoutError';
+      throw timeoutError;
+    }
+    throw error;
+  } finally { window.clearTimeout(timeout); }
+}
+function setupSubtitlePanel() {
+  $('subtitle-close')?.addEventListener('click', () => {
+    const panel = $('subtitle-panel');
+    if (!panel) return;
+    panel.hidden = true;
+    showOwnControls();
+    document.dispatchEvent(new Event('rioma:subtitle-closed'));
+  });
+  $('subtitle-search')?.addEventListener('click', async () => {
+    const status = $('subtitle-status'); if (!state) return;
+    // A manual search takes ownership of the subtitle request slot. Abort the
+    // automatic Romanian lookup so the TV WebView does not fetch both paths.
+    subtitleAutoToken += 1;
+    subtitleAutoController?.abort();
+    subtitleAutoController = null;
+    subtitleRequestController?.abort();
+    const controller = new AbortController();
+    subtitleRequestController = controller;
+    status.textContent = 'Se caută subtitrări online…';
+    try {
+      const params = new URLSearchParams({ tmdb_id: state.id, type: state.type, season: String(state.season || 1), episode: String(state.episode || 1), languages: $('subtitle-language').value });
+      const response = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/search?${params}`), controller); const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Căutarea online nu este disponibilă pe acest server.');
+      subtitleResults = (payload.data || []).flatMap(item => (item.attributes?.files || []).map(file => ({ id:file.file_id, language:item.attributes.language, release:item.attributes.release || 'Subtitrare', downloads:item.attributes.download_count || 0 })));
+      $('subtitle-results').innerHTML = subtitleResults.map((item, i) => `<option value="${i}">${esc(item.language.toUpperCase())} · ${esc(item.release)} · ${it…755 tokens truncated…itleAutoController?.abort();
+  const controller = new AbortController();
+  subtitleAutoController = controller;
+  const cacheKey = `cinemalibrary_subtitle_${state.type}_${state.id}_${state.season || 1}_${state.episode || 1}_ro`;
+  let cachedContent = '';
+  try { cachedContent = localStorage.getItem(cacheKey) || ''; } catch {}
+  try {
+    const status = $('subtitle-status');
+    if (status) status.textContent = 'Se caută automat subtitrarea în română…';
+    const params = new URLSearchParams({ tmdb_id: state.id, type: state.type, season: String(state.season || 1), episode: String(state.episode || 1), languages: 'ro' });
+    const searchResponse = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/search?${params}`), controller);
+    const searchText = await searchResponse.text();
+    let searchPayload = {};
+    try { searchPayload = JSON.parse(searchText); } catch { throw new Error('Româna este solicitată automat de sursa Rioma. Căutarea suplimentară online necesită un backend securizat.'); }
+    if (!searchResponse.ok) throw new Error(searchPayload.error || 'Căutarea online nu este disponibilă.');
+    subtitleResults = (searchPayload.data || []).flatMap(item => (item.attributes?.files || []).map(file => ({ id:file.file_id, language:item.attributes.language, release:item.attributes.release || 'Subtitrare', downloads:item.attributes.download_count || 0 })));
+    selectedSubtitleFileId = subtitleResults[0]?.id || null;
+    if (!selectedSubtitleFileId) { if (status) status.textContent = 'Nu am găsit automat subtitrare în română pentru acest titlu.'; return; }
+    // Never trust a stale/partial subtitle cache entry. If it cannot be
+    // parsed into cues, fetch fresh content instead of silently showing none.
+    if (cachedContent && !parseSubtitles(cachedContent).length) cachedContent = '';
+    const content = cachedContent || await (async () => {
+      const contentResponse = await fetchSubtitle(subtitleApiUrl(`/api/subtitles/content?file_id=${encodeURIComponent(selectedSubtitleFileId)}`), controller);
+      if (!contentResponse.ok) throw new Error('Subtitrarea nu a putut fi descărcată.');
+      return contentResponse.text();
+    })();
+    if (token !== subtitleAutoToken || loadToken !== playerLoadToken) return;
+    subtitleCues = parseSubtitles(content);
+    if (!subtitleCues.length) throw new Error('Fișierul de subtitrare nu conține replici valide. Apasă din nou pentru a reîncerca.');
+    subtitleOffset = 0;
+    try { localStorage.setItem(cacheKey, content); } catch {}
+    startSubtitleDisplayLoop();
+    if (status) status.textContent = `Subtitrarea română a fost încărcată automat (${subtitleCues.length} replici).`;
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    if (token === subtitleAutoToken && loadToken === playerLoadToken && $('subtitle-status')) $('subtitle-status').textContent = error.message || 'Româna este solicitată automat de sursa Rioma.';
+  } finally {
+    if (subtitleAutoController === controller) subtitleAutoController = null;
+  }
+}
+function toggleVolumeControl() {
+  const controls = $('custom-controls');
+  const button = $('own-mute');
+  if (!controls || !button) return;
+  const open = controls.classList.toggle('volume-open');
+  button.setAttribute('aria-expanded', String(open));
+  button.setAttribute('title', open ? 'Ascunde volumul' : 'Arată volumul');
+  showOwnControls();
+  document.dispatchEvent(new CustomEvent(open ? 'rioma:volume-opened' : 'rioma:volume-closed'));
+}
+function setupOwnControls() {
+  $('own-play').addEventListener('click', toggleOwnPlayback);
+  $('own-restart').addEventListener('click', () => ownCommand('seek', [0]));
+  $('own-back10').addEventListener('click', () => seekOwn(-10));
+  $('own-forward10').addEventListener('click', () => seekOwn(10));
+  $('own-mute').addEventListener('click', toggleVolumeControl);
+  $('own-volume').addEventListener('input', event => ownCommand('setVolume', [Number(event.target.value)]));
+  $('own-timeline').addEventListener('input', event => {
+    if (ownDuration) ownCommand('seek', [(Number(event.target.value) / 100) * ownDuration]);
+  });
+  $('own-quality').addEventListener('change', event => {
+    const quality = event.target.value;
+    localStorage.setItem(OWN_QUALITY_KEY, quality);
+    ownCommand('setQuality', [quality]);
+    toast(quality === 'auto' ? 'Claritatea este setată pe Auto.' : `S-a solicitat claritatea ${quality}, dacă este disponibilă.`);
+  });
+  $('own-picture').addEventListener('change', event => applyOwnPicture(event.target.value));
+  $('own-captions').addEventListener('click', () => {
+    toggleSubtitlePanel();
+  });
+  $('own-server')?.addEventListener('click', openCinesrcServerPicker);
+  $('own-provider')?.addEventListener('change', event => {
+    const next = Number(event.target.value);
+    if (!serverUrlResolvers[next] || !state || next === state.server) return;
+    state.server = next;
+    try { localStorage.setItem(PROVIDER_KEY, String(next)); localStorage.setItem(STORAGE_KEY, String(next)); } catch {}
+    attemptedServers.clear();
+    loadPlayer();
+    updateTitleBar();
+    toast(`Player selectat: ${SERVERS.find(item => item.id === next)?.name || next}`);
+  });
+  $('own-fullscreen').addEventListener('click', togglePlayerFullscreen);
+  try {
+    const quality = localStorage.getItem(OWN_QUALITY_KEY);
+    if (quality) $('own-quality').value = quality;
+    const picture = localStorage.getItem(OWN_PICTURE_KEY);
+    applyOwnPicture(picture || 'standard');
+  } catch { applyOwnPicture('standard'); }
+  updateOwnControls();
+}
+function openCinesrcServerPicker() {
+  if (!state) return;
+  if (cinesrcServerPickerOpen) {
+    closeCinesrcServerPicker();
+    return;
+  }
+  cinesrcServerPickerOpen = true;
+  $('player-hit-area')?.classList.add('server-picker-open');
+  $('own-server')?.setAttribute('aria-expanded', 'true');
+  loadPlayer();
+  toast('Selectează serverul din meniul Cinesrc.');
+}
+function closeCinesrcServerPicker(sourceId) {
+  if (sourceId) {
+    try { localStorage.setItem('cinemalibrary_cinesrc_lastserver_v1', String(sourceId)); } catch {}
+  }
+  if (!cinesrcServerPickerOpen) return;
+  cinesrcServerPickerOpen = false;
+  $('player-hit-area')?.classList.remove('server-picker-open');
+  $('own-server')?.setAttribute('aria-expanded', 'false');
+  loadPlayer();
+  toast(sourceId ? `Server Cinesrc selectat: ${sourceId}` : 'Selectorul de servere a fost închis.');
+}
+
+/* ─── PARAMS ─── */
+function readParams() {
+  const p = new URLSearchParams(location.search);
+  const type = p.get('type');
+  const id = p.get('id');
+  if (!id || (type !== 'movie' && type !== 'tv')) return null;
+
+  let server = parseInt(p.get('server'), 10);
+  if (!server || !serverUrlResolvers[server]) server = parseInt(localStorage.getItem(PROVIDER_KEY), 10);
+  if (!server || !serverUrlResolvers[server]) {
+    const saved = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+    server = (saved && serverUrlResolvers[saved]) ? saved : 3;
+  }
+
+  const out = { type, id, server };
+  out.subtitle = ['ro', 'en', 'auto'].includes(p.get('sub'))
+    ? p.get('sub')
+    : (localStorage.getItem(SUBTITLE_KEY) || 'ro');
+  try {
+    const progress = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]');
+    const key = `${type}-${id}`;
+    const saved = progress.find(x => `${x.media_type || (x.title ? 'movie' : 'tv')}-${x.id}` === key);
+    out.resumeAt = Number(saved?.progressSeconds) || 0;
+  } catch { out.resumeAt = 0; }
+  if (type === 'tv') {
+    out.season  = parseInt(p.get('s'), 10) || 1;
+    out.episode = parseInt(p.get('e'), 10) || 1;
+  }
+  return out;
+}
+
+function syncUrl() {
+  const p = new URLSearchParams();
+  p.set('type', state.type);
+  p.set('id', state.id);
+  if (state.type === 'tv') { p.set('s', state.season); p.set('e', state.episode); }
+  p.set('server', state.server);
+  p.set('sub', state.subtitle);
+  if (isTvClient) p.set('tv', '1');
+  history.replaceState(null, '', `${location.pathname}?${p.toString()}`);
+}
+
+/* ─── PLAYER ─── */
+function loadPlayer() {
+  $('player-hit-area')?.classList.toggle('server-picker-open', cinesrcServerPickerOpen);
+  $('own-server')?.setAttribute('aria-expanded', String(cinesrcServerPickerOpen));
+  const nextProgressKey = progressIdentity();
+  // Preserve the current position only while the loaded title/episode is
+  // unchanged. Episode changes save the old key before mutating state.
+  if (loadedProgressKey && loadedProgressKey === nextProgressKey) persistCurrentPlayback();
+  loadedProgressKey = nextProgressKey;
+  attemptedServers.add(state.server);
+  subtitleAutoToken += 1;
+  subtitleAutoController?.abort();
+  subtitleAutoController = null;
+  subtitleRequestController?.abort();
+  subtitleRequestController = null;
+  recommendationAbortController?.abort();
+  recommendationAbortController = null;
+  stopSubtitleDisplayLoop();
+  subtitleCues = [];
+  $('subtitle-layer').hidden = true;
+  autoNextEpisodeToken += 1;
+  endRecommendationsShownForToken = 0;
+  const inlineNext = $('next-episode-action');
+  if (inlineNext) inlineNext.hidden = true;
+  const recommendationPanel = $('end-recommendations');
+  if (recommendationPanel) recommendationPanel.hidden = true;
+  const serverId = state.server;
+  const loadToken = ++playerLoadToken;
+  playerLoadStartedAt = performance.now();
+  playerControlMetricRecorded = false;
+  playerFrameMetricRecorded = false;
+  remoteFocusMetricRecorded = false;
+  try { performance.mark('cinema-player-load-start'); } catch {}
+  providerReady = false;
+  providerErrorCount = 0;
+  clearTimeout(playerLoadGuardTimer);
+  playerLoadGuardTimer = 0;
+  clearTimeout(providerReadyFallbackTimer);
+  providerReadyFallbackTimer = 0;
+  clearTimeout(subtitleAutoStartTimer);
+  subtitleAutoStartTimer = 0;
+  subtitleAutoScheduledToken = 0;
+  resumePlayerReady = false;
+  resumeDecisionAppliedToken = 0;
+  const src = serverUrlResolvers[state.server](state);
+  $('player-wrap')?.classList.toggle('external-provider', isExternalProvider());
+  const providerSelect = $('own-provider');
+  if (providerSelect) providerSelect.value = String(state.server);
+  $('own-server')?.toggleAttribute('hidden', isExternalProvider());
+  const loader = $('player-loading');
+  hidePlayerError();
+  loader.classList.remove('hide');
+  loader.removeAttribute('aria-hidden');
+
+  // Recreate the iframe on every load so the Permissions Policy
+  // (allow="fullscreen; ...") is re-applied for the new origin.
+  // Navigating an existing iframe via contentWindow.location drops the
+  // fullscreen delegation for cross-origin servers, which is why fullscreen
+  // only worked for the first source before.
+  const old = $('player');
+  const frame = document.createElement('iframe');
+  frame.id = 'player';
+  frame.allowFullscreen = true;
+  frame.loading = 'eager';
+  frame.setAttribute('fetchpriority', 'high');
+  // Use "*" so the fullscreen permission cascades to nested cross-origin
+  // The Cinema Player may load the media layer inside a nested iframe.
+  frame.setAttribute('allow', 'autoplay *; encrypted-media *; picture-in-picture *; fullscreen *; web-share *');
+  frame.referrerPolicy = 'origin';
+  let settled = false;
+  const fail = () => {
+    if (settled || loadToken !== playerLoadToken) return;
+    settled = true;
+    handlePlayerFailure(serverId);
+  };
+  frame.onload = () => {
+    if (loadToken !== playerLoadToken) return;
+    settled = true;
+    updateServerStatus(serverId, 'online');
+    if (isExternalProvider()) {
+      providerReady = true;
+      clearTimeout(providerReadyFallbackTimer);
+      loader.classList.add('hide');
+      loader.setAttribute('aria-hidden', 'true');
+      updateOwnControls(true);
+      return;
+    }
+    // Some WebViews receive the provider's ready postMessage late. Show the
+    // shell controls after a short grace period, but do not mark the media
+    // ready: Play must remain disabled until the provider confirms ready.
+    clearTimeout(providerReadyFallbackTimer);
+    providerReadyFallbackTimer = window.setTimeout(() => {
+      if (loadToken !== playerLoadToken || providerReady) return;
+      updateOwnControls(true);
+      showOwnControls();
+    }, 1800);
+  };
+  frame.onerror = fail;
+  // Use replace so iframe loads don't pollute the browser history stack
+  frame.src = src;
+  // Stop the previous cross-origin document before replacing it. Samsung's
+  // WebView can otherwise keep the old provider's network/media pipeline
+  // alive for a while, causing periodic freezes when switching servers or
+  // episodes even though the old iframe is no longer visible.
+  if (old) {
+    old.onload = null;
+    old.onerror = null;
+    try { old.src = 'about:blank'; } catch {}
+    old.replaceWith(frame);
+  } else {
+    $('player-wrap')?.appendChild(frame);
+  }
+  ownPaused = true;
+  playbackIntent = false;
+  // The resume choice is displayed before this iframe is created. Preserve
+  // it while the provider loads and apply it only after the provider is ready.
+  if (!hasResumeAvailable()) {
+    resumePromptShown = false;
+    resumeDecision = null;
+  }
+  watchCheckShown = false;
+  stopWatchCheckTimer();
+  $('watch-check-prompt').hidden = true;
+  providerTimeSignals = 0;
+  playbackRecoveryUsed = false;
+  stopPlaybackHeartbeat();
+  lastPlaybackSignalAt = 0;
+  stopSubtitleFallbackClock();
+  ownMuted = false;
+  ownCurrentTime = 0;
+  ownDuration = 0;
+  updateOwnControls();
+  applyEnhancer();
+  applyOwnPicture(localStorage.getItem(OWN_PICTURE_KEY) || 'standard');
+  showOwnControls();
+  // The previous provider shell is gone at this point. Re-anchor an active
+  // TV navigator to a current player control instead of leaving focus on the
+  // old iframe/control tree during a server or episode switch.
+  document.dispatchEvent(new Event('rioma:player-reloaded'));
+  playerLoadGuardTimer = window.setTimeout(() => {
+    playerLoadGuardTimer = 0;
+    if (loadToken !== playerLoadToken || settled) return;
+    loader.classList.add('hide');
+    loader.setAttribute('aria-hidden', 'true');
+    // Do not replace a slow cross-origin player automatically. Some providers
+    // keep the iframe loading while their consent/ad layer initializes; show
+    // an actionable retry instead of leaving the TV WebView on a black surface.
+    showPlayerError('Sursa video nu a răspuns la timp.');
+  }, 12000);
+  syncUrl();
+  savePlaybackProgress();
+  if (state.title) updateTitleBar();
+}
+
+function scheduleAutomaticSubtitleLoad(loadToken) {
+  if (loadToken !== playerLoadToken || subtitleAutoScheduledToken === loadToken) return;
+  subtitleAutoScheduledToken = loadToken;
+  clearTimeout(subtitleAutoStartTimer);
+  // Let the provider finish its first media request before the subtitle API
+  // starts its own request. This is especially important on TV WebViews.
+  subtitleAutoStartTimer = window.setTimeout(() => {
+    subtitleAutoStartTimer = 0;
+    if (loadToken === playerLoadToken) autoLoadRomanianSubtitle(loadToken);
+  }, 120);
+}
+
+function hasResumeAvailable() {
+  return false;
+}
+
+function prepareResumeChoice() {
+  // Resume prompts are intentionally disabled. Progress is still saved for
+  // the library history, but playback starts without an interruption.
+  return;
+}
+
+function applyResumeDecision() {
+  if (!resumePlayerReady || !resumeDecision || resumeDecisionAppliedToken === playerLoadToken) return;
+  resumeDecisionAppliedToken = playerLoadToken;
+  if (resumeDecision === 'continue') {
+    ownCommand('seek', [Math.floor(state.resumeAt)]);
+    ownPaused = false;
+    requestProviderPlay(playerLoadToken);
+  } else {
+    ownCommand('seek', [0]);
+    ownPaused = false;
+    requestProviderPlay(playerLoadToken);
+  }
+}
+
+function savePlaybackProgress() {
+  if (!state?.title) return;
+  try {
+    const item = state.media || {};
+    const entry = {
+      id: state.id, media_type: state.type,
+      title: item.title || state.title, name: item.name || state.title,
+      poster_path: item.poster_path || null, backdrop_path: item.backdrop_path || null,
+      release_date: item.release_date || '', first_air_date: item.first_air_date || '',
+      vote_average: item.vote_average || 0, genre_ids: item.genre_ids || [],
+      ...(state.type === 'tv' ? { season: state.season, episode: state.episode } : {}),
+      progressSeconds: Math.max(0, Math.floor(Number(state.resumeAt) || 0)),
+      updatedAt: Date.now()
+    };
+    const key = `${state.type}-${state.id}`;
+    let previous = [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]');
+      previous = Array.isArray(parsed) ? parsed : [];
+    } catch {}
+    const saved = previous.filter(x => `${x.media_type || (x.title ? 'movie' : 'tv')}-${x.id}` !== key);
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify([entry, ...saved].slice(0, 30)));
+
+    // Keep a durable recent-history entry as soon as the title is opened.
+    // This survives leaving the TV app and is separate from the resume point.
+    const historyItem = libraryItemFromState();
+    const history = readLibrary(LIBRARY_KEYS.history)
+      .filter(x => libraryId(x) !== key);
+    writeLibrary(LIBRARY_KEYS.history, [historyItem, ...history]);
+  } catch {}
+}
+
+function schedulePlaybackProgressSave() {
+  const now = performance.now();
+  if (now - lastProgressSaveAt >= 5000) {
+    lastProgressSaveAt = now;
+    savePlaybackProgress();
+    return;
+  }
+  if (progressSaveTimer) return;
+  progressSaveTimer = window.setTimeout(() => {
+    progressSaveTimer = 0;
+    lastProgressSaveAt = performance.now();
+    savePlaybackProgress();
+  }, Math.max(250, 5000 - (now - lastProgressSaveAt)));
+}
+
+function clearPlaybackProgress() {
+  try {
+    const key = `${state.type}-${state.id}`;
+    const saved = JSON.parse(localStorage.getItem(PROGRESS_KEY) || '[]')
+      .filter(x => `${x.media_type || (x.title ? 'movie' : 'tv')}-${x.id}` !== key);
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(saved));
+  } catch {}
+}
+
+function recommendationUrl(item) {
+  const params = new URLSearchParams({
+    type: item.media_type,
+    id: String(item.id),
+    server: String(state?.server || 3),
+    sub: state?.subtitle || 'ro'
+  });
+  if (item.media_type === 'tv') {
+    params.set('s', '1');
+    params.set('e', '1');
+  }
+  if (isTvClient) params.set('tv', '1');
+  if (document.body.classList.contains('embedded')) params.set('embedded', '1');
+  return `${location.pathname}?${params.toString()}`;
+}
+
+async function showEndRecommendations() {
+  const panel = $('end-recommendations');
+  const grid = $('end-recommendation-grid');
+  if (!panel || !grid || !state?.media || endRecommendationsShownForToken === playerLoadToken) return;
+  // Recommendations are meaningful for films and, only when TMDB gives us
+  // reliable season metadata, for the final episode of the final season.
+  if (state.type === 'tv' && !isFinalTvEpisode()) return;
   const recommendationToken = playerLoadToken;
   const recommendationKey = progressIdentity();
   endRecommendationsShownForToken = recommendationToken;
@@ -1724,13 +2597,42 @@ window.addEventListener('beforeunload', () => {
     return true;
   }
 
+  let tvCursorX = 50;
+  let tvCursorY = 50;
+  function renderTvCursor() {
+    const cursor = $('tv-player-cursor');
+    if (!cursor) return;
+    cursor.style.left = `${tvCursorX}%`;
+    cursor.style.top = `${tvCursorY}%`;
+    cursor.classList.add('visible');
+  }
+  function moveTvCursor(key) {
+    const step = 8;
+    if (key === 'ArrowLeft') tvCursorX = Math.max(2, tvCursorX - step);
+    if (key === 'ArrowRight') tvCursorX = Math.min(98, tvCursorX + step);
+    if (key === 'ArrowUp') tvCursorY = Math.max(2, tvCursorY - step);
+    if (key === 'ArrowDown') tvCursorY = Math.min(98, tvCursorY + step);
+    renderTvCursor();
+  }
+  function activateTvCursor() {
+    const externalFrame = $('player');
+    if (!externalFrame) return;
+    try { externalFrame.focus({ preventScroll: true }); } catch { externalFrame.focus(); }
+    try { externalFrame.contentWindow?.focus(); } catch {}
+    // Providers that implement the optional cursor relay can activate the
+    // exact point selected by the TV remote. The native focus fallback above
+    // remains active for providers that expose keyboard controls directly.
+    try { externalFrame.contentWindow?.postMessage({ type: 'cinema:cursor-activate', x: tvCursorX, y: tvCursorY }, '*'); } catch {}
+    try { externalFrame.click(); } catch {}
+  }
   function handleRemoteKey(key) {
     if (!key) return;
     // External providers own the controls inside their cross-origin iframe.
     // Move the real focus into that iframe first so Tizen can route the next
     // remote action to the provider instead of keeping focus on our wrapper.
     const externalFrame = $('player');
-    if (externalFrame && isExternalProvider() && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', 'MediaPlayPause', 'MediaPlay', 'MediaPause', 'MediaStop', 'MediaFastForward', 'MediaRewind'].includes(key)) {
+    if (externalFrame && isExternalProvider() && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter'].includes(key)) {
+      if (key === 'Enter') activateTvCursor(); else moveTvCursor(key);
       try { externalFrame.focus({ preventScroll: true }); } catch { externalFrame.focus(); }
       try { externalFrame.contentWindow?.focus(); } catch {}
       externalFrame.classList.add('tv-external-focus');
