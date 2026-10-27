@@ -1,4 +1,4 @@
-const CACHE = 'cinema-library-shell-v43-cache-first-20261027';
+const CACHE = 'cinema-library-shell-v44-network-first-20261027';
 const SHELL_ASSET_TIMEOUT = 8000;
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './live.html', './stream/index.html',
@@ -60,19 +60,15 @@ self.addEventListener('fetch', event => {
       );
       return;
     }
-    event.respondWith(caches.match(request, cacheOptions).then(cached => {
-      // The cached shell is returned immediately, but the background refresh
-      // must bypass the browser HTTP cache or a TV WebView can keep replaying
-      // the previous deployed document indefinitely.
-      const refresh = fetch(request, { cache: 'no-store' }).then(response => {
+    event.respondWith(
+      fetch(request, { cache: 'no-store' }).then(response => {
         if (response.ok) {
           const cacheKey = new Request(`${url.origin}${url.pathname}`);
           caches.open(CACHE).then(cache => cache.put(cacheKey, response.clone())).catch(() => {});
         }
         return response;
-      }).catch(() => cached || caches.match('./404.html'));
-      return cached || refresh;
-    }));
+      }).catch(() => caches.match(request, cacheOptions).then(cached => cached || caches.match('./404.html')))
+    );
     return;
   }
   // Only cache immutable/static assets. Dynamic routes and ad-hoc same-origin
