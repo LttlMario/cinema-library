@@ -75,7 +75,7 @@
     nextFrame.removeAttribute('src');
     frame.replaceWith(nextFrame);
     bindFrame(nextFrame);
-    nextFrame.src = 'https://cinema.panel-pro.ro/index.html?tv=1&tvapp=1.7.14&fresh=1&retry=' + Date.now();
+    nextFrame.src = 'https://cinema.panel-pro.ro/index.html?tv=1&tvapp=1.7.18&fresh=1&retry=' + Date.now();
     errorTimer = window.setTimeout(showError, 15000);
   }
 
