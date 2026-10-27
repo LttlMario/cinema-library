@@ -1528,7 +1528,7 @@ function playerUrl(item, season = 1, episode = 1) {
 // TMDB-based embed URL, so no stream extraction or worker is needed here.
 function screenscapeUrl(item, season = 1, episode = 1) {
   const type = mediaOf(item) === 'movie' ? 'movie' : 'tv';
-  const params = new URLSearchParams({ tmdb: String(item.id), type });
+  const params = new URLSearchParams({ tmdb: String(item.id), type, lan: 'ro' });
   if (type === 'tv') {
     params.set('s', String(season));
     params.set('e', String(episode));
