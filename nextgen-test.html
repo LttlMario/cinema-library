@@ -14,6 +14,7 @@
     label { display: grid; gap: 6px; color: #aaa; font-size: 12px; }
     input, select, button { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; background: #0c0c11; color: #fff; font: inherit; }
     button { cursor: pointer; background: var(--red); border-color: var(--red); font-weight: 700; }
+    button:disabled { cursor: not-allowed; opacity: .45; filter: grayscale(1); }
     button:hover, button:focus-visible { filter: brightness(1.15); outline: 2px solid #fff; outline-offset: 2px; }
     .wide { grid-column: span 2; }
     .player { position: relative; margin-top: 16px; width: 100%; aspect-ratio: 16 / 9; min-height: 360px; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px #0009; }
@@ -50,6 +51,7 @@
         </select>
       </label>
       <button class="wide" type="submit">Redă</button>
+      <button id="next-episode" class="wide" type="button">Episodul următor</button>
     </form>
     <div class="player" id="player"></div>
     <div class="status" id="status"></div>
@@ -97,9 +99,20 @@
       $('status').textContent = `${name} · ${p.type === 'tv' ? `S${p.season} E${p.episode}` : 'film'} · TMDB ${p.id}`;
       history.replaceState(null, '', `?type=${p.type}&id=${p.id}&season=${p.season}&episode=${p.episode}&server=${$('server').value}`);
     }
+    function updateNextButton() {
+      $('next-episode').disabled = $('type').value !== 'tv';
+      $('next-episode').title = $('type').value === 'tv' ? 'Încarcă episodul următor' : 'Disponibil doar pentru seriale';
+    }
+    $('next-episode').addEventListener('click', () => {
+      if ($('type').value !== 'tv') return;
+      $('episode').value = String(Math.max(1, Number($('episode').value || 1) + 1));
+      play();
+    });
     $('form').addEventListener('submit', (event) => { event.preventDefault(); play(); });
+    $('type').addEventListener('change', updateNextButton);
     const q = new URLSearchParams(location.search);
     ['type', 'id', 'season', 'episode', 'server'].forEach((key) => { if (q.has(key) && $(key)) $(key).value = q.get(key); });
+    updateNextButton();
     play();
   </script>
 </body>
