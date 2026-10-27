@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 40117)
-Total output lines: 3110
+Warning: truncated output (original token count: 40336)
+Total output lines: 3121
 
 <!DOCTYPE html>
 <html lang="en">
@@ -219,6 +219,7 @@ Total output lines: 3110
        its native controller cannot appear as a second controller. */
     #player { pointer-events:none; }
     .player-wrap.external-provider #player { pointer-events:auto; }
+    .player-wrap.external-provider #player:focus-visible { outline:4px solid var(--accent-h); outline-offset:-4px; }
     .player-wrap.external-provider .custom-controls,
     .player-wrap.external-provider .player-hit-area { display:none !important; }
     .player-source-controls { position:absolute; top:.85rem; right:.85rem; z-index:14; display:flex; align-items:center; gap:.45rem; padding:.35rem; border:1px solid rgba(255,255,255,.2); border-radius:9px; background:rgba(10,10,14,.9); box-shadow:0 4px 16px rgba(0,0,0,.4); }
@@ -856,27 +857,7 @@ const tmdb = async (path, options = {}) => {
     const controller = new AbortController();
     const relayAbort = () => controller.abort();
     if (options.signal) {
-      if (options.signal.aborted) {
-        const error = new Error('TMDB request cancelled');
-        error.name = 'AbortErr…10117 tokens truncated…tring(state?.server || 3),
-    sub: state?.subtitle || 'ro'
-  });
-  if (item.media_type === 'tv') {
-    params.set('s', '1');
-    params.set('e', '1');
-  }
-  if (isTvClient) params.set('tv', '1');
-  if (document.body.classList.contains('embedded')) params.set('embedded', '1');
-  return `${location.pathname}?${params.toString()}`;
-}
-
-async function showEndRecommendations() {
-  const panel = $('end-recommendations');
-  const grid = $('end-recommendation-grid');
-  if (!panel || !grid || !state?.media || endRecommendationsShownForToken === playerLoadToken) return;
-  // Recommendations are meaningful for films and, only when TMDB gives us
-  // reliable season metadata, for the final episode of the final season.
-  if (state.type === 'tv' && !isFinalTvEpisode()) return;
+      if…10336 tokens truncated…ode()) return;
   const recommendationToken = playerLoadToken;
   const recommendationKey = progressIdentity();
   endRecommendationsShownForToken = recommendationToken;
@@ -1745,6 +1726,16 @@ window.addEventListener('beforeunload', () => {
 
   function handleRemoteKey(key) {
     if (!key) return;
+    // External providers own the controls inside their cross-origin iframe.
+    // Move the real focus into that iframe first so Tizen can route the next
+    // remote action to the provider instead of keeping focus on our wrapper.
+    const externalFrame = $('player');
+    if (externalFrame && isExternalProvider() && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter', 'MediaPlayPause', 'MediaPlay', 'MediaPause', 'MediaStop', 'MediaFastForward', 'MediaRewind'].includes(key)) {
+      try { externalFrame.focus({ preventScroll: true }); } catch { externalFrame.focus(); }
+      try { externalFrame.contentWindow?.focus(); } catch {}
+      externalFrame.classList.add('tv-external-focus');
+      return;
+    }
     if (['MediaPlayPause', 'MediaPlay', 'MediaPause', 'MediaStop', 'MediaFastForward', 'MediaRewind'].includes(key)) {
       document.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
       return;
@@ -1850,7 +1841,7 @@ window.addEventListener('beforeunload', () => {
     // to the middle of the screen (handy on a TV). It's a cross-origin iframe,
     // so we never send real focus into it — setFocus only adds the highlight
     // and scrolls; Enter on it is a harmless no-op click on the wrapper.
-    const player = $('player-wrap');
+    const player = isExternalProvider() ? $('player') : $('player-wrap');
     if (vis(player)) secs.push({ items: [player] });
     return secs;
   }
