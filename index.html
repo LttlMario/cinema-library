@@ -814,6 +814,8 @@
     .rioma-overlay { position:fixed; inset:0; z-index:10000; background:#000; }
     .rioma-overlay[hidden] { display:none; }
     .rioma-overlay iframe { display:block; width:100%; height:100%; border:0; background:#000; }
+    .rioma-overlay-cursor { position:fixed; z-index:10002; width:30px; height:30px; margin:-15px 0 0 -15px; border:3px solid #fff; border-radius:50%; background:rgba(229,9,20,.88); box-shadow:0 0 0 4px rgba(229,9,20,.48),0 2px 14px #000; pointer-events:none; display:none; }
+    .rioma-overlay-cursor.visible { display:block; }
 
     /* ─────────────── TFLIX VISUAL SKIN ───────────────
        Visual-only layer. The existing markup, event handlers, API calls and
@@ -963,6 +965,7 @@
 <body>
   <div class="rioma-overlay" id="rioma-overlay" hidden aria-label="Player Rioma fullscreen">
     <iframe id="rioma-overlay-frame" title="Player Rioma" tabindex="0" allowfullscreen allow="autoplay *; encrypted-media *; picture-in-picture *; fullscreen *; web-share *"></iframe>
+    <div id="rioma-overlay-cursor" class="rioma-overlay-cursor" aria-hidden="true"></div>
   </div>
 
 <!-- ─────────────── NAVBAR ─────────────── -->
@@ -2411,6 +2414,7 @@ async function updateEpisodes(tvId) {
 }
 
 function closeRiomaOverlay() {
+  $('rioma-overlay-cursor')?.classList.remove('visible');
   const overlay = $('rioma-overlay');
   const frame = $('rioma-overlay-frame');
   if (!overlay) return;
@@ -2427,6 +2431,31 @@ function closeRiomaOverlay() {
   if (window.parent !== window) window.parent.postMessage({ type: 'cinema:player-closed' }, '*');
 }
 
+let riomaCursorX = 50;
+let riomaCursorY = 50;
+function renderRiomaCursor() {
+  const cursor = $('rioma-overlay-cursor');
+  if (!cursor) return;
+  cursor.style.left = riomaCursorX + '%';
+  cursor.style.top = riomaCursorY + '%';
+  cursor.classList.add('visible');
+}
+function handleRiomaCursorKey(key) {
+  if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter'].includes(key)) return;
+  const frame = $('rioma-overlay-frame');
+  if (!frame || $('rioma-overlay')?.hidden) return;
+  if (key === 'ArrowLeft') riomaCursorX = Math.max(2, riomaCursorX - 8);
+  if (key === 'ArrowRight') riomaCursorX = Math.min(98, riomaCursorX + 8);
+  if (key === 'ArrowUp') riomaCursorY = Math.max(2, riomaCursorY - 8);
+  if (key === 'ArrowDown') riomaCursorY = Math.min(98, riomaCursorY + 8);
+  renderRiomaCursor();
+  try { frame.focus(); frame.contentWindow?.focus(); } catch {}
+  if (key === 'Enter') {
+    try { frame.contentWindow?.postMessage({ type: 'cinema:cursor-activate', x: riomaCursorX, y: riomaCursorY }, '*'); } catch {}
+    try { frame.click(); } catch {}
+  }
+}
+
 function openRiomaOverlay(url) {
   const overlay = $('rioma-overlay');
   const frame = $('rioma-overlay-frame');
@@ -2434,6 +2463,9 @@ function openRiomaOverlay(url) {
   document.documentElement.classList.add('player-open');
   cancelHomeWork();
   clearInterval(heroTimer);
+  riomaCursorX = 50;
+  riomaCursorY = 50;
+  renderRiomaCursor();
   frame.src = url;
   frame.setAttribute('tabindex', '0');
   overlay.hidden = false;
@@ -2462,6 +2494,7 @@ window.addEventListener('message', event => {
   if (event.data?.type === 'rioma:close' && frame) closeRiomaOverlay();
   if (event.data?.type === 'cinema:remote-key') {
     const key = String(event.data.key || '');
+    handleRiomaCursorKey(key);
     const overlay = $('rioma-overlay');
     if (overlay && !overlay.hidden && frame?.contentWindow) {
       frame.contentWindow.postMessage({ type: 'rioma:remote-key', key }, '*');
@@ -2478,6 +2511,7 @@ document.addEventListener('keydown', event => {
   const frame = $('rioma-overlay-frame');
   const keys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter','Escape','Backspace','BrowserBack','GoBack','Back'];
   if (!overlay || overlay.hidden || !frame?.contentWindow || !keys.includes(event.key)) return;
+  handleRiomaCursorKey(event.key);
   frame.contentWindow.postMessage({ type: 'rioma:remote-key', key: event.key }, '*');
   event.preventDefault();
   event.stopPropagation();
