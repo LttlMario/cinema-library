@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NextGen player test</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; background: #050507; }
+    body { min-height: 100%; font: 14px system-ui, sans-serif; color: #e9e9ed; }
+    .page { min-height: 100%; display: grid; place-items: center; padding: 24px; }
+    .shell { width: min(1200px, 100%); }
+    .player { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px #0009; }
+    iframe { width: 100%; height: 100%; display: block; border: 0; }
+    .message { padding: 32px; text-align: center; color: #aaa; }
+    .hint { margin-top: 12px; color: #888; font-size: 12px; }
+    code { color: #ff4050; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="shell" aria-label="Test player NextGen">
+      <div class="player" id="player"><div class="message">Se încarcă playerul NextGen…</div></div>
+      <div class="hint">Test: <code>?type=movie&amp;id=550</code> sau <code>?type=tv&amp;id=1396&amp;season=1&amp;episode=1</code></div>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const type = params.get('type') === 'tv' ? 'tv' : 'movie';
+      const id = String(params.get('id') || '550').replace(/[^0-9]/g, '');
+      const season = String(params.get('season') || '1').replace(/[^0-9]/g, '') || '1';
+      const episode = String(params.get('episode') || '1').replace(/[^0-9]/g, '') || '1';
+      const path = type === 'tv'
+        ? `/embed/tv/${id}/${season}/${episode}`
+        : `/embed/movie/${id}`;
+      const frame = document.createElement('iframe');
+      frame.title = 'NextGen video player';
+      frame.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
+      frame.allowFullscreen = true;
+      frame.referrerPolicy = 'origin';
+      frame.src = `https://nextgencloudfabric.com${path}`;
+      document.querySelector('#player').replaceChildren(frame);
+    })();
+  </script>
+</body>
+</html>
