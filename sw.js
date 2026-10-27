@@ -1,4 +1,4 @@
-const CACHE = 'cinema-library-shell-v38-cache-first-20261027';
+const CACHE = 'cinema-library-shell-v39-cache-first-20261027';
 const SHELL_ASSET_TIMEOUT = 8000;
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './stream/index.html',
