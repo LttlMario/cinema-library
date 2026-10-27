@@ -1469,7 +1469,18 @@ function loadPlayer() {
   frame.onerror = fail;
   // Use replace so iframe loads don't pollute the browser history stack
   frame.src = src;
-  old.replaceWith(frame);
+  // Stop the previous cross-origin document before replacing it. Samsung's
+  // WebView can otherwise keep the old provider's network/media pipeline
+  // alive for a while, causing periodic freezes when switching servers or
+  // episodes even though the old iframe is no longer visible.
+  if (old) {
+    old.onload = null;
+    old.onerror = null;
+    try { old.src = 'about:blank'; } catch {}
+    old.replaceWith(frame);
+  } else {
+    $('player-wrap')?.appendChild(frame);
+  }
   ownPaused = true;
   playbackIntent = false;
   // The resume choice is displayed before this iframe is created. Preserve
