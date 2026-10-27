@@ -145,6 +145,7 @@
   const catalogType = query.get('type');
   const active = page === 'catalog.html' && catalogType === 'movie' ? 'movies'
     : page === 'catalog.html' && catalogType === 'tv' ? 'series'
+    : page === 'index.html' && location.pathname.includes('/tv/') ? 'tv'
     : page === 'live.html' ? 'live'
     : isHome && location.hash === '#favorites' ? 'favorites'
     : isHome ? 'home' : '';
@@ -153,7 +154,7 @@
     series: [['Toate serialele', 'catalog.html?type=tv'], ['Seriale recente', 'catalog.html?type=tv&sort=latest'], ['Cele mai apreciate', 'catalog.html?type=tv&sort=top']],
     top: [['Top filme', 'catalog.html?mode=top&type=movie'], ['Top seriale', 'catalog.html?mode=top&type=tv']]
   };
-  const nav = [['Home', 'index.html', 'home'], ['Movies', '', 'movies'], ['TV Shows', '', 'series'], ['Live', 'live.html', 'live']];
+  const nav = [['Home', 'index.html', 'home'], ['Movies', '', 'movies'], ['TV Shows', 'tv/index.html', 'tv'], ['Live', 'live.html', 'live']];
   document.documentElement.classList.add('cinema-shell-page');
   document.body.classList.add('cinema-shell-page');
   const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = appUrl('assets/site-shell.css?v=20261027-live1'); document.head.append(css);
@@ -327,4 +328,3 @@
     openRiomaFromLink(url.href);
   });
 })();
-

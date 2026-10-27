@@ -32,7 +32,7 @@ jobs:
           for page in about.html catalog.html contact.html contribute.html download.html genres.html privacy.html sitemap.html terms.html watch-together.html 404.html; do sed -i 's#</head>#<link rel="stylesheet" href="assets/site-shell.css?v=20261025-stability13"><script defer src="assets/site-shell.js?v=20261025-shell13"></script></head>#' "$page"; done
 
       - name: Prepare Pages artifact
-        run: mkdir -p public && mv index.html 404.html contribute.html download.html catalog.html genres.html about.html contact.html terms.html privacy.html sitemap.html watch-together.html live.html manifest.webmanifest sw.js assets stream tflix public/
+        run: mkdir -p public && mv index.html 404.html contribute.html download.html catalog.html genres.html about.html contact.html terms.html privacy.html sitemap.html watch-together.html live.html tv manifest.webmanifest sw.js assets stream tflix public/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
