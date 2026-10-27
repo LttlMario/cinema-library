@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live TV — Cinema Library</title>
+  <link rel="icon" href="assets/icons/cinema-library-favicon.png">
+  <style>
+    :root{color-scheme:dark;--bg:#08080b;--card:#15151b;--line:rgba(255,255,255,.1);--text:#f4f4f5;--muted:#a1a1aa;--red:#e50914}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px Inter,system-ui,sans-serif}main{max-width:1500px;margin:0 auto;padding:96px 4vw 50px}.live-head{display:flex;align-items:end;justify-content:space-between;gap:1rem;margin-bottom:1.2rem}.live-head h1{margin:0;font-size:clamp(1.7rem,3vw,2.6rem)}.live-head p{margin:.35rem 0 0;color:var(--muted)}.live-status{color:var(--muted);font-size:.85rem}.live-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1rem}.screen{background:#000;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 18px 50px #0008}.screen video{display:block;width:100%;aspect-ratio:16/9;background:#000}.screen-bar{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;background:#111116}.screen-bar strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.screen-bar span{color:var(--muted);font-size:.8rem}.guide{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:.8rem;max-height:calc(100vh - 150px);overflow:auto}.guide h2{margin:.2rem .35rem .7rem;font-size:1rem}.group{margin-bottom:1rem}.group-title{padding:.5rem .45rem;color:var(--muted);font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em}.channel{display:flex;align-items:center;gap:.65rem;width:100%;padding:.6rem;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--text);text-align:left;cursor:pointer}.channel:hover,.channel:focus-visible,.channel.active{background:rgba(229,9,20,.16);border-color:rgba(229,9,20,.7);outline:0}.channel img,.channel-logo{width:34px;height:34px;object-fit:contain;border-radius:6px;background:#22222a;flex:0 0 34px}.channel-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650}.empty{padding:2rem;color:var(--muted);text-align:center}.error{color:#ff6a73}.live-note{margin-top:1rem;color:var(--muted);font-size:.78rem;line-height:1.45}@media(max-width:900px){main{padding-top:84px}.live-layout{grid-template-columns:1fr}.guide{max-height:none}.live-head{align-items:start;flex-direction:column}}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="live-head"><div><h1>Live TV</h1><p>Canale live din playlistul IPTV.</p></div><div id="status" class="live-status">Se încarcă lista…</div></div>
+    <div class="live-layout">
+      <section class="screen" aria-label="Player Live TV"><video id="video" controls playsinline></video><div class="screen-bar"><strong id="now">Selectează un canal</strong><span id="group"></span></div></section>
+      <aside class="guide" aria-label="Canale Live TV"><h2>Canale</h2><div id="channels"><div class="empty">Se încarcă…</div></div></aside>
+    </div>
+    <p class="live-note">Disponibilitatea canalelor depinde de playlistul extern și de drepturile de difuzare. Playlistul este reîncărcat la fiecare accesare.</p>
+  </main>
+  <script>
+    const PLAYLIST_URL='https://iptv.public.nunesnetwork.com/playlist.m3u';
+    const $=id=>document.getElementById(id), video=$('video'); let hls=null, active=null;
+    function esc(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+    function parseM3U(text){const lines=text.split(/\r?\n/),items=[];let meta=null;for(const line of lines){let l=line.trim();const markdown=l.match(/^\[[^\]]+\]\((https?:\/\/[^)]+)\)$/);if(markdown)l=markdown[1];if(l.startsWith('#EXTINF:')){const comma=l.indexOf(',');const attrs={};for(const m of l.matchAll(/([\w-]+)="([^"]*)"/g))attrs[m[1]]=m[2];meta={name:comma>=0?l.slice(comma+1).trim():attrs['tvg-name']||'Canal',group:attrs['group-title']||'Alte canale',logo:attrs['tvg-logo']||''}}else if(l&&!l.startsWith('#')&&meta){try{const url=new URL(l);if(url.protocol==='https:'&&url.pathname.toLowerCase().endsWith('.m3u8')&&!url.hostname.includes('newkso.rustrumyk'))items.push({...meta,url:url.href})}catch{}meta=null}}return items}
+    function groups(items){return items.reduce((out,item)=>(out[item.group]??=[]).push(item),out),out}
+    function play(item,button){if(hls){hls.destroy();hls=null}active=item;document.querySelectorAll('.channel.active').forEach(x=>x.classList.remove('active'));button?.classList.add('active');$('now').textContent=item.name;$('group').textContent=item.group;video.pause();video.removeAttribute('src');video.load();if(video.canPlayType('application/vnd.apple.mpegurl')){video.src=item.url;video.play().catch(()=>{})}else if(window.Hls&&window.Hls.isSupported()){hls=new Hls({enableWorker:true,lowLatencyMode:true});hls.loadSource(item.url);hls.attachMedia(video);hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}))}else{video.src=item.url;video.play().catch(()=>{})}}
+    function render(items){const root=$('channels'),map=groups(items);root.innerHTML='';Object.entries(map).forEach(([group,list])=>{const section=document.createElement('section');section.className='group';section.innerHTML=`<div class="group-title">${esc(group)}</div>`;list.forEach(item=>{const b=document.createElement('button');b.className='channel';b.type='button';b.innerHTML=item.logo?`<img src="${esc(item.logo)}" alt="" loading="lazy"><span class="channel-name">${esc(item.name)}</span>`:`<span class="channel-logo">▶</span><span class="channel-name">${esc(item.name)}</span>`;b.addEventListener('click',()=>play(item,b));section.append(b)});root.append(section)})}
+    async function init(){try{const response=await fetch(PLAYLIST_URL,{cache:'no-store'});if(!response.ok)throw Error('Playlistul nu a răspuns.');const items=parseM3U(await response.text());if(!items.length)throw Error('Playlistul nu conține canale.');render(items);$('status').textContent=`${items.length} canale`; }catch(error){$('status').textContent='Eroare';$('channels').innerHTML=`<div class="empty error">${esc(error.message)}<br>Verifică disponibilitatea playlistului extern.</div>`}}
+    const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';script.onload=init;script.onerror=init;document.head.append(script);
+  </script>
+  <script src="assets/site-shell.js?v=20261027-shell20"></script>
+</body>
+</html>
+
