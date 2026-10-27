@@ -1,8 +1,8 @@
-const CACHE = 'cinema-library-shell-v44-network-first-20261027';
+const CACHE = 'cinema-library-shell-v45-network-first-20261027';
 const SHELL_ASSET_TIMEOUT = 8000;
 const SHELL = [
   './', './index.html', './catalog.html', './genres.html', './live.html', './stream/index.html',
-  './404.html', './contribute.html', './manifest.webmanifest',
+  './404.html', './contribute.html', './nextgen-test.html', './manifest.webmanifest',
   './assets/site-shell.css', './assets/site-shell.js', './assets/home-nav-fix.js', './assets/nav-parity.css', './assets/icons/cinema-library-favicon.png'
 ];
 self.addEventListener('install', event => {
@@ -29,7 +29,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
   const isShell = url.pathname === '/' || [
     '/index.html', '/catalog.html', '/genres.html', '/live.html', '/stream/index.html',
-    '/404.html', '/contribute.html', '/manifest.webmanifest',
+    '/404.html', '/contribute.html', '/nextgen-test.html', '/manifest.webmanifest',
     '/assets/site-shell.css', '/assets/site-shell.js', '/assets/home-nav-fix.js', '/assets/nav-parity.css'
   ].includes(url.pathname);
   if (isShell) {
