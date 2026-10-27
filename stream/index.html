@@ -240,6 +240,7 @@
     #own-picture { min-width:72px; }
     .custom-controls .control-spacer { margin-left:auto; }
     .player-hit-area { position:absolute; inset:0; z-index:2; cursor:default; }
+    .player-hit-area.server-picker-open { display:none; }
     .subtitle-layer { position:absolute; left:4%; right:4%; bottom:72px; z-index:20; display:flex; justify-content:center; pointer-events:none; text-align:center; isolation:isolate; }
     .subtitle-layer[hidden] { display:none; }
     .subtitle-text { max-width:min(92%, 980px); padding:.28em .55em; border-radius:.2em; background:rgba(0,0,0,.78); color:#fff; font-size:clamp(15px, 2.2vw, 27px); line-height:1.25; text-shadow:0 1px 2px #000; white-space:pre-wrap; }
@@ -397,7 +398,8 @@
     body.tv-mode #own-forward10,
     body.tv-mode #own-captions,
     body.tv-mode #own-fullscreen,
-    body.tv-mode #own-next { min-width: 56px; padding-inline: 9px; }
+    body.tv-mode #own-next,
+    body.tv-mode #own-server { min-width: 56px; padding-inline: 9px; }
     body.tv-mode #own-timeline { height: 8px; }
     body.tv-mode #own-timeline::-webkit-slider-runnable-track { height: 8px; }
     body.tv-mode #own-timeline::-webkit-slider-thumb { width: 20px; height: 20px; margin-top: -6px; }
@@ -560,6 +562,7 @@
           <select id="own-picture" aria-label="Profil imagine"><option value="standard">Standard</option><option value="cinema">Cinema</option><option value="bright">Luminos</option><option value="contrast">Contrast</option><option value="vivid">Viu</option><option value="natural">Natural</option><option value="night">Noapte</option></select>
           <span class="control-spacer"></span>
           <button id="own-next" type="button" aria-label="Alege episodul" title="Alege episodul" hidden>☷ Episod</button>
+          <button id="own-server" type="button" aria-label="Alege serverul Cinesrc" title="Alege serverul Cinesrc">▣ Server</button>
           <button id="own-mute" type="button" aria-label="Arată volumul" aria-expanded="false" title="Arată volumul">🔊</button>
           <input id="own-volume" type="range" min="0" max="1" value="1" step="0.05" aria-label="Volum">
           <button id="own-captions" type="button" aria-label="Subtitrări">CC</button>
@@ -686,7 +689,7 @@ themeToggle.addEventListener('click', () => {
 });
 updateThemeButton();
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('../sw.js?v=20261027-v41').then(registration => {
+  navigator.serviceWorker.register('../sw.js?v=20261027-v42').then(registration => {
     registration.update().catch(() => {});
     if (registration.waiting) registration.waiting.postMessage({ type: 'cinema:skip-waiting' });
   }).catch(() => {});
@@ -720,13 +723,21 @@ const ENHANCER_PRESETS = {
 const SERVERS = [
   { id: 3, name: 'Rioma', note: 'Playerul unic Cinema Library.' },
 ];
+let cinesrcServerPickerOpen = false;
 
 /* Single source used by Rioma. */
 const serverUrlResolvers = {
   3: (p) => p.type === 'movie'
-    ? `https://cinesrc.st/embed/movie/${p.id}?controls=false&autoplay=false&color=%23e50914${subtitleParam(p, 'sub')}`
-    : `https://cinesrc.st/embed/tv/${p.id}?controls=false&season=${p.season}&episode=${p.episode}&autonext=false&autoplay=false&color=%23e50914${subtitleParam(p, 'sub')}`
+    ? cinesrcEmbedUrl(`https://cinesrc.st/embed/movie/${p.id}?autoplay=false&color=%23e50914${subtitleParam(p, 'sub')}`)
+    : cinesrcEmbedUrl(`https://cinesrc.st/embed/tv/${p.id}?season=${p.season}&episode=${p.episode}&autonext=false&autoplay=false&color=%23e50914${subtitleParam(p, 'sub')}`)
 };
+function cinesrcEmbedUrl(raw) {
+  const url = new URL(raw);
+  url.searchParams.set('controls', cinesrcServerPickerOpen ? 'true' : 'false');
+  const lastServer = localStorage.getItem('cinemalibrary_cinesrc_lastserver_v1');
+  if (lastServer) url.searchParams.set('lastserver', lastServer);
+  return url.toString();
+}
 function subtitleParam(p, key) {
   // Rioma expects a single language code. Romanian is the default for both
   // web and TV; the local subtitle loader remains available as a fallback.
@@ -1343,6 +1354,7 @@ function setupOwnControls() {
   $('own-captions').addEventListener('click', () => {
     toggleSubtitlePanel();
   });
+  $('own-server')?.addEventListener('click', openCinesrcServerPicker);
   $('own-fullscreen').addEventListener('click', togglePlayerFullscreen);
   try {
     const quality = localStorage.getItem(OWN_QUALITY_KEY);
@@ -1351,6 +1363,29 @@ function setupOwnControls() {
     applyOwnPicture(picture || 'standard');
   } catch { applyOwnPicture('standard'); }
   updateOwnControls();
+}
+function openCinesrcServerPicker() {
+  if (!state) return;
+  if (cinesrcServerPickerOpen) {
+    closeCinesrcServerPicker();
+    return;
+  }
+  cinesrcServerPickerOpen = true;
+  $('player-hit-area')?.classList.add('server-picker-open');
+  $('own-server')?.setAttribute('aria-expanded', 'true');
+  loadPlayer();
+  toast('Selectează serverul din meniul Cinesrc.');
+}
+function closeCinesrcServerPicker(sourceId) {
+  if (sourceId) {
+    try { localStorage.setItem('cinemalibrary_cinesrc_lastserver_v1', String(sourceId)); } catch {}
+  }
+  if (!cinesrcServerPickerOpen) return;
+  cinesrcServerPickerOpen = false;
+  $('player-hit-area')?.classList.remove('server-picker-open');
+  $('own-server')?.setAttribute('aria-expanded', 'false');
+  loadPlayer();
+  toast(sourceId ? `Server Cinesrc selectat: ${sourceId}` : 'Selectorul de servere a fost închis.');
 }
 
 /* ─── PARAMS ─── */
@@ -1735,7 +1770,13 @@ window.addEventListener('message', event => {
   const message = event.data || {};
   const payload = normalizePlayerPayload(message);
   const eventType = String(message.type || message.event || payload.event || '').toLowerCase();
-  if (eventType === 'cinesrc:ready' || eventType === 'ready') {
+  if (eventType === 'cinesrc:sourceused' || eventType === 'sourceused') {
+    const sourceId = payload.sourceId ?? message.sourceId ?? payload.source ?? message.source;
+    if (sourceId !== undefined && sourceId !== null && String(sourceId)) {
+      try { localStorage.setItem('cinemalibrary_cinesrc_lastserver_v1', String(sourceId)); } catch {}
+      $('own-server')?.setAttribute('title', `Server Cinesrc: ${sourceId}`);
+    }
+  } else if (eventType === 'cinesrc:ready' || eventType === 'ready') {
     providerReady = true;
     clearTimeout(providerReadyFallbackTimer);
     providerReadyFallbackTimer = 0;
@@ -2858,6 +2899,11 @@ window.addEventListener('beforeunload', () => {
     }
 
     if (['Escape', 'Backspace', 'BrowserBack', 'GoBack', 'Back', 'XF86Back'].includes(k) || e.keyCode === 10009 || e.keyCode === 461) {
+      if (cinesrcServerPickerOpen) {
+        e.preventDefault();
+        closeCinesrcServerPicker();
+        return;
+      }
       const watchCheck = $('watch-check-prompt');
       if (watchCheck && !watchCheck.hidden) {
         e.preventDefault();
