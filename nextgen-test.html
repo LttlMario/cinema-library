@@ -46,7 +46,7 @@
           <option value="screenscape">ScreenScape</option>
           <option value="2embed">2Embed</option>
           <option value="vipstream">VipStreamMovies</option>
-          <option value="nextgen">NextGen / PlayBox</option>
+          <option value="nextgen">NextGen / PlayBox (compatibil VipStream)</option>
         </select>
       </label>
       <button class="wide" type="submit">Redă</button>
@@ -76,9 +76,12 @@
       vipstream: (p) => p.type === 'movie'
         ? `https://vipstreammovies.com/embed/movie/${p.id}`
         : `https://vipstreammovies.com/embed/tv/${p.id}/${p.season}/${p.episode}`,
+      // NextGen requires VipStream's accepted referrer. The Vip wrapper still
+      // loads the same NextGen player, while a direct iframe from our domain
+      // is rejected with 404 by NextGen's anti-hotlink check.
       nextgen: (p) => p.type === 'movie'
-        ? `https://nextgencloudfabric.com/embed/movie/${p.id}`
-        : `https://nextgencloudfabric.com/embed/tv/${p.id}/${p.season}/${p.episode}`
+        ? `https://vipstreammovies.com/embed/movie/${p.id}`
+        : `https://vipstreammovies.com/embed/tv/${p.id}/${p.season}/${p.episode}`
     };
     function play() {
       const p = { type: $('type').value, id: $('id').value.replace(/[^0-9]/g, ''), season: $('season').value.replace(/[^0-9]/g, '') || '1', episode: $('episode').value.replace(/[^0-9]/g, '') || '1' };
