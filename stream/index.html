@@ -1504,6 +1504,10 @@ function loadPlayer() {
   applyEnhancer();
   applyOwnPicture(localStorage.getItem(OWN_PICTURE_KEY) || 'standard');
   showOwnControls();
+  // The previous provider shell is gone at this point. Re-anchor an active
+  // TV navigator to a current player control instead of leaving focus on the
+  // old iframe/control tree during a server or episode switch.
+  document.dispatchEvent(new Event('rioma:player-reloaded'));
   playerLoadGuardTimer = window.setTimeout(() => {
     playerLoadGuardTimer = 0;
     if (loadToken !== playerLoadToken || settled) return;
@@ -2686,6 +2690,13 @@ window.addEventListener('beforeunload', () => {
     active = true;
     document.documentElement.classList.add('keynav');
     setFocus(target, false);
+  });
+  document.addEventListener('rioma:player-reloaded', () => {
+    if (!active) return;
+    showOwnControls();
+    const target = vis($('own-timeline')) ? $('own-timeline')
+      : (vis($('own-play')) ? $('own-play') : document.querySelector('.server-card.selected'));
+    if (target) setFocus(target, false);
   });
 
   function move(dx, dy) {
