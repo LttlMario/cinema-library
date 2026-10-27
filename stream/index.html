@@ -2680,8 +2680,19 @@ window.addEventListener('beforeunload', () => {
   function move(dx, dy) {
     const secs = getSections();
     if (!secs.length) return;
-    const si = secs.findIndex(s => s.items.indexOf(cur) >= 0);
-    if (si < 0) { focusInitial(); return; }
+    // Provider controls and episode/recommendation rows may be rebuilt while
+    // a source is loading. Re-anchor and apply the same arrow immediately so
+    // one remote press never disappears during that transition.
+    if (cur && !vis(cur)) {
+      cur.classList.remove('kf');
+      cur = null;
+    }
+    let si = secs.findIndex(s => s.items.indexOf(cur) >= 0);
+    if (si < 0) {
+      focusInitial();
+      si = secs.findIndex(s => s.items.indexOf(cur) >= 0);
+      if (si < 0) return;
+    }
     const sec = secs[si];
     const ii = sec.items.indexOf(cur);
 
