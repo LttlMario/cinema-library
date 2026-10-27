@@ -2937,6 +2937,29 @@ $('clear-filters').addEventListener('click', () => {
     }
   }
 
+  // Native TV controls can take focus before the D-pad handler sees the key.
+  // Adopt that focus immediately so the red highlight and the next navigation
+  // target always refer to the same button/select/input.
+  function adoptNativeFocus(el) {
+    if (!el || !vis(el)) return;
+    const sections = getSections();
+    if (!sections.some(section => section.items.includes(el))) return;
+    if (cur === el) return;
+    if (cur) {
+      cur.classList.remove('kf');
+      cur.closest('.rank-card')?.classList.remove('kf-parent');
+    }
+    cur = el;
+    cur.classList.add('kf');
+    cur.closest('.rank-card')?.classList.add('kf-parent');
+    active = true;
+    document.documentElement.classList.add('keynav');
+  }
+
+  document.addEventListener('focusin', event => {
+    adoptNativeFocus(event.target instanceof Element ? event.target : null);
+  }, true);
+
   function getSections() {
     // Modal open → trap focus inside it
     if ($('modal-backdrop').classList.contains('open')) {
