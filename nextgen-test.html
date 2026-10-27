@@ -3,46 +3,101 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NextGen player test</title>
+  <title>Player test - Cinema Library</title>
   <style>
-    :root { color-scheme: dark; }
+    :root { color-scheme: dark; --red: #ed1020; --panel: #15151c; --line: #30303a; }
     * { box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; margin: 0; background: #050507; }
-    body { min-height: 100%; font: 14px system-ui, sans-serif; color: #e9e9ed; }
-    .page { min-height: 100%; display: grid; place-items: center; padding: 24px; }
-    .shell { width: min(1200px, 100%); }
-    .player { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px #0009; }
-    iframe { width: 100%; height: 100%; display: block; border: 0; }
-    .message { padding: 32px; text-align: center; color: #aaa; }
-    .hint { margin-top: 12px; color: #888; font-size: 12px; }
-    code { color: #ff4050; }
+    html, body { margin: 0; min-height: 100%; background: #050507; color: #eee; font: 14px system-ui, sans-serif; }
+    .page { width: min(1280px, 100%); margin: 0 auto; padding: 24px; }
+    h1 { margin: 0 0 18px; font-size: 24px; }
+    .controls { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+    label { display: grid; gap: 6px; color: #aaa; font-size: 12px; }
+    input, select, button { min-height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; background: #0c0c11; color: #fff; font: inherit; }
+    button { cursor: pointer; background: var(--red); border-color: var(--red); font-weight: 700; }
+    button:hover, button:focus-visible { filter: brightness(1.15); outline: 2px solid #fff; outline-offset: 2px; }
+    .wide { grid-column: span 2; }
+    .player { position: relative; margin-top: 16px; width: 100%; aspect-ratio: 16 / 9; min-height: 360px; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 12px 40px #0009; }
+    iframe { width: 100%; height: 100%; display: block; border: 0; background: #000; }
+    .status { margin-top: 10px; color: #aaa; min-height: 20px; }
+    .note { margin-top: 14px; color: #888; font-size: 12px; }
+    @media (max-width: 850px) { .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wide { grid-column: span 2; } }
   </style>
 </head>
 <body>
   <main class="page">
-    <section class="shell" aria-label="Test player NextGen">
-      <div class="player" id="player"><div class="message">Se încarcă playerul NextGen…</div></div>
-      <div class="hint">Test: <code>?type=movie&amp;id=550</code> sau <code>?type=tv&amp;id=1396&amp;season=1&amp;episode=1</code></div>
-    </section>
+    <h1>Player test Cinema Library</h1>
+    <form class="controls" id="form">
+      <label>Tip
+        <select id="type"><option value="movie">Film</option><option value="tv">Serial</option></select>
+      </label>
+      <label>ID TMDB
+        <input id="id" inputmode="numeric" value="550" required>
+      </label>
+      <label>Sezon
+        <input id="season" inputmode="numeric" value="1">
+      </label>
+      <label>Episod
+        <input id="episode" inputmode="numeric" value="1">
+      </label>
+      <label class="wide">Server / player
+        <select id="server">
+          <option value="cinesrc">Cinesrc</option>
+          <option value="vidsrc">VidSrc</option>
+          <option value="screenscape">ScreenScape</option>
+          <option value="2embed">2Embed</option>
+          <option value="vipstream">VipStreamMovies</option>
+          <option value="nextgen">NextGen / PlayBox</option>
+        </select>
+      </label>
+      <button class="wide" type="submit">Redă</button>
+    </form>
+    <div class="player" id="player"></div>
+    <div class="status" id="status"></div>
+    <div class="note">Pagină de test nelegată în meniul aplicației. Player-ele externe își păstrează controalele native.</div>
   </main>
   <script>
-    (() => {
-      const params = new URLSearchParams(location.search);
-      const type = params.get('type') === 'tv' ? 'tv' : 'movie';
-      const id = String(params.get('id') || '550').replace(/[^0-9]/g, '');
-      const season = String(params.get('season') || '1').replace(/[^0-9]/g, '') || '1';
-      const episode = String(params.get('episode') || '1').replace(/[^0-9]/g, '') || '1';
-      const path = type === 'tv'
-        ? `/embed/tv/${id}/${season}/${episode}`
-        : `/embed/movie/${id}`;
+    const $ = (id) => document.getElementById(id);
+    const providers = {
+      cinesrc: (p) => p.type === 'movie'
+        ? `https://cinesrc.st/embed/movie/${p.id}?autoplay=false&controls=true&color=%23e50914&sub=ro`
+        : `https://cinesrc.st/embed/tv/${p.id}?season=${p.season}&episode=${p.episode}&autonext=false&autoplay=false&controls=true&color=%23e50914&sub=ro`,
+      vidsrc: (p) => p.type === 'movie'
+        ? `https://vidsrc.cc/v2/embed/movie/${p.id}?poster=true&autoPlay=false`
+        : `https://vidsrc.cc/v2/embed/tv/${p.id}/${p.season}/${p.episode}?poster=true&autoPlay=false`,
+      screenscape: (p) => {
+        const u = new URL('https://nxsha.screenscape.me/embed');
+        u.searchParams.set('tmdb', p.id); u.searchParams.set('type', p.type); u.searchParams.set('lan', 'ron');
+        if (p.type === 'tv') { u.searchParams.set('s', p.season); u.searchParams.set('e', p.episode); }
+        return u.href;
+      },
+      '2embed': (p) => p.type === 'movie'
+        ? `https://www.2embed.cc/embed/${p.id}`
+        : `https://www.2embed.cc/embedtv/${p.id}&s=${p.season}&e=${p.episode}`,
+      vipstream: (p) => p.type === 'movie'
+        ? `https://vipstreammovies.com/embed/movie/${p.id}`
+        : `https://vipstreammovies.com/embed/tv/${p.id}/${p.season}/${p.episode}`,
+      nextgen: (p) => p.type === 'movie'
+        ? `https://nextgencloudfabric.com/embed/movie/${p.id}`
+        : `https://nextgencloudfabric.com/embed/tv/${p.id}/${p.season}/${p.episode}`
+    };
+    function play() {
+      const p = { type: $('type').value, id: $('id').value.replace(/[^0-9]/g, ''), season: $('season').value.replace(/[^0-9]/g, '') || '1', episode: $('episode').value.replace(/[^0-9]/g, '') || '1' };
+      if (!p.id) return;
+      const name = $('server').selectedOptions[0].textContent;
       const frame = document.createElement('iframe');
-      frame.title = 'NextGen video player';
+      frame.title = `${name} player`;
       frame.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media';
       frame.allowFullscreen = true;
       frame.referrerPolicy = 'origin';
-      frame.src = `https://nextgencloudfabric.com${path}`;
-      document.querySelector('#player').replaceChildren(frame);
-    })();
+      frame.src = providers[$('server').value](p);
+      $('player').replaceChildren(frame);
+      $('status').textContent = `${name} · ${p.type === 'tv' ? `S${p.season} E${p.episode}` : 'film'} · TMDB ${p.id}`;
+      history.replaceState(null, '', `?type=${p.type}&id=${p.id}&season=${p.season}&episode=${p.episode}&server=${$('server').value}`);
+    }
+    $('form').addEventListener('submit', (event) => { event.preventDefault(); play(); });
+    const q = new URLSearchParams(location.search);
+    ['type', 'id', 'season', 'episode', 'server'].forEach((key) => { if (q.has(key) && $(key)) $(key).value = q.get(key); });
+    play();
   </script>
 </body>
 </html>
