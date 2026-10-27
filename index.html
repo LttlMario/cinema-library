@@ -990,7 +990,7 @@
   </div>
 </header>
 
-<script src="assets/site-shell.js?v=20261025-shell16"></script>
+<script src="assets/site-shell.js?v=20261027-shell17"></script>
 <script src="assets/home-nav-fix.js?v=20261025-22"></script>
 <link rel="stylesheet" href="assets/nav-parity.css?v=20261025-focus21">
 <style id="tflix-final-nav-parity">
@@ -1137,7 +1137,7 @@ themeToggle?.addEventListener('click', () => {
 });
 updateThemeButton();
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js?v=20261025-v37').then(registration => {
+  navigator.serviceWorker.register('./sw.js?v=20261027-v38').then(registration => {
     registration.update().catch(() => {});
     if (registration.waiting) registration.waiting.postMessage({ type: 'cinema:skip-waiting' });
   }).catch(() => {});
