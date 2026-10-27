@@ -118,6 +118,7 @@ expect(index.includes('homeWorkController.signal.aborted || document.documentEle
 expect(index.includes("const topLoad = isTvMode ? Promise.resolve() : loadTop10()") && index.includes('Top 10 is below the first TV viewport'), 'TV defers the below-fold Top 10 request until after the initial paint');
 expect(siteShell.includes('aria-current="${active === key ? \'page\' : \'false\'}"') && siteShell.includes('aria-expanded="false"'), 'shell navigation exposes active page and dropdown state to TV WebViews');
 expect(siteShell.includes('data-nav="${key}"'), 'shell Home link exposes a stable semantic navigation key');
+expect(siteShell.includes('BrowserBack: 461') && siteShell.includes('Back: 10009') && siteShell.includes('#search-wrap.search-open') && siteShell.includes('openMenu.classList.remove'), 'shared TV navigator closes search or dropdowns before handling Back');
 expect(siteShell.includes('function') && siteShell.includes('syncShellMenuState') && siteShell.includes('MutationObserver'), 'shell navigation keeps aria-expanded synchronized with visible dropdowns');
 expect(siteShell.includes('const shellMenuObservers = []') && siteShell.includes('observer.disconnect()') && siteShell.includes('if (!event.persisted)'), 'secondary-page menu observers are cleaned up only on real page exit');
 expect(siteShell.includes("style.opacity !== '0'") && siteShell.includes("style.pointerEvents !== 'none'") && siteShell.includes('el.offsetWidth > 0'), 'secondary-page TV focus excludes invisible Search controls');
@@ -136,13 +137,13 @@ expect(stream.includes('href="${esc(HOME_URL.href)}"'), 'Player metadata errors 
 const wrapperMain = read('app/samsung-tv/main.js');
 expect(wrapperMain.includes("var appReady = false") && wrapperMain.includes("event.data.type === 'cinema:app-ready'") && wrapperMain.includes('readyTimer'), 'TV wrapper waits for the live page readiness handshake');
 expect(wrapperMain.includes('lastForwardedKey') && wrapperMain.includes('now - lastForwardedAt < 55'), 'TV wrapper coalesces duplicate remote presses without blocking key repeat');
-expect(tvMain.includes('tvapp=1.7.13') && tvConfig.includes('version="1.7.13"'), 'TV wrapper release version is synchronized across source files');
+expect(tvMain.includes('tvapp=1.7.14') && tvConfig.includes('version="1.7.14"'), 'TV wrapper release version is synchronized across source files');
 expect(index.includes("window.parent.postMessage({ type: 'cinema:app-ready' }, '*')"), 'Web app announces first-paint readiness to the TV wrapper');
 expect(index.includes('const heroLoad = loadHero()') && index.includes('await Promise.allSettled([heroLoad, initialLoads[0]])'), 'TV readiness waits only for the hero and first visible row');
 expect(stream.includes('const tmdb = async (path, options = {})') && stream.includes('options.signal.addEventListener') && stream.includes('signal: controller.signal'), 'Player TMDB requests can be cancelled when the title changes');
 expect(stream.includes('let metadataAbortController = null') && stream.includes('metadataAbortController?.abort()') && stream.includes('tmdb(`/tv/${state.id}`, { signal: metadataController.signal })') && stream.includes('tmdb(`/movie/${state.id}`, { signal: metadataController.signal })'), 'Player metadata fetches stop when the player closes');
-expect(index.includes('site-shell.js?v=20261027-shell18') && index.includes('home-nav-fix.js?v=20261027-23') && read('catalog.html').includes('site-shell.js?v=20261027-shell18') && read('genres.html').includes('site-shell.js?v=20261027-shell18'), 'TV navigation assets use a fresh cache-busting version');
-expect(sw.includes('cinema-library-shell-v40-cache-first-20261027') && index.includes('sw.js?v=20261027-v40') && stream.includes('sw.js?v=20261027-v40'), 'Service worker shell cache is bumped for immediate updates');
+expect(index.includes('site-shell.js?v=20261027-shell19') && index.includes('home-nav-fix.js?v=20261027-23') && read('catalog.html').includes('site-shell.js?v=20261027-shell19') && read('genres.html').includes('site-shell.js?v=20261027-shell19'), 'TV navigation assets use a fresh cache-busting version');
+expect(sw.includes('cinema-library-shell-v41-cache-first-20261027') && index.includes('sw.js?v=20261027-v41') && stream.includes('sw.js?v=20261027-v41'), 'Service worker shell cache is bumped for immediate updates');
 expect(index.includes('<div class="search-wrap" id="search-wrap">') && !index.includes('<div class="search-wrap open" id="search-wrap">'), 'TV starts with the sidebar Search button visible, not the floating field');
 expect(index.includes('<a class="nav-link active" href="index.html" data-nav="home" aria-current="page">Acasă</a>'), 'Home is a native focusable navigation control on the TV layout');
 expect(homeNavFix.includes("cinema:search-opened") && homeNavFix.includes("cinema:search-closed") && index.includes("key: 'search-input'"), 'Search keeps the TV focus state synchronized while opening and closing');
@@ -155,8 +156,8 @@ expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseR
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
 expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
-expect(index.includes('sw.js?v=20261027-v40') && stream.includes('sw.js?v=20261027-v40'), 'catalog and player register the current service-worker revision');
-expect(sw.includes('cinema-library-shell-v40-cache-first-20261027') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
+expect(index.includes('sw.js?v=20261027-v41') && stream.includes('sw.js?v=20261027-v41'), 'catalog and player register the current service-worker revision');
+expect(sw.includes('cinema-library-shell-v41-cache-first-20261027') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
 expect(sw.includes('const refresh = fetch(request, { cache: \'no-store\' })') && sw.includes('return cached || refresh'), 'service-worker serves cached static assets before background refresh');
 expect(sw.includes('The cached shell is returned immediately') && sw.includes('const refresh = fetch(request, { cache: \'no-store\' })'), 'service-worker refreshes cached HTML from the network instead of the browser HTTP cache');
 expect(sw.includes('event.waitUntil(refresh.then(() => undefined, () => undefined))'), 'service-worker keeps background asset refresh alive');
@@ -177,8 +178,8 @@ expect(sw.includes('const SHELL_ASSET_TIMEOUT = 8000') && sw.includes('controlle
 expect(sw.includes('isStaticAsset') && sw.includes('request.destination'), 'service-worker does not cache arbitrary dynamic same-origin requests');
 expect((sw.match(/cache\.put\([^\n]+\)\)\.catch\(\(\) => \{\}\)/g) || []).length >= 3, 'service-worker ignores cache quota failures without breaking the page');
 
-expect(tvIndex.includes('tvapp=1.7.13') && !tvIndex.includes('tvapp=1.7.13&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
-expect(tvMain.includes('tvapp=1.7.13&fresh=1'), 'TV retry path requests a fresh live document');
+expect(tvIndex.includes('tvapp=1.7.14') && !tvIndex.includes('tvapp=1.7.14&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
+expect(tvMain.includes('tvapp=1.7.14&fresh=1'), 'TV retry path requests a fresh live document');
 expect(tvMain.includes('BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV Back uses the guarded handshake timeout');
 expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back acknowledgements only from the live page');
 expect(tvMain.includes("event.target !== document.body && event.target !== frame"), 'TV wrapper does not steal focus from its own controls');
@@ -202,7 +203,7 @@ expect(tvMain.includes('function handleFrameError()') && tvMain.includes("frame.
 expect(tvMain.includes('function cleanupWrapperRuntime()') && tvMain.includes("window.addEventListener('pagehide', cleanupWrapperRuntime)") && tvMain.includes('backRequestId += 1'), 'TV wrapper cancels delayed work when the application is unloaded');
 expect(tvMain.includes('var BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV wrapper allows fullscreen exit and popup acknowledgement to complete before fallback');
 expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://cinesrc.st') && tvIndex.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'TV wrapper preconnects to image, video and subtitle origins');
-expect(tvConfig.includes('version="1.7.13"'), 'TV package version matches the wrapper source');
+expect(tvConfig.includes('version="1.7.14"'), 'TV package version matches the wrapper source');
 expect(tvMain.includes('function forwardKey(key)') && tvMain.includes('frame.contentWindow.focus()'), 'TV wrapper restores iframe focus before forwarding remote keys');
 expect(tvMain.includes('event.stopPropagation();') && tvMain.includes('forwardKey(key);'), 'TV wrapper consumes forwarded remote events exactly once');
 expect(stream.includes("!document.documentElement.classList.contains('keynav')") && stream.includes("controls?.classList.add('controls-idle')"), 'player controls stay visible while TV D-pad navigation is active');
