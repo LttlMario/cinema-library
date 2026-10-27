@@ -741,6 +741,7 @@
     .official-link { grid-column: 1 / -1; justify-self: start; font-size: 0.78rem; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
     .official-link:hover { color: var(--text); }
     .modal-watch-btn { flex:1 1 180px; width:auto; padding: 0.95rem; font-size: 1.02rem; }
+    .modal-local-watch-btn { padding: 0.95rem 1rem; white-space: nowrap; }
     .modal-server-btn { padding: 0.95rem 1rem; white-space: nowrap; }
     .modal-favorite-btn { padding: 0.95rem 1rem; white-space: nowrap; }
     .modal-favorite-btn.active { color: #ffd166; border-color: rgba(255,209,102,.55); background: rgba(255,209,102,.1); }
@@ -1078,6 +1079,7 @@
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           Redă
         </button>
+        <button class="btn modal-local-watch-btn" id="modal-local-watch-btn" type="button" title="Folosește playerul Cinema Library">Playerul nostru</button>
         <button class="btn modal-server-btn" id="modal-server-btn" type="button" title="Alege manual serverul Cinesrc">▣ Server</button>
         <button class="btn modal-favorite-btn" id="modal-favorite-btn" type="button" aria-pressed="false">♡ Favorite</button>
         <button class="btn modal-later-btn" id="modal-later-btn" type="button" aria-pressed="false">＋ Mai târziu</button>
@@ -1520,6 +1522,18 @@ function playerUrl(item, season = 1, episode = 1) {
     p.set('s', season); p.set('e', episode);
   }
   return `${PLAYER}?${p.toString()}`;
+}
+
+// ScreenScape is the default external player. It exposes an official
+// TMDB-based embed URL, so no stream extraction or worker is needed here.
+function screenscapeUrl(item, season = 1, episode = 1) {
+  const type = mediaOf(item) === 'movie' ? 'movie' : 'tv';
+  const params = new URLSearchParams({ tmdb: String(item.id), type });
+  if (type === 'tv') {
+    params.set('s', String(season));
+    params.set('e', String(episode));
+  }
+  return `https://nxsha.screenscape.me/embed?${params.toString()}`;
 }
 
 /* ─── DIGITAL RELEASE FETCH (shared) ─── */
@@ -2482,7 +2496,30 @@ $('modal-watch-btn').addEventListener('click', () => {
   // Samsung TV WebViews and compete with playback.
   closeModal(true);
   // Rioma stays inside the Cinema Library app, including on Samsung TV.
-  // Do not hand playback off to the external TV browser.
+  // ScreenScape is the primary player; the local player remains available
+  // through the explicit "Playerul nostru" button beside Redă.
+  openRiomaOverlay(screenscapeUrl(currentModalItem, s, e));
+});
+
+// Secondary playback route: keep the existing Cinema Library player available
+// without changing the default ScreenScape flow.
+$('modal-local-watch-btn')?.addEventListener('click', () => {
+  if (!currentModalItem) return;
+  const s = parseInt($('season-select')?.value || 1);
+  const e = parseInt($('episode-select')?.value || 1);
+  const existingProgress = libraryRead(LIBRARY_KEYS.progress).find(entry => libraryKey(entry) === libraryKey(currentModalItem));
+  const sameEpisode = mediaOf(currentModalItem) === 'movie'
+    || (existingProgress?.season === s && existingProgress?.episode === e);
+  libraryUpsert(LIBRARY_KEYS.progress, currentModalItem, {
+    season: s,
+    episode: e,
+    progressSeconds: sameEpisode ? Number(existingProgress?.progressSeconds) || 0 : 0
+  });
+  const destination = new URL(playerUrl(currentModalItem, s, e), document.baseURI);
+  destination.searchParams.set('embedded', '1');
+  if (openServerPickerNext) destination.searchParams.set('server-picker', '1');
+  openServerPickerNext = false;
+  closeModal(true);
   openRiomaOverlay(destination.href);
 });
 
@@ -3339,4 +3376,3 @@ window.addEventListener('beforeunload', cleanupHomeRuntime);
 <!-- End Cloudflare Web Analytics -->
 </body>
 </html>
-
