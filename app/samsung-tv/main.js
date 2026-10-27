@@ -163,6 +163,7 @@
     if (!loaded && code !== BACK_KEY && !EXIT_KEYS[code]) return;
     if (code === BACK_KEY) {
       event.preventDefault();
+      event.stopPropagation();
       var requestId = ++backRequestId;
       backHandledByWeb = false;
       // Let the live page/player handle Back first. The player uses this to
@@ -177,15 +178,18 @@
       }, BACK_HANDSHAKE_TIMEOUT);
     } else if (EXIT_KEYS[code]) {
       event.preventDefault();
+      event.stopPropagation();
       exitApplication();
     } else if (MEDIA_KEYS[code]) {
       forwardKey(MEDIA_KEYS[code]);
       event.preventDefault();
+      event.stopPropagation();
     } else if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
       // If Samsung keeps focus on the outer document, forward the remote
       // command into the live web page inside the iframe.
       forwardKey(key);
       event.preventDefault();
+      event.stopPropagation();
     }
   }, true);
   errorTimer = window.setTimeout(showError, 15000);
