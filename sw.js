@@ -1,7 +1,7 @@
-const CACHE = 'cinema-library-shell-v42-cache-first-20261027';
+const CACHE = 'cinema-library-shell-v43-cache-first-20261027';
 const SHELL_ASSET_TIMEOUT = 8000;
 const SHELL = [
-  './', './index.html', './catalog.html', './genres.html', './stream/index.html',
+  './', './index.html', './catalog.html', './genres.html', './live.html', './stream/index.html',
   './404.html', './contribute.html', './manifest.webmanifest',
   './assets/site-shell.css', './assets/site-shell.js', './assets/home-nav-fix.js', './assets/nav-parity.css', './assets/icons/cinema-library-favicon.png'
 ];
@@ -28,7 +28,7 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
   const url = new URL(request.url);
   const isShell = url.pathname === '/' || [
-    '/index.html', '/catalog.html', '/genres.html', '/stream/index.html',
+    '/index.html', '/catalog.html', '/genres.html', '/live.html', '/stream/index.html',
     '/404.html', '/contribute.html', '/manifest.webmanifest',
     '/assets/site-shell.css', '/assets/site-shell.js', '/assets/home-nav-fix.js', '/assets/nav-parity.css'
   ].includes(url.pathname);
