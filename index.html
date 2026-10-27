@@ -743,6 +743,10 @@
     .modal-watch-btn { flex:1 1 180px; width:auto; padding: 0.95rem; font-size: 1.02rem; }
     .modal-local-watch-btn { padding: 0.95rem 1rem; white-space: nowrap; }
     .modal-server-btn { padding: 0.95rem 1rem; white-space: nowrap; }
+    .modal-provider-wrap { display:flex; align-items:center; gap:.55rem; flex:1 1 100%; }
+    .modal-provider-wrap label { color:var(--muted); font-size:.78rem; font-weight:700; white-space:nowrap; }
+    .modal-provider-select { flex:1 1 auto; min-height:44px; padding:.7rem .85rem; border:1px solid rgba(255,255,255,.16); border-radius:7px; background:#19191f; color:var(--text); font:600 .9rem inherit; cursor:pointer; }
+    .modal-provider-select:focus-visible { outline:3px solid var(--accent-h); outline-offset:3px; border-color:var(--accent); }
     .modal-favorite-btn { padding: 0.95rem 1rem; white-space: nowrap; }
     .modal-favorite-btn.active { color: #ffd166; border-color: rgba(255,209,102,.55); background: rgba(255,209,102,.1); }
     .modal-later-btn { padding: 0.95rem 1rem; white-space: nowrap; }
@@ -1074,6 +1078,14 @@
           </div>
         </div>
       </div>
+      <div class="modal-provider-wrap">
+        <label for="modal-provider">Player:</label>
+        <select id="modal-provider" class="modal-provider-select" aria-label="Alege playerul înainte de redare">
+          <option value="3">Cinesrc — playerul Cinema Library</option>
+          <option value="4">VidSrc — player extern</option>
+          <option value="5">ScreenScape — player extern</option>
+        </select>
+      </div>
       <div class="modal-actions">
         <button class="btn btn-primary modal-watch-btn" id="modal-watch-btn">
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -1211,6 +1223,7 @@ let searchRequestId = 0;
 let genreRequestId = 0;
 let currentModalItem = null;
 let openServerPickerNext = false;
+const MODAL_PROVIDER_KEY = 'cinemalibrary_provider_v1';
 let modalTrailerTimer = null;
 let modalTrailerToken = 0;
 let tvDetails = {};
@@ -1507,8 +1520,8 @@ document.addEventListener('click', () => {
 });
 
 /* ─── PLAYER URL ─── */
-function playerUrl(item, season = 1, episode = 1) {
-  const p = new URLSearchParams({ server: CINEMA_PLAYER_ID });
+function playerUrl(item, season = 1, episode = 1, provider = CINEMA_PLAYER_ID) {
+  const p = new URLSearchParams({ server: String(provider || CINEMA_PLAYER_ID) });
   p.set('tv', '1');
   if (new URLSearchParams(window.location.search).get('tv') === '1') p.set('player-tv', '1');
   p.set('v', '20261025-stability18');
@@ -2221,6 +2234,8 @@ async function openModal(item) {
 
   currentModalItem = { ...item, media_type: type };
   rememberTitle(currentModalItem);
+  const preferredProvider = Number(localStorage.getItem(MODAL_PROVIDER_KEY) || 3);
+  if ($('modal-provider')) $('modal-provider').value = [3, 4, 5].includes(preferredProvider) ? String(preferredProvider) : '3';
   resetModalTrailer();
 
   const bg = backdrop(item.backdrop_path) || poster(item.poster_path, 'w780');
@@ -2445,8 +2460,15 @@ document.addEventListener('keydown', event => {
   event.stopPropagation();
 }, true);
 
+document.getElementById('modal-provider')?.addEventListener('change', event => {
+  const value = Number(event.target.value);
+  if ([3, 4, 5].includes(value)) localStorage.setItem(MODAL_PROVIDER_KEY, String(value));
+});
+
 $('modal-watch-btn').addEventListener('click', () => {
   if (!currentModalItem) return;
+  const selectedProvider = Number($('modal-provider')?.value || 3);
+  if ([3, 4, 5].includes(selectedProvider)) localStorage.setItem(MODAL_PROVIDER_KEY, String(selectedProvider));
   const openServerPicker = openServerPickerNext;
   openServerPickerNext = false;
   const s = parseInt($('season-select')?.value  || 1);
@@ -2472,7 +2494,7 @@ $('modal-watch-btn').addEventListener('click', () => {
     episode: e,
     progressSeconds: sameEpisode ? Number(existingProgress?.progressSeconds) || 0 : 0
   });
-  const destination = new URL(playerUrl(currentModalItem, s, e), document.baseURI);
+  const destination = new URL(playerUrl(currentModalItem, s, e, selectedProvider), document.baseURI);
   destination.searchParams.set('embedded', '1');
   if (openServerPicker) destination.searchParams.set('server-picker', '1');
   if (new URLSearchParams(window.location.search).get('app') === 'tv') {
@@ -2486,20 +2508,17 @@ $('modal-watch-btn').addEventListener('click', () => {
     tflix.searchParams.set('id', String(currentModalItem.id));
     tflix.searchParams.set('season', String(s));
     tflix.searchParams.set('episode', String(e));
+    tflix.searchParams.set('server', String(selectedProvider));
     tflix.searchParams.set('return', `${window.location.origin}${window.location.pathname}?app=tv&v=20261021-cinema-catalog&reopen=1&type=${encodeURIComponent(mediaOf(currentModalItem))}&id=${encodeURIComponent(currentModalItem.id)}&season=${s}&episode=${e}`);
     closeModal(true);
     window.parent.postMessage({ type: 'open-in-tv-browser', url: tflix.href }, '*');
     return;
   }
-  // Stop and unload the delayed YouTube trailer before opening Rioma. Keeping
-  // it alive behind the overlay causes a small trailer surface to reappear on
-  // Samsung TV WebViews and compete with playback.
-  // Rioma stays inside the Cinema Library app, including on Samsung TV.
-  // ScreenScape is the primary player; the local player remains available
-  // through the explicit "Playerul nostru" button beside Redă.
-  const primaryPlayerUrl = screenscapeUrl(currentModalItem, s, e);
+  // Stop and unload the delayed YouTube trailer before opening the selected player.
+  // Every provider is routed through the same embedded player page so Back,
+  // fullscreen and TV focus handling remain consistent.
   closeModal(true);
-  openRiomaOverlay(primaryPlayerUrl);
+  openRiomaOverlay(destination.href);
 });
 
 // Secondary playback route: keep the existing Cinema Library player available
@@ -2516,7 +2535,7 @@ $('modal-local-watch-btn')?.addEventListener('click', () => {
     episode: e,
     progressSeconds: sameEpisode ? Number(existingProgress?.progressSeconds) || 0 : 0
   });
-  const destination = new URL(playerUrl(currentModalItem, s, e), document.baseURI);
+  const destination = new URL(playerUrl(currentModalItem, s, e, 3), document.baseURI);
   destination.searchParams.set('embedded', '1');
   if (openServerPickerNext) destination.searchParams.set('server-picker', '1');
   openServerPickerNext = false;
@@ -3027,7 +3046,7 @@ $('clear-filters').addEventListener('click', () => {
       if ($('tv-selectors').style.display !== 'none')
         s.push({ key: null, items: [$('season-select'), $('episode-select')] });
       // Keep remote focus in the same order as the visible popup actions.
-      s.push({ key: null, items: [$('modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn'), $('modal-report-btn'), $('official-link')].filter(vis) });
+      s.push({ key: null, items: [$('modal-provider'), $('modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn'), $('modal-report-btn'), $('official-link')].filter(vis) });
       return s;
     }
     const openSubmenu = document.querySelector('.nav-submenu.open');
