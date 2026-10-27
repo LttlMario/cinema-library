@@ -136,7 +136,7 @@ expect(stream.includes('href="${esc(HOME_URL.href)}"'), 'Player metadata errors 
 const wrapperMain = read('app/samsung-tv/main.js');
 expect(wrapperMain.includes("var appReady = false") && wrapperMain.includes("event.data.type === 'cinema:app-ready'") && wrapperMain.includes('readyTimer'), 'TV wrapper waits for the live page readiness handshake');
 expect(wrapperMain.includes('lastForwardedKey') && wrapperMain.includes('now - lastForwardedAt < 55'), 'TV wrapper coalesces duplicate remote presses without blocking key repeat');
-expect(tvMain.includes('tvapp=1.7.12') && tvConfig.includes('version="1.7.12"'), 'TV wrapper release version is synchronized across source files');
+expect(tvMain.includes('tvapp=1.7.13') && tvConfig.includes('version="1.7.13"'), 'TV wrapper release version is synchronized across source files');
 expect(index.includes("window.parent.postMessage({ type: 'cinema:app-ready' }, '*')"), 'Web app announces first-paint readiness to the TV wrapper');
 expect(index.includes('const heroLoad = loadHero()') && index.includes('await Promise.allSettled([heroLoad, initialLoads[0]])'), 'TV readiness waits only for the hero and first visible row');
 expect(stream.includes('const tmdb = async (path, options = {})') && stream.includes('options.signal.addEventListener') && stream.includes('signal: controller.signal'), 'Player TMDB requests can be cancelled when the title changes');
@@ -177,8 +177,8 @@ expect(sw.includes('const SHELL_ASSET_TIMEOUT = 8000') && sw.includes('controlle
 expect(sw.includes('isStaticAsset') && sw.includes('request.destination'), 'service-worker does not cache arbitrary dynamic same-origin requests');
 expect((sw.match(/cache\.put\([^\n]+\)\)\.catch\(\(\) => \{\}\)/g) || []).length >= 3, 'service-worker ignores cache quota failures without breaking the page');
 
-expect(tvIndex.includes('tvapp=1.7.12') && !tvIndex.includes('tvapp=1.7.12&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
-expect(tvMain.includes('tvapp=1.7.12&fresh=1'), 'TV retry path requests a fresh live document');
+expect(tvIndex.includes('tvapp=1.7.13') && !tvIndex.includes('tvapp=1.7.13&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
+expect(tvMain.includes('tvapp=1.7.13&fresh=1'), 'TV retry path requests a fresh live document');
 expect(tvMain.includes('BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV Back uses the guarded handshake timeout');
 expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back acknowledgements only from the live page');
 expect(tvMain.includes("event.target !== document.body && event.target !== frame"), 'TV wrapper does not steal focus from its own controls');
@@ -202,7 +202,7 @@ expect(tvMain.includes('function handleFrameError()') && tvMain.includes("frame.
 expect(tvMain.includes('function cleanupWrapperRuntime()') && tvMain.includes("window.addEventListener('pagehide', cleanupWrapperRuntime)") && tvMain.includes('backRequestId += 1'), 'TV wrapper cancels delayed work when the application is unloaded');
 expect(tvMain.includes('var BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV wrapper allows fullscreen exit and popup acknowledgement to complete before fallback');
 expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://cinesrc.st') && tvIndex.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'TV wrapper preconnects to image, video and subtitle origins');
-expect(tvConfig.includes('version="1.7.12"'), 'TV package version matches the wrapper source');
+expect(tvConfig.includes('version="1.7.13"'), 'TV package version matches the wrapper source');
 expect(tvMain.includes('function forwardKey(key)') && tvMain.includes('frame.contentWindow.focus()'), 'TV wrapper restores iframe focus before forwarding remote keys');
 expect(tvMain.includes('event.stopPropagation();') && tvMain.includes('forwardKey(key);'), 'TV wrapper consumes forwarded remote events exactly once');
 expect(stream.includes("!document.documentElement.classList.contains('keynav')") && stream.includes("controls?.classList.add('controls-idle')"), 'player controls stay visible while TV D-pad navigation is active');
