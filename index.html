@@ -970,6 +970,7 @@
     <a class="nav-link" href="genres.html">Genuri</a>
     <div class="nav-dropdown"><button class="nav-link" type="button" data-menu="movies-menu">Filme⌄</button><div class="nav-submenu" id="movies-menu"><a href="catalog.html?type=movie">Toate filmele</a><a href="catalog.html?type=movie&sort=latest">Lansări recente</a><a href="catalog.html?type=movie&sort=top">Cele mai apreciate</a></div></div>
     <div class="nav-dropdown"><button class="nav-link" type="button" data-menu="series-menu">Seriale⌄</button><div class="nav-submenu" id="series-menu"><a href="catalog.html?type=tv">Toate serialele</a><a href="catalog.html?type=tv&sort=latest">Seriale recente</a><a href="catalog.html?type=tv&sort=top">Cele mai apreciate</a></div></div>
+    <a class="nav-link" href="live.html" data-nav="live">Live</a>
     <a class="nav-link" href="watch-together.html">Vezi împreună</a>
     <div class="nav-dropdown"><button class="nav-link" type="button" data-menu="top-menu">Top IMDb⌄</button><div class="nav-submenu" id="top-menu"><a href="catalog.html?mode=top&type=movie">Top filme</a><a href="catalog.html?mode=top&type=tv">Top seriale</a></div></div>
   </nav>
@@ -991,7 +992,7 @@
   </div>
 </header>
 
-<script src="assets/site-shell.js?v=20261027-shell19"></script>
+<script src="assets/site-shell.js?v=20261027-shell20"></script>
 <script src="assets/home-nav-fix.js?v=20261027-23"></script>
 <link rel="stylesheet" href="assets/nav-parity.css?v=20261025-focus21">
 <style id="tflix-final-nav-parity">
@@ -1139,7 +1140,7 @@ themeToggle?.addEventListener('click', () => {
 });
 updateThemeButton();
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js?v=20261027-v42').then(registration => {
+  navigator.serviceWorker.register('./sw.js?v=20261027-v43').then(registration => {
     registration.update().catch(() => {});
     if (registration.waiting) registration.waiting.postMessage({ type: 'cinema:skip-waiting' });
   }).catch(() => {});
