@@ -1085,6 +1085,7 @@
           <option value="4">VidSrc — player extern</option>
           <option value="5">ScreenScape — player extern</option>
           <option value="6">2Embed — player extern</option>
+          <option value="7">VipStreamMovies — player extern</option>
         </select>
       </div>
       <div class="modal-actions">
@@ -1562,6 +1563,11 @@ function selectedProviderUrl(item, season = 1, episode = 1, provider = 3) {
     return type === 'movie'
       ? `https://www.2embed.cc/embed/${item.id}`
       : `https://www.2embed.cc/embedtv/${item.id}&s=${season}&e=${episode}`;
+  }
+  if (Number(provider) === 7) {
+    return type === 'movie'
+      ? `https://vipstreammovies.com/embed/movie/${item.id}`
+      : `https://vipstreammovies.com/embed/tv/${item.id}/${season}/${episode}`;
   }
   return null;
 }
@@ -2252,7 +2258,7 @@ async function openModal(item) {
   currentModalItem = { ...item, media_type: type };
   rememberTitle(currentModalItem);
   const preferredProvider = Number(localStorage.getItem(MODAL_PROVIDER_KEY) || 3);
-  if ($('modal-provider')) $('modal-provider').value = [3, 4, 5, 6].includes(preferredProvider) ? String(preferredProvider) : '3';
+  if ($('modal-provider')) $('modal-provider').value = [3, 4, 5, 6, 7].includes(preferredProvider) ? String(preferredProvider) : '3';
   resetModalTrailer();
 
   const bg = backdrop(item.backdrop_path) || poster(item.poster_path, 'w780');
@@ -2479,13 +2485,13 @@ document.addEventListener('keydown', event => {
 
 document.getElementById('modal-provider')?.addEventListener('change', event => {
   const value = Number(event.target.value);
-  if ([3, 4, 5, 6].includes(value)) localStorage.setItem(MODAL_PROVIDER_KEY, String(value));
+  if ([3, 4, 5, 6, 7].includes(value)) localStorage.setItem(MODAL_PROVIDER_KEY, String(value));
 });
 
 $('modal-watch-btn').addEventListener('click', () => {
   if (!currentModalItem) return;
   const selectedProvider = Number($('modal-provider')?.value || 3);
-  if ([3, 4, 5, 6].includes(selectedProvider)) localStorage.setItem(MODAL_PROVIDER_KEY, String(selectedProvider));
+  if ([3, 4, 5, 6, 7].includes(selectedProvider)) localStorage.setItem(MODAL_PROVIDER_KEY, String(selectedProvider));
   const openServerPicker = openServerPickerNext;
   openServerPickerNext = false;
   const s = parseInt($('season-select')?.value  || 1);

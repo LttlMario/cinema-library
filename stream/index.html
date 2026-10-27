@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 40035)
-Total output lines: 3104
+Warning: truncated output (original token count: 40117)
+Total output lines: 3110
 
 <!DOCTYPE html>
 <html lang="en">
@@ -568,6 +568,7 @@ Total output lines: 3104
             <option value="4">VidSrc</option>
             <option value="5">ScreenScape</option>
             <option value="6">2Embed</option>
+            <option value="7">VipStreamMovies</option>
           </select>
           <button id="own-server" type="button" aria-label="Alege serverul Cinesrc" title="Alege serverul Cinesrc">▣ Server</button>
         </div>
@@ -747,6 +748,7 @@ const SERVERS = [
   { id: 4, name: 'VidSrc', note: 'Player extern VidSrc; controalele sunt în iframe.' },
   { id: 5, name: 'ScreenScape', note: 'Player extern ScreenScape; controalele sunt în iframe.' },
   { id: 6, name: '2Embed', note: 'Player extern 2Embed; controalele sunt în iframe.' },
+  { id: 7, name: 'VipStreamMovies', note: 'Player extern VipStreamMovies; controalele sunt în iframe.' },
 ];
 let cinesrcServerPickerOpen = new URLSearchParams(location.search).get('server-picker') === '1';
 
@@ -770,6 +772,10 @@ const serverUrlResolvers = {
   6: (p) => p.type === 'movie'
     ? `https://www.2embed.cc/embed/${p.id}`
     : `https://www.2embed.cc/embedtv/${p.id}&s=${p.season}&e=${p.episode}`
+  ,
+  7: (p) => p.type === 'movie'
+    ? `https://vipstreammovies.com/embed/movie/${p.id}`
+    : `https://vipstreammovies.com/embed/tv/${p.id}/${p.season}/${p.episode}`
 };
 function cinesrcEmbedUrl(raw) {
   const url = new URL(raw);
@@ -852,15 +858,7 @@ const tmdb = async (path, options = {}) => {
     if (options.signal) {
       if (options.signal.aborted) {
         const error = new Error('TMDB request cancelled');
-        error.name = 'AbortError';
-        throw error;
-      }
-      options.signal.addEventListener('abort', relayAbort, { once: true });
-    }
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    try {
-      const r = await fetchTmdbWithRetry(`${API_BASE}${localizedPath}`, { headers: HEADERS, signal: controller.signal });
-      if (!r.ok) t…10035 tokens truncated…tring(state?.server || 3),
+        error.name = 'AbortErr…10117 tokens truncated…tring(state?.server || 3),
     sub: state?.subtitle || 'ro'
   });
   if (item.media_type === 'tv') {
