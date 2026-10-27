@@ -1183,7 +1183,15 @@ const CATEGORY_ROWS = [
   { title: 'Filme populare',      endpoint: '/movie/popular',   media: 'movie', anchor: 'movies' },
   { title: 'Lansate recent digital', endpoint: null,       media: 'movie', anchor: 'digital', isDigitalRow: true },
   { title: 'Cele mai apreciate anul acesta', endpoint: `/discover/movie?sort_by=vote_average.desc&vote_count.gte=500&primary_release_year=${CURRENT_YEAR}`, media: 'movie' },
+  { title: 'Filme de acțiune', endpoint: '/discover/movie?with_genres=28&sort_by=popularity.desc&vote_count.gte=80&include_adult=false', media: 'movie' },
+  { title: 'Filme de comedie', endpoint: '/discover/movie?with_genres=35&sort_by=popularity.desc&vote_count.gte=40&include_adult=false', media: 'movie' },
+  { title: 'Filme horror', endpoint: '/discover/movie?with_genres=27&sort_by=popularity.desc&vote_count.gte=40&include_adult=false', media: 'movie' },
+  { title: 'Filme SF', endpoint: '/discover/movie?with_genres=878&sort_by=popularity.desc&vote_count.gte=40&include_adult=false', media: 'movie' },
+  { title: 'Filme thriller', endpoint: '/discover/movie?with_genres=53&sort_by=popularity.desc&vote_count.gte=40&include_adult=false', media: 'movie' },
   { title: 'Seriale populare',    endpoint: '/tv/popular',      media: 'tv',    anchor: 'tv' },
+  { title: 'Seriale apreciate', endpoint: `/discover/tv?sort_by=vote_average.desc&vote_count.gte=200&first_air_date_year=${CURRENT_YEAR}`, media: 'tv' },
+  { title: 'Seriale de acțiune și aventură', endpoint: '/discover/tv?with_genres=10759&sort_by=popularity.desc&vote_count.gte=30&include_adult=false', media: 'tv' },
+  { title: 'Seriale dramă', endpoint: '/discover/tv?with_genres=18&sort_by=popularity.desc&vote_count.gte=30&include_adult=false', media: 'tv' },
   { title: 'Se difuzează astăzi',        endpoint: '/tv/airing_today', media: 'tv',    anchor: 'airing' },
 ];
 
