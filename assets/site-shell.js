@@ -5,6 +5,11 @@
     if (!window.__cinemaTvRemoteBridge) {
       window.__cinemaTvRemoteBridge = true;
       const keyCodes = { ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40, Enter: 13 };
+      const normalizeRemoteKey = (event) => {
+        const raw = String(event?.key || '');
+        if (keyCodes[raw]) return raw;
+        return ({ 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 13: 'Enter' })[raw] || ({ 37: 'ArrowLeft', 38: 'ArrowUp', 39: 'ArrowRight', 40: 'ArrowDown', 13: 'Enter' })[String(event?.keyCode || event?.which || '')] || raw;
+      };
       const visible = (el) => {
         if (!el || !el.getClientRects().length) return false;
         const style = getComputedStyle(el);
@@ -94,15 +99,16 @@
         candidates[0]?.el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       };
       window.addEventListener('message', (event) => {
-        const key = String(event.data?.type === 'cinema:remote-key' ? event.data.key : '');
+          const key = String(event.data?.type === 'cinema:remote-key' ? event.data.key : '');
         if (!keyCodes[key]) return;
         const target = document.activeElement || document.body;
         target.dispatchEvent(new KeyboardEvent('keydown', { key, code: key, keyCode: keyCodes[key], which: keyCodes[key], bubbles: true, cancelable: true }));
       });
       document.addEventListener('keydown', (event) => {
-        if (!keyCodes[event.key] || document.querySelector('#rows-container')) return;
+        const key = normalizeRemoteKey(event);
+        if (!keyCodes[key] || document.querySelector('#rows-container')) return;
         event.preventDefault();
-        moveFocus(event.key);
+        moveFocus(key);
       }, true);
     }
   }
