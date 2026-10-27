@@ -2506,6 +2506,26 @@ window.addEventListener('beforeunload', () => {
     if (scroll) el.scrollIntoView({ behavior: document.body.classList.contains('tv-mode') ? 'auto' : 'smooth', block: 'center', inline: 'nearest' });
   }
 
+  // Samsung WebView may move the real DOM focus itself when a select, range
+  // input, or button consumes a remote key. Keep the visual D-pad focus in
+  // lockstep with that native focus so the next arrow/OK never operates on a
+  // stale control.
+  function adoptNativeFocus(el) {
+    if (!el || !vis(el)) return;
+    const sections = getSections();
+    if (!sections.some(section => section.items.includes(el))) return;
+    if (cur === el) return;
+    cur?.classList.remove('kf');
+    cur = el;
+    cur.classList.add('kf');
+    active = true;
+    document.documentElement.classList.add('keynav');
+  }
+
+  document.addEventListener('focusin', event => {
+    adoptNativeFocus(event.target instanceof Element ? event.target : null);
+  }, true);
+
   function getSections() {
     const secs = [];
     // CC is a modal-like focus trap. Once opened, the remote must stay
