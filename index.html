@@ -1137,7 +1137,7 @@ themeToggle?.addEventListener('click', () => {
 });
 updateThemeButton();
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js?v=20261027-v38').then(registration => {
+  navigator.serviceWorker.register('./sw.js?v=20261027-v39').then(registration => {
     registration.update().catch(() => {});
     if (registration.waiting) registration.waiting.postMessage({ type: 'cinema:skip-waiting' });
   }).catch(() => {});
