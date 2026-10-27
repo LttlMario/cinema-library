@@ -1013,7 +1013,7 @@ function showOwnControls() {
   wrap?.classList.remove('controls-idle');
   clearTimeout(window.__cinemaOwnControlsTimer);
   window.__cinemaOwnControlsTimer = setTimeout(() => {
-    if (!ownPaused) {
+    if (!ownPaused && !document.documentElement.classList.contains('keynav')) {
       controls?.classList.add('controls-idle');
       $('player-fullscreen')?.classList.add('tv-hidden');
     }
