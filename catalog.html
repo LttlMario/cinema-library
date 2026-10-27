@@ -15,10 +15,14 @@
   <link rel="icon" href="./assets/icons/cinema-library-favicon.png">
   <style>
     .catalog-wrap{max-width:var(--shell-max);margin:auto;padding:0 var(--shell-gutter) 4rem}
-    .catalog-head{display:flex;justify-content:space-between;align-items:end;gap:1rem;margin-bottom:1.5rem}
+    .catalog-head{display:flex;justify-content:space-between;align-items:end;gap:1rem;margin-bottom:1rem}
     .catalog-head h2{margin:.35rem 0;font-size:clamp(1.8rem,4vw,3rem)}
     .catalog-head p{color:var(--shell-muted);margin:0}
-    .catalog-sort{padding:.65rem .8rem;border:1px solid var(--shell-line);border-radius:8px;background:var(--shell-card);color:var(--shell-text)}
+    .catalog-toolbar{display:flex;flex-wrap:wrap;gap:.55rem;margin-bottom:1.25rem;padding:.75rem;border:1px solid var(--shell-line);border-radius:10px;background:rgba(20,20,28,.72)}
+    .catalog-sort,.catalog-filter{padding:.65rem .8rem;border:1px solid var(--shell-line);border-radius:8px;background:var(--shell-card);color:var(--shell-text)}
+    .catalog-tab,.catalog-quick{display:inline-flex;align-items:center;min-height:38px;padding:.55rem .8rem;border:1px solid var(--shell-line);border-radius:8px;background:transparent;color:var(--shell-text);text-decoration:none;font-weight:700;cursor:pointer}
+    .catalog-tab.active,.catalog-quick.active,.catalog-tab:hover,.catalog-quick:hover{border-color:var(--shell-accent);background:var(--shell-accent);color:#fff}
+    .catalog-explore{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.5rem}
     .catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem}
     .catalog-card{position:relative;background:var(--shell-card);border-radius:9px;overflow:hidden;transition:transform .2s,box-shadow .2s;content-visibility:auto;contain-intrinsic-size:390px 260px;scroll-margin:1rem}
     .catalog-card a{display:block;color:inherit;text-decoration:none}
@@ -30,7 +34,7 @@
     .catalog-badge{position:absolute;top:7px;left:7px;padding:.2rem .45rem;border-radius:4px;background:var(--shell-accent);font-size:.62rem;font-weight:800}
     .catalog-status{text-align:center;color:var(--shell-muted);min-height:1.5rem;margin:1.5rem 0}
     .catalog-more{display:block;margin:2rem auto;padding:.7rem 1.2rem;border:1px solid var(--shell-accent);border-radius:8px;background:var(--shell-accent);color:#fff;cursor:pointer}
-    @media(max-width:700px){.catalog-head{display:block}.catalog-sort{margin-top:1rem}}
+    @media(max-width:700px){.catalog-head{display:block}.catalog-toolbar{display:grid;grid-template-columns:1fr 1fr}.catalog-toolbar>*{width:100%}.catalog-tab{justify-content:center}.catalog-explore{overflow:auto;flex-wrap:nowrap}.catalog-quick{white-space:nowrap}}
   </style>
 </head>
 <body>
@@ -38,8 +42,22 @@
     <div class="catalog-wrap">
       <section class="catalog-head">
         <div><small class="shell-eyebrow">Cinema Library</small><h2 id="title">Catalog</h2><p id="subtitle">Titluri selectate pentru tine</p></div>
-        <select class="catalog-sort" id="sort" aria-label="Sortează titlurile"><option value="popularity.desc">Populare</option><option value="primary_release_date.desc">Cele mai noi</option><option value="vote_average.desc">Cele mai apreciate</option></select>
       </section>
+      <nav class="catalog-toolbar" aria-label="Filtre catalog">
+        <a class="catalog-tab" id="movies-tab" href="catalog.html?type=movie">Filme</a>
+        <a class="catalog-tab" id="series-tab" href="catalog.html?type=tv">Seriale</a>
+        <select class="catalog-filter" id="genre-filter" aria-label="Filtrează după gen"><option value="">Toate genurile</option></select>
+        <select class="catalog-filter" id="year-filter" aria-label="Filtrează după an"><option value="">Orice an</option></select>
+        <select class="catalog-sort" id="sort" aria-label="Sortează titlurile"><option value="popularity.desc">Populare</option><option value="latest">Cele mai noi</option><option value="vote_average.desc">Cele mai apreciate</option><option value="vote_count.desc">Cele mai urmărite</option></select>
+      </nav>
+      <div class="catalog-explore" aria-label="Explorează rapid">
+        <button class="catalog-quick" type="button" data-quick="popular">Populare acum</button>
+        <button class="catalog-quick" type="button" data-quick="latest">Lansări recente</button>
+        <button class="catalog-quick" type="button" data-quick="top">Cele mai apreciate</button>
+        <button class="catalog-quick" type="button" data-quick="action">Acțiune</button>
+        <button class="catalog-quick" type="button" data-quick="horror">Horror</button>
+        <button class="catalog-quick" type="button" data-quick="sf">SF</button>
+      </div>
       <p class="catalog-status" id="status" role="status" aria-live="polite">Se încarcă…</p>
       <section class="catalog-grid" id="grid" aria-label="Rezultate catalog" aria-busy="false"></section>
       <button class="catalog-more" id="more" type="button">Vezi mai multe</button>
@@ -47,14 +65,21 @@
   </main>
   <script src="assets/site-shell.js?v=20261027-shell20"></script>
   <script>
-    const token='__TMDB_TOKEN__',q=new URLSearchParams(location.search),tvMode=q.get('tv')==='1',mode=q.get('mode'),type=q.get('type')==='tv'?'tv':'movie',genre=q.get('genre')||'',names={28:'Acțiune',27:'Horror',878:'SF',53:'Thriller'},sortParam=q.get('sort');
+    const token='__TMDB_TOKEN__',q=new URLSearchParams(location.search),tvMode=q.get('tv')==='1',mode=q.get('mode'),type=q.get('type')==='tv'?'tv':'movie',names={28:'Acțiune',35:'Comedie',27:'Horror',878:'SF',53:'Thriller',18:'Dramă',10759:'Acțiune și aventură'},sortParam=q.get('sort');
+    const genreOptions={movie:[[28,'Acțiune'],[35,'Comedie'],[18,'Dramă'],[27,'Horror'],[878,'SF'],[53,'Thriller'],[10749,'Romantic'],[16,'Animație']],tv:[[10759,'Acțiune și aventură'],[18,'Dramă'],[35,'Comedie'],[9648,'Mister'],[10765,'SF și fantasy'],[80,'Crimă'],[10751,'Familie']]};
     let page=1,items=[],requestId=0,controller=null;const $=id=>document.getElementById(id);
-    const sortAliases={latest:'primary_release_date.desc',top:'vote_average.desc'};
+    const sortAliases={latest:type==='tv'?'first_air_date.desc':'primary_release_date.desc',top:'vote_average.desc'};
     if(sortAliases[sortParam]) $('sort').value=sortAliases[sortParam];
-    $('title').textContent=mode==='top'?`Top IMDb — ${type==='tv'?'Seriale':'Filme'}`:`${type==='tv'?'Seriale':'Filme'}${names[genre]?' — '+names[genre]:''}`;
     if(mode==='top') $('sort').value='vote_average.desc';
+    $('movies-tab').classList.toggle('active',type==='movie');$('series-tab').classList.toggle('active',type==='tv');
+    $('title').textContent=mode==='top'?`Top IMDb — ${type==='tv'?'Seriale':'Filme'}`:`${type==='tv'?'Seriale':'Filme'}${names[q.get('genre')]?' — '+names[q.get('genre')]:''}`;
+    genreOptions[type].forEach(([id,label])=>{const option=document.createElement('option');option.value=id;option.textContent=label;$('genre-filter').append(option)});
+    if(q.get('genre')) $('genre-filter').value=q.get('genre');
+    const currentYear=new Date().getFullYear();
+    for(let year=currentYear;year>=1950;year--){const option=document.createElement('option');option.value=year;option.textContent=year;$('year-filter').append(option)}
+    if(q.get('year')) $('year-filter').value=q.get('year');
     function esc(value){return String(value||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-    function endpoint(){const sort=mode==='top'?'vote_average.desc':$('sort').value;return `/discover/${type}?sort_by=${sort}&include_adult=false${mode==='top'?'&vote_count.gte=500':''}${genre?'&with_genres='+encodeURIComponent(genre):''}`}
+    function endpoint(){const sort=mode==='top'?'vote_average.desc':($('sort').value==='latest'?(type==='tv'?'first_air_date.desc':'primary_release_date.desc'):$('sort').value);const selectedGenre=$('genre-filter').value;const year=$('year-filter').value;const yearParam=year?(type==='tv'?`&first_air_date_year=${year}`:`&primary_release_year=${year}`):'';return `/discover/${type}?sort_by=${sort}&include_adult=false${mode==='top'?'&vote_count.gte=500':''}${selectedGenre?'&with_genres='+encodeURIComponent(selectedGenre):''}${yearParam}`}
     async function fetchCatalogJson(url,options={}){
       for(let attempt=1;attempt<=2;attempt+=1){
         try{
@@ -80,7 +105,7 @@
       $('status').textContent=page===1?'Se încarcă titlurile…':'Se încarcă mai multe titluri…';$('grid').setAttribute('aria-busy','true');$('more').disabled=true;
       const timeout=setTimeout(()=>controller.abort(),10000);
       try{
-        const cacheKey=`cinema_catalog_${type}_${mode||'all'}_${genre}_${$('sort').value}_${page}`;let data=null;let staleData=null;
+        const cacheKey=`cinema_catalog_${type}_${mode||'all'}_${$('genre-filter').value}_${$('year-filter').value}_${$('sort').value}_${page}`;let data=null;let staleData=null;
         try{const cached=JSON.parse(sessionStorage.getItem(cacheKey)||'null');if(cached){if(Date.now()-cached.time<300000)data=cached.data;else staleData=cached.data}}catch{}
         if(!data){
           if(staleData&&current===requestId){
@@ -96,7 +121,20 @@
         $('status').textContent='Catalogul nu este disponibil momentan. Încearcă din nou.';$('more').style.display='none'
       }finally{clearTimeout(timeout);if(current===requestId){$('grid').setAttribute('aria-busy','false');$('more').disabled=false}}
     }
-    $('sort').onchange=()=>{page=1;items=[];load()};$('more').onclick=()=>{page++;load()};
+    function reloadCatalog(){page=1;items=[];load()}
+    $('sort').onchange=reloadCatalog;$('genre-filter').onchange=reloadCatalog;$('year-filter').onchange=reloadCatalog;$('more').onclick=()=>{page++;load()};
+    document.querySelectorAll('[data-quick]').forEach(button=>button.addEventListener('click',()=>{
+      document.querySelectorAll('[data-quick]').forEach(item=>item.classList.remove('active'));button.classList.add('active');
+      const quick=button.dataset.quick;
+      $('genre-filter').value='';$('year-filter').value='';
+      if(quick==='latest') $('sort').value='latest';
+      else if(quick==='top') $('sort').value='vote_average.desc';
+      else if(quick==='action') $('genre-filter').value=type==='tv'?'10759':'28';
+      else if(quick==='horror') $('genre-filter').value='27';
+      else if(quick==='sf') $('genre-filter').value=type==='tv'?'10765':'878';
+      else $('sort').value='popularity.desc';
+      reloadCatalog();
+    }));
     window.addEventListener('pagehide',()=>{controller?.abort()},{once:true});
     load();
   </script>
