@@ -39,8 +39,12 @@ expect(stream.includes('providerReadyFallbackTimer') && stream.includes('Play mu
 expect(stream.includes('function handleProviderError') && stream.includes("eventType.includes('error')") && stream.includes('handlePlayerFailure(state.server)'), 'provider errors stop playback and recover through the next source');
 expect(stream.includes('if (!state || state.server !== serverId) return;'), 'stale provider errors cannot trigger a second server fallback');
 expect(stream.includes('Keep processing this same arrow key') && stream.includes('if (!vis(cur)) {\n        cur = null;'), 'TV focus keeps the current D-pad action after controls restore');
+expect(index.includes('Rows can be rebuilt while TMDB data is arriving') && index.includes('si = secs.findIndex(s => s.items.indexOf(cur) >= 0);'), 'Home D-pad recovery reapplies the arrow after dynamic rows rebuild');
+expect(index.includes("openSubmenu.classList.remove('open');") && index.includes('setFocus(parent, false);'), 'Home Back returns focus to the submenu parent after closing it');
+expect(stream.includes('Provider controls and episode/recommendation rows may be rebuilt') && stream.includes('one remote press never disappears'), 'Player D-pad recovery reapplies the arrow during source transitions');
 expect(index.includes('el.hidden || el.disabled') && index.includes("style.visibility !== 'hidden'") && stream.includes('el.hidden || el.disabled'), 'TV focus skips hidden, invisible, and disabled controls');
 expect(stream.includes('function loadPlayer() {\n  const nextProgressKey = progressIdentity();') && stream.includes('loadedProgressKey === nextProgressKey') && stream.includes('persistCurrentPlayback();'), 'player saves progress before replacing an unchanged source');
+expect(stream.includes("old.src = 'about:blank'") && stream.includes('old.replaceWith(frame)'), 'player tears down the previous provider iframe before switching source');
 expect(stream.includes('const TMDB_CACHE_MAX_ENTRIES = isTvClient ? 60 : 120') && stream.includes('slice(0, TMDB_CACHE_MAX_ENTRIES)'), 'player TMDB cache is bounded for TV and web');
 expect(stream.includes('function flushTmdbCache()') && stream.includes('flushTmdbCache();'), 'player TMDB cache flushes before page exit');
 expect(stream.includes('lastOwnCommandKey') && stream.includes('now - lastOwnCommandAt < 180'), 'rapid duplicate Play/Pause commands are ignored');
@@ -129,12 +133,14 @@ expect(stream.includes('let watchActivityController = null') && stream.includes(
 expect(stream.includes('href="${esc(HOME_URL.href)}"'), 'Player metadata errors keep the TV return URL');
 const wrapperMain = read('app/samsung-tv/main.js');
 expect(wrapperMain.includes("var appReady = false") && wrapperMain.includes("event.data.type === 'cinema:app-ready'") && wrapperMain.includes('readyTimer'), 'TV wrapper waits for the live page readiness handshake');
+expect(wrapperMain.includes('lastForwardedKey') && wrapperMain.includes('now - lastForwardedAt < 55'), 'TV wrapper coalesces duplicate remote presses without blocking key repeat');
+expect(tvMain.includes('tvapp=1.7.12') && tvConfig.includes('version="1.7.12"'), 'TV wrapper release version is synchronized across source files');
 expect(index.includes("window.parent.postMessage({ type: 'cinema:app-ready' }, '*')"), 'Web app announces first-paint readiness to the TV wrapper');
 expect(index.includes('const heroLoad = loadHero()') && index.includes('await Promise.allSettled([heroLoad, initialLoads[0]])'), 'TV readiness waits only for the hero and first visible row');
 expect(stream.includes('const tmdb = async (path, options = {})') && stream.includes('options.signal.addEventListener') && stream.includes('signal: controller.signal'), 'Player TMDB requests can be cancelled when the title changes');
 expect(stream.includes('let metadataAbortController = null') && stream.includes('metadataAbortController?.abort()') && stream.includes('tmdb(`/tv/${state.id}`, { signal: metadataController.signal })') && stream.includes('tmdb(`/movie/${state.id}`, { signal: metadataController.signal })'), 'Player metadata fetches stop when the player closes');
 expect(index.includes('site-shell.js?v=20261027-shell17') && index.includes('home-nav-fix.js?v=20261025-22') && read('catalog.html').includes('site-shell.js?v=20261027-shell17') && read('genres.html').includes('site-shell.js?v=20261027-shell17'), 'TV navigation assets use a fresh cache-busting version');
-expect(sw.includes('cinema-library-shell-v38-cache-first-20261027') && index.includes('sw.js?v=20261027-v38') && stream.includes('sw.js?v=20261027-v38'), 'Service worker shell cache is bumped for immediate updates');
+expect(sw.includes('cinema-library-shell-v39-cache-first-20261027') && index.includes('sw.js?v=20261027-v39') && stream.includes('sw.js?v=20261027-v39'), 'Service worker shell cache is bumped for immediate updates');
 expect(index.includes('<div class="search-wrap" id="search-wrap">') && !index.includes('<div class="search-wrap open" id="search-wrap">'), 'TV starts with the sidebar Search button visible, not the floating field');
 expect(index.includes('<a class="nav-link active" href="index.html" data-nav="home" aria-current="page">Acasă</a>'), 'Home is a native focusable navigation control on the TV layout');
 expect(homeNavFix.includes("cinema:search-opened") && homeNavFix.includes("cinema:search-closed") && index.includes("key: 'search-input'"), 'Search keeps the TV focus state synchronized while opening and closing');
@@ -147,8 +153,8 @@ expect(index.includes('franchiseRowsInFlight') && index.includes('loadFranchiseR
 expect(index.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'homepage preconnects to the subtitle API used by the player overlay');
 expect(!index.includes("['movie',330459],['movie',330459]"), 'franchise rows do not request duplicate titles');
 expect(index.includes("modal-watch-btn'), $('modal-favorite-btn'), $('modal-later-btn'), $('modal-watched-btn"), 'popup focus follows visible button order');
-expect(index.includes('sw.js?v=20261027-v38') && stream.includes('sw.js?v=20261027-v38'), 'catalog and player register the current service-worker revision');
-expect(sw.includes('cinema-library-shell-v38-cache-first-20261027') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
+expect(index.includes('sw.js?v=20261027-v39') && stream.includes('sw.js?v=20261027-v39'), 'catalog and player register the current service-worker revision');
+expect(sw.includes('cinema-library-shell-v39-cache-first-20261027') && sw.includes('./assets/home-nav-fix.js'), 'service-worker caches the current navigation shell including TV Search logic');
 expect(sw.includes('const refresh = fetch(request, { cache: \'no-store\' })') && sw.includes('return cached || refresh'), 'service-worker serves cached static assets before background refresh');
 expect(sw.includes('The cached shell is returned immediately') && sw.includes('const refresh = fetch(request, { cache: \'no-store\' })'), 'service-worker refreshes cached HTML from the network instead of the browser HTTP cache');
 expect(sw.includes('event.waitUntil(refresh.then(() => undefined, () => undefined))'), 'service-worker keeps background asset refresh alive');
@@ -169,8 +175,8 @@ expect(sw.includes('const SHELL_ASSET_TIMEOUT = 8000') && sw.includes('controlle
 expect(sw.includes('isStaticAsset') && sw.includes('request.destination'), 'service-worker does not cache arbitrary dynamic same-origin requests');
 expect((sw.match(/cache\.put\([^\n]+\)\)\.catch\(\(\) => \{\}\)/g) || []).length >= 3, 'service-worker ignores cache quota failures without breaking the page');
 
-expect(tvIndex.includes('tvapp=1.7.11') && !tvIndex.includes('tvapp=1.7.11&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
-expect(tvMain.includes('tvapp=1.7.11&fresh=1'), 'TV retry path requests a fresh live document');
+expect(tvIndex.includes('tvapp=1.7.12') && !tvIndex.includes('tvapp=1.7.12&fresh=1'), 'TV wrapper uses the cached shell on normal startup');
+expect(tvMain.includes('tvapp=1.7.12&fresh=1'), 'TV retry path requests a fresh live document');
 expect(tvMain.includes('BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV Back uses the guarded handshake timeout');
 expect(tvMain.includes('event.source !== frame.contentWindow'), 'TV accepts Back acknowledgements only from the live page');
 expect(tvMain.includes("event.target !== document.body && event.target !== frame"), 'TV wrapper does not steal focus from its own controls');
@@ -193,7 +199,7 @@ expect(tvMain.includes('function handleFrameError()') && tvMain.includes("frame.
 expect(tvMain.includes('function cleanupWrapperRuntime()') && tvMain.includes("window.addEventListener('pagehide', cleanupWrapperRuntime)") && tvMain.includes('backRequestId += 1'), 'TV wrapper cancels delayed work when the application is unloaded');
 expect(tvMain.includes('var BACK_HANDSHAKE_TIMEOUT = 1200'), 'TV wrapper allows fullscreen exit and popup acknowledgement to complete before fallback');
 expect(tvIndex.includes('https://image.tmdb.org') && tvIndex.includes('https://cinesrc.st') && tvIndex.includes('cinema-library-subtitles-api.bmariomihail.chatgpt.site'), 'TV wrapper preconnects to image, video and subtitle origins');
-expect(tvConfig.includes('version="1.7.11"'), 'TV package version matches the wrapper source');
+expect(tvConfig.includes('version="1.7.12"'), 'TV package version matches the wrapper source');
 expect(tvMain.includes('function forwardKey(key)') && tvMain.includes('frame.contentWindow.focus()'), 'TV wrapper restores iframe focus before forwarding remote keys');
 expect(tvMain.includes('event.stopPropagation();') && tvMain.includes('forwardKey(key);'), 'TV wrapper consumes forwarded remote events exactly once');
 expect(stream.includes("!document.documentElement.classList.contains('keynav')") && stream.includes("controls?.classList.add('controls-idle')"), 'player controls stay visible while TV D-pad navigation is active');
