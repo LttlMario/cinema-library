@@ -741,6 +741,7 @@
     .official-link { grid-column: 1 / -1; justify-self: start; font-size: 0.78rem; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
     .official-link:hover { color: var(--text); }
     .modal-watch-btn { flex:1 1 180px; width:auto; padding: 0.95rem; font-size: 1.02rem; }
+    .modal-server-btn { padding: 0.95rem 1rem; white-space: nowrap; }
     .modal-favorite-btn { padding: 0.95rem 1rem; white-space: nowrap; }
     .modal-favorite-btn.active { color: #ffd166; border-color: rgba(255,209,102,.55); background: rgba(255,209,102,.1); }
     .modal-later-btn { padding: 0.95rem 1rem; white-space: nowrap; }
@@ -1076,6 +1077,7 @@
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           Redă
         </button>
+        <button class="btn modal-server-btn" id="modal-server-btn" type="button" title="Alege manual serverul Cinesrc">▣ Server</button>
         <button class="btn modal-favorite-btn" id="modal-favorite-btn" type="button" aria-pressed="false">♡ Favorite</button>
         <button class="btn modal-later-btn" id="modal-later-btn" type="button" aria-pressed="false">＋ Mai târziu</button>
         <button class="btn modal-watched-btn" id="modal-watched-btn" type="button" aria-pressed="false">● Marchează văzut</button>
@@ -1205,6 +1207,7 @@ let searchResults = [];
 let searchRequestId = 0;
 let genreRequestId = 0;
 let currentModalItem = null;
+let openServerPickerNext = false;
 let modalTrailerTimer = null;
 let modalTrailerToken = 0;
 let tvDetails = {};
@@ -2429,6 +2432,8 @@ document.addEventListener('keydown', event => {
 
 $('modal-watch-btn').addEventListener('click', () => {
   if (!currentModalItem) return;
+  const openServerPicker = openServerPickerNext;
+  openServerPickerNext = false;
   const s = parseInt($('season-select')?.value  || 1);
   const e = parseInt($('episode-select')?.value || 1);
   const inPlayerLab = new URLSearchParams(window.location.search).get('player-lab') === '1';
@@ -2454,6 +2459,7 @@ $('modal-watch-btn').addEventListener('click', () => {
   });
   const destination = new URL(playerUrl(currentModalItem, s, e), document.baseURI);
   destination.searchParams.set('embedded', '1');
+  if (openServerPicker) destination.searchParams.set('server-picker', '1');
   if (new URLSearchParams(window.location.search).get('app') === 'tv') {
     // On Samsung TV the catalog stays in the app, while playback is handed
     // to the real TFlix browser player. The return URL lets its Back/X action
@@ -2477,6 +2483,12 @@ $('modal-watch-btn').addEventListener('click', () => {
   // Rioma stays inside the Cinema Library app, including on Samsung TV.
   // Do not hand playback off to the external TV browser.
   openRiomaOverlay(destination.href);
+});
+
+$('modal-server-btn')?.addEventListener('click', () => {
+  if (!currentModalItem) return;
+  openServerPickerNext = true;
+  $('modal-watch-btn')?.click();
 });
 
 $('modal-favorite-btn').addEventListener('click', () => {
