@@ -11,6 +11,8 @@
   var readyTimer = 0;
   var backHandledByWeb = false;
   var backRequestId = 0;
+  var lastForwardedKey = '';
+  var lastForwardedAt = 0;
   var BACK_HANDSHAKE_TIMEOUT = 1200;
   var LIVE_ORIGIN = 'https://cinema.panel-pro.ro';
   var BACK_KEY = 10009;
@@ -73,7 +75,7 @@
     nextFrame.removeAttribute('src');
     frame.replaceWith(nextFrame);
     bindFrame(nextFrame);
-    nextFrame.src = 'https://cinema.panel-pro.ro/index.html?tv=1&tvapp=1.7.11&fresh=1&retry=' + Date.now();
+    nextFrame.src = 'https://cinema.panel-pro.ro/index.html?tv=1&tvapp=1.7.12&fresh=1&retry=' + Date.now();
     errorTimer = window.setTimeout(showError, 15000);
   }
 
@@ -121,6 +123,13 @@
     frame.addEventListener('error', handleFrameError);
   }
   function forwardKey(key) {
+    var now = Date.now();
+    // A few Samsung firmware versions deliver the same remote press twice
+    // (once to the wrapper and once to the focused iframe). Coalesce only an
+    // immediate duplicate; normal key-repeat remains untouched.
+    if (key !== 'Back' && key === lastForwardedKey && now - lastForwardedAt < 55) return;
+    lastForwardedKey = key;
+    lastForwardedAt = now;
     try {
       frame.focus();
       frame.contentWindow.focus();
@@ -133,6 +142,8 @@
     window.clearTimeout(readyTimer);
     backRequestId += 1;
     backHandledByWeb = false;
+    lastForwardedKey = '';
+    lastForwardedAt = 0;
   }
   bindFrame(frame);
   retry.addEventListener('click', retryLoad);
