@@ -2494,11 +2494,12 @@ $('modal-watch-btn').addEventListener('click', () => {
   // Stop and unload the delayed YouTube trailer before opening Rioma. Keeping
   // it alive behind the overlay causes a small trailer surface to reappear on
   // Samsung TV WebViews and compete with playback.
-  closeModal(true);
   // Rioma stays inside the Cinema Library app, including on Samsung TV.
   // ScreenScape is the primary player; the local player remains available
   // through the explicit "Playerul nostru" button beside Redă.
-  openRiomaOverlay(screenscapeUrl(currentModalItem, s, e));
+  const primaryPlayerUrl = screenscapeUrl(currentModalItem, s, e);
+  closeModal(true);
+  openRiomaOverlay(primaryPlayerUrl);
 });
 
 // Secondary playback route: keep the existing Cinema Library player available
