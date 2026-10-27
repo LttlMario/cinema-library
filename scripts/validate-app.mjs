@@ -155,6 +155,7 @@ expect(sw.includes('event.waitUntil(refresh.then(() => undefined, () => undefine
 const requiredPlayerControls = ['player-back-action', 'own-play', 'own-timeline', 'own-quality', 'own-picture', 'own-next', 'own-mute', 'own-volume', 'own-captions', 'own-fullscreen', 'subtitle-close', 'episode-picker-close', 'player-error-retry', 'watch-check-continue', 'watch-check-stop'];
 expect(requiredPlayerControls.every(id => stream.includes(`id="${id}"`)), 'player audit covers every critical TV control');
 expect(stream.includes('function getSections()') && stream.includes('function activateCurrent()') && stream.includes("if (cur === $('own-next')) { openEpisodePicker(); return; }"), 'player controls share the native D-pad focus and activation path');
+expect(stream.includes('function adoptNativeFocus(el)') && stream.includes("document.addEventListener('focusin', event =>") && index.includes('function adoptNativeFocus(el)'), 'native TV focus is synchronized with the visual D-pad focus');
 const requiredHomeControls = ['home-nav', 'favorites-nav', 'search-toggle', 'search', 'modal-watch-btn', 'modal-favorite-btn', 'modal-later-btn', 'modal-watched-btn'];
 expect(requiredHomeControls.every(id => index.includes(`id="${id}"`)), 'homepage audit covers the TV navigation and popup controls');
 expect(index.includes('registration.update()') && stream.includes('registration.update()') && sw.includes("cinema:skip-waiting"), 'TV and web check for a newer service-worker version at startup');
