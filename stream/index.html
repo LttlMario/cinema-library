@@ -263,6 +263,17 @@
     @media (max-width:560px) { .subtitle-panel { right:6px; bottom:50px; width:calc(100% - 12px); } }
     .player-wrap:fullscreen .custom-controls { padding:16px 18px 18px; gap:8px; }
     .player-wrap:fullscreen .custom-controls button,.player-wrap:fullscreen .custom-controls select { min-height:34px; padding:7px 10px; font-size:12px; }
+    /* Narrow web viewports must keep every control inside the player. TV mode
+       deliberately keeps its larger sofa-friendly controls below. */
+    @media (max-width:560px) {
+      body:not(.tv-mode) .custom-controls { gap:4px; padding:9px 6px 7px; }
+      body:not(.tv-mode) .custom-controls button,
+      body:not(.tv-mode) .custom-controls select { min-height:32px; padding:5px 6px; font-size:11px; }
+      body:not(.tv-mode) .custom-controls .control-spacer { display:none; }
+      body:not(.tv-mode) #own-timeline { order:-1; flex:1 1 100%; min-width:100%; }
+      body:not(.tv-mode) #own-time { font-size:11px; }
+      body:not(.tv-mode) #own-volume { max-width:82px; }
+    }
     .player-back-action { position:absolute; top:.85rem; left:.85rem; z-index:12; display:inline-flex; align-items:center; gap:.35rem; min-height:36px; padding:.45rem .75rem; border:1px solid rgba(255,255,255,.34); border-radius:8px; background:rgba(10,10,14,.86); color:#fff; font:700 12px system-ui,sans-serif; cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,.42); transition:opacity .2s,transform .2s,background .2s,border-color .2s; }
     .player-back-action:hover,.player-back-action:focus-visible { background:rgba(229,9,20,.92); border-color:var(--accent-h); transform:translateY(-1px); }
     .player-back-action:active { transform:scale(.96); }
